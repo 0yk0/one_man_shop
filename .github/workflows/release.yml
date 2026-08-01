@@ -71,6 +71,7 @@ jobs:
 
       - name: Install Wails
         if: steps.cache-wails.outputs.cache-hit != 'true'
+        shell: bash
         env:
           GOPROXY: https://proxy.golang.org,direct
           GONOSUMCHECK: '*'
@@ -90,18 +91,18 @@ jobs:
         run: npm run build
 
       - name: Generate bindings
+        shell: bash
         run: wails3 generate bindings -clean=true -ts -i
 
       - name: Build binary
+        shell: bash
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: ${{ matrix.goos == 'windows' && '0' || '1' }}
+          BUILD_TAGS: ${{ matrix.goos == 'linux' && 'production,webkit2_41' || 'production' }}
         run: |
-          go build -tags ${{ matrix.goos == 'linux' && 'production,webkit2_41' || 'production' }} \
-            -trimpath -buildvcs=false \
-            -ldflags="-w -s" \
-            -o bin/${{ matrix.artifact }}${{ matrix.ext }}
+          go build -tags "$BUILD_TAGS" -trimpath -buildvcs=false -ldflags="-w -s" -o "bin/${{ matrix.artifact }}${{ matrix.ext }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
