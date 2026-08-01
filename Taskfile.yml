@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  APP_NAME: "one-man-shop-v3"
+  APP_NAME: "one_man_shop"
   BIN_DIR: "bin"
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'

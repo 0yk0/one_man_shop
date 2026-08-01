@@ -37,7 +37,7 @@ export default function CustomerDisplay() {
                 {products.map((p) => (
                   <div key={p.id} className="flex justify-between items-baseline py-2 border-b border-stone-100">
                     <span className="font-semibold text-stone-800 text-lg">{p.name}</span>
-                    <span className="border-b border-dotted border-stone-300 flex-1 mx-2 min-w-[20px]"></span>
+                    <span className="border-b border-dotted border-stone-300 flex-1 mx-2 min-w-5"></span>
                     <span className="font-mono font-semibold text-stone-800 text-lg">₹{p.price.toFixed(0)}</span>
                   </div>
                 ))}

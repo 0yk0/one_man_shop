@@ -6,13 +6,13 @@
         <key>CFBundleName</key>
             <string>One Man Shop</string>
         <key>CFBundleExecutable</key>
-            <string>one_man_shop_v3</string>
+            <string>one_man_shop</string>
         <key>CFBundleIdentifier</key>
             <string>com.onemanshop.pos</string>
         <key>CFBundleVersion</key>
             <string>0.1.0</string>
         <key>CFBundleGetInfoString</key>
-            <string>This is a comment</string>
+            <string>Offline POS System for Small Shops</string>
         <key>CFBundleShortVersionString</key>
             <string>0.1.0</string>
         <key>CFBundleIconFile</key>
@@ -24,6 +24,6 @@
         <key>NSHighResolutionCapable</key>
             <string>true</string>
         <key>NSHumanReadableCopyright</key>
-            <string>© 2026, My Company</string>
+            <string>© 2026, One Man Shop</string>
     </dict>
 </plist>
