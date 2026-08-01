@@ -91,12 +91,6 @@ jobs:
         shell: bash
         run: wails3 task linux:create:appimage
 
-      # Strip quarantine flag so the app launches when downloaded from GitHub
-      - name: Remove quarantine (macOS)
-        if: matrix.goos == 'darwin'
-        shell: bash
-        run: xattr -dr com.apple.quarantine bin/*.app
-
       - name: Upload macOS artifact
         if: matrix.goos == 'darwin'
         uses: actions/upload-artifact@v7
