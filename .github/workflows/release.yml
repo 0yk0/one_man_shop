@@ -97,15 +97,28 @@ jobs:
         shell: bash
         run: xattr -dr com.apple.quarantine bin/*.app
 
-      - name: Upload artifact
+      - name: Upload macOS artifact
+        if: matrix.goos == 'darwin'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: bin/*.app/**
+
+      - name: Upload Windows artifact
+        if: matrix.goos == 'windows'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: bin/*.exe
+
+      - name: Upload Linux artifact
+        if: matrix.goos == 'linux'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: |
-            bin/*.app/**
-            bin/${{ matrix.artifact }}${{ matrix.ext }}
             bin/*.AppImage
-          if-no-files-found: error
+            bin/one_man_shop
 
   release:
     needs: build
