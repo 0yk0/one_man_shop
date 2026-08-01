@@ -14,6 +14,8 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
+// wsPort is the WebSocket port for the customer display.
+// MUST match WS_PORT in frontend/src/stores/displayStore.ts
 const wsPort = 9246
 
 type App struct {

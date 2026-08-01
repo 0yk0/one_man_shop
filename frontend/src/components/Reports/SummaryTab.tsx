@@ -12,7 +12,7 @@ export default function SummaryTab() {
 
   useEffect(() => {
     Promise.all([
-      GetTransactions(1000, 0),
+      GetTransactions(50000, 0),
       import('../../bindings').then(m => m.GetSettings()),
     ])
       .then(([txns, settings]) => { setAllTxns(txns); setTaxEnabled(settings.tax_enabled) })

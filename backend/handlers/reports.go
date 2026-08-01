@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,7 +127,9 @@ func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (stri
 		var items []models.CartItem
 		itemsJSON := r.GetString("items")
 		if itemsJSON != "" {
-			json.Unmarshal([]byte(itemsJSON), &items)
+			if err := json.Unmarshal([]byte(itemsJSON), &items); err != nil {
+				log.Printf("[ExportCSV] Failed to unmarshal items for transaction %s: %v", r.Id, err)
+			}
 		}
 
 		itemNames := ""
@@ -136,6 +139,7 @@ func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (stri
 			}
 			itemNames += fmt.Sprintf("%s x%d", item.Name, item.Qty)
 		}
+		itemNames = strings.ReplaceAll(itemNames, "\"", "\"\"")
 
 		csv += fmt.Sprintf("%s,%s,\"%s\",%.2f,%.2f,%.2f,%s\n",
 			t.Format("2006-01-02"), t.Format("15:04:05"), itemNames,

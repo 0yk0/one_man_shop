@@ -71,7 +71,9 @@ func (a *AppHandler) GetTransactions(limit int, offset int) ([]models.Transactio
 		var items []models.CartItem
 		itemsJSON := r.GetString("items")
 		if itemsJSON != "" {
-			json.Unmarshal([]byte(itemsJSON), &items)
+			if err := json.Unmarshal([]byte(itemsJSON), &items); err != nil {
+				log.Printf("[GetTransactions] Failed to unmarshal items for transaction %s: %v", r.Id, err)
+			}
 		}
 		transactions[i] = models.Transaction{
 			ID: r.Id, Items: items, Subtotal: r.GetFloat("subtotal"), TaxTotal: r.GetFloat("tax_total"),

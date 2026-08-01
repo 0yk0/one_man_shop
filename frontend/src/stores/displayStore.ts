@@ -26,6 +26,7 @@ export const useDisplayStore = create<DisplayState>(() => ({
   theme: 'light',
 }))
 
+// MUST match wsPort in app.go
 const WS_PORT = 9246
 const WS_URL = `ws://127.0.0.1:${WS_PORT}/ws`
 const RECONNECT_DELAY = 1000

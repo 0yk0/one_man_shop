@@ -4,9 +4,19 @@ Congratulations on generating your Wails3 application! This README will guide yo
 
 ## Getting Started
 
-1. Navigate to your project directory in the terminal.
+1. Navigate to your project directory in the terminal:
 
-2. To run your application in development mode, use the following command:
+   ```
+   cd one_man_shop_v3
+   ```
+
+2. Ensure `wails3` is in your PATH:
+
+   ```
+   export PATH="$HOME/go/bin:$PATH"
+   ```
+
+3. To run your application in development mode, use the following command:
 
    ```
    wails3 dev
@@ -14,7 +24,7 @@ Congratulations on generating your Wails3 application! This README will guide yo
 
    This will start your application and enable hot-reloading for both frontend and backend changes.
 
-3. To build your application for production, use:
+4. To build your application for production, use:
 
    ```
    wails3 build

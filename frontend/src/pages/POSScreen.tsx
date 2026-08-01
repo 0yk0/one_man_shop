@@ -29,6 +29,7 @@ export default function POSScreen() {
   const [completed, setCompleted] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
   const processingRef = useRef(false)
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayOpen, setDisplayOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
@@ -47,6 +48,11 @@ export default function POSScreen() {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => { if (clearTimerRef.current) clearTimeout(clearTimerRef.current) }
+  }, [])
 
   const filteredProducts = search
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -225,7 +231,7 @@ export default function POSScreen() {
       ConfirmPayment()
 
       // Auto-clear after 3 seconds (thank you view duration)
-      setTimeout(() => {
+      clearTimerRef.current = setTimeout(() => {
         setCompleted(false)
         setCart([])
         setShowPayment(false)
@@ -432,10 +438,10 @@ export default function POSScreen() {
               disabled={cart.length === 0}
               onClick={() => {
                 setShowPayment(true)
-                if (displayOpen) {
-                  UpdateCustomerDisplay(cart, total, taxTotal)
-                  SendPaymentMethodToDisplay('upi')
-                }
+              if (displayOpen) {
+                UpdateCustomerDisplay(cart, subtotal, taxTotal)
+                SendPaymentMethodToDisplay('upi')
+              }
               }}
             >
               Pay ₹{total.toFixed(2)}

@@ -30,7 +30,7 @@ export default function TransactionsTab() {
   const loadAll = useCallback(async () => {
     try {
       setLoading(true)
-      const txns = await GetTransactions(1000, 0)
+      const txns = await GetTransactions(50000, 0)
       const settings = await GetSettings()
       setAllTxns(txns)
       setTaxEnabled(settings.tax_enabled)
