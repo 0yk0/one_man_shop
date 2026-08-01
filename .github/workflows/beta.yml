@@ -122,7 +122,7 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          VERSION=$(grep 'version:' build/config.yml | head -1 | awk '{print $2}' | tr -d '"')
+          VERSION=$(grep -E '^  version:' build/config.yml | awk '{print $2}' | tr -d "\"'")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Download all artifacts
