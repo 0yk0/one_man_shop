@@ -52,16 +52,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install Task
         uses: arduino/setup-task@v2
         with:
           version: 3.x
 
+      - name: Authenticate git for GitHub
+        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install Wails
-        env:
-          GOPROXY: https://proxy.golang.org,direct
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
 
       - name: Remove .npmrc age gate
