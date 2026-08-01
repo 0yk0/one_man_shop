@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: all;
+};
+
+/* Smooth tap feedback for product cards */
+.product-tap {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.product-tap:active {
+  transform: scale(0.96);
+}

@@ -1,0 +1,6 @@
+/* App-level styles - Tailwind handles most styling via DaisyUI */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
