@@ -60,7 +60,9 @@ jobs:
 
       - name: Install Linux build dependencies
         if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev pkg-config
 
       - name: Cache Wails binary
         id: cache-wails
@@ -100,7 +102,7 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: ${{ matrix.goos == 'windows' && '0' || '1' }}
-          BUILD_TAGS: ${{ matrix.goos == 'linux' && 'production,webkit2_41' || 'production' }}
+          BUILD_TAGS: production
         run: |
           go build -tags "$BUILD_TAGS" -trimpath -buildvcs=false -ldflags="-w -s" -o "bin/${{ matrix.artifact }}${{ matrix.ext }}"
 
