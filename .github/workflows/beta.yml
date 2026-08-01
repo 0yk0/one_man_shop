@@ -7,6 +7,9 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
 jobs:
   build:
     strategy:
@@ -31,7 +34,7 @@ jobs:
             suffix: "-windows-amd64"
             ext: ".exe"
             artifact: one_man_shop_beta_windows_amd64
-          - os: ubuntu-26.04
+          - os: ubuntu-latest
             goos: linux
             goarch: amd64
             suffix: "-linux-amd64"
@@ -55,12 +58,9 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Authenticate git for GitHub
-        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
       - name: Install Linux build dependencies
         if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkit2gtk-6.0-dev
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
       - name: Cache Wails binary
         id: cache-wails
@@ -72,11 +72,10 @@ jobs:
       - name: Install Wails
         if: steps.cache-wails.outputs.cache-hit != 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p ~/go/bin
-          gh release download v3.0.0-alpha2.120 --repo wailsapp/wails --pattern "*${{ runner.os == 'macOS' && 'darwin' || runner.os == 'Windows' && 'windows' || 'linux' }}*${{ runner.arch == 'arm64' && 'arm64' || 'x86_64' }}*" --clobber -D ~/go/bin/
-          chmod +x ~/go/bin/wails3*
+          GOPROXY: https://proxy.golang.org,direct
+          GONOSUMCHECK: '*'
+          GONOSUMDB: '*'
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
 
       - name: Remove .npmrc age gate
         shell: bash
@@ -97,9 +96,10 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: ${{ matrix.goos == 'linux' && '1' || '0' }}
+          CGO_ENABLED: ${{ matrix.goos == 'windows' && '0' || '1' }}
         run: |
-          go build -tags production -trimpath -buildvcs=false \
+          go build -tags ${{ matrix.goos == 'linux' && 'production,webkit2_41' || 'production' }} \
+            -trimpath -buildvcs=false \
             -ldflags="-w -s" \
             -o bin/${{ matrix.artifact }}${{ matrix.ext }}
 
