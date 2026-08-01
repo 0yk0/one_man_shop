@@ -62,6 +62,10 @@ jobs:
       - name: Authenticate git for GitHub
         run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
+      - name: Install Linux build dependencies
+        if: matrix.goos == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
 
