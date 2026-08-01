@@ -10,6 +10,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
@@ -59,7 +60,7 @@ jobs:
 
       - name: Install Linux build dependencies
         if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkit2gtk-6.0-dev
 
       - name: Cache Wails binary
         id: cache-wails
@@ -72,6 +73,8 @@ jobs:
         if: steps.cache-wails.outputs.cache-hit != 'true'
         env:
           GOPROXY: https://proxy.golang.org,direct
+          GONOSUMCHECK: '*'
+          GONOSUMDB: '*'
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
 
       - name: Remove .npmrc age gate
