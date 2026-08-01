@@ -54,11 +54,6 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-
       - name: Authenticate git for GitHub
         run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
