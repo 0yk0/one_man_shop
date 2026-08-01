@@ -31,7 +31,7 @@ jobs:
             suffix: "-windows-amd64"
             ext: ".exe"
             artifact: one_man_shop_release_windows_amd64
-          - os: ubuntu-latest
+          - os: ubuntu-26.04
             goos: linux
             goarch: amd64
             suffix: "-linux-amd64"
@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Linux build dependencies
         if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkit2gtk-6.0-dev || sudo apt-get install -y libgtk-4-dev libwebkit2gtk-4.1-dev
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkit2gtk-6.0-dev
 
       - name: Cache Wails binary
         id: cache-wails
@@ -72,10 +72,11 @@ jobs:
       - name: Install Wails
         if: steps.cache-wails.outputs.cache-hit != 'true'
         env:
-          GOPROXY: https://proxy.golang.org,direct
-          GONOSUMCHECK: '*'
-          GONOSUMDB: '*'
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ~/go/bin
+          gh release download v3.0.0-alpha2.120 --repo wailsapp/wails --pattern "*${{ runner.os == 'macOS' && 'darwin' || runner.os == 'Windows' && 'windows' || 'linux' }}*${{ runner.arch == 'arm64' && 'arm64' || 'x86_64' }}*" --clobber -D ~/go/bin/
+          chmod +x ~/go/bin/wails3*
 
       - name: Remove .npmrc age gate
         shell: bash
