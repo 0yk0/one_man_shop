@@ -1,69 +1,148 @@
-# Welcome to Your New Wails3 Project!
+# One Man Shop
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+Offline POS for small shops. Free and open source.
 
-## Getting Started
+Built for a friend's small shop. Made open source for everyone.
 
-1. Navigate to your project directory in the terminal:
+![One Man Shop POS](website/public/screenshots/screenshot-06.png)
 
-   ```
-   cd one_man_shop_v3
-   ```
+## Features
 
-2. Ensure `wails3` is in your PATH:
+- **UPI QR Payments** — Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app.
+- **Customer Display** — Show your menu, live bill, and payment QR on a second screen for customers to see.
+- **Product Management** — Add up to 50 products with images, prices, and optional tax rates.
+- **Sales Reports** — Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV.
+- **Auto Backups** — Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose data.
+- **35 Themes** — Switch between 35 built-in themes instantly. Light, dark, and everything in between.
 
-   ```
-   export PATH="$HOME/go/bin:$PATH"
-   ```
+## Screenshots
 
-3. To run your application in development mode, use the following command:
+| POS Screen | Customer Display | Reports |
+|---|---|---|
+| ![POS](website/public/screenshots/screenshot-06.png) | ![Display](website/public/screenshots/screenshot-08.png) | ![Reports](website/public/screenshots/screenshot-10.png) |
 
-   ```
-   wails3 dev
-   ```
+| Products | Settings | Setup Wizard |
+|---|---|---|
+| ![Products](website/public/screenshots/screenshot-03.png) | ![Settings](website/public/screenshots/screenshot-12.png) | ![Setup](website/public/screenshots/screenshot-01.png) |
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+## Tech Stack
 
-4. To build your application for production, use:
+| Layer | Technology |
+|---|---|
+| Desktop framework | [Wails v3](https://wails.io/) (alpha) |
+| Backend | Go |
+| Frontend | React 18, TypeScript, Vite |
+| Database | [PocketBase](https://pocketbase.io/) (embedded SQLite) |
+| Styling | Tailwind CSS, DaisyUI |
+| State | Zustand |
+| Charts | Recharts |
 
-   ```
-   wails3 build
-   ```
+## Installation
 
-   This will create a production-ready executable in the `build` directory.
+### Download
 
-## Exploring Wails3 Features
+Download the latest release from [GitHub Releases](https://github.com/0yk0/one_man_shop/releases/latest).
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+- **macOS** — Unzip and drag to Applications. Works on Apple Silicon and Intel.
+- **Windows** — Download the `.exe` and run it.
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+### First Launch
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+1. Enter your shop name
+2. Set your UPI VPA (e.g. `yourname@upi`)
+3. Enter your merchant name
+4. Start adding products and selling
 
-   ```
-   go run .
-   ```
+## Development
 
-   Note: Some examples may be under development during the alpha phase.
+### Prerequisites
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+- [Go](https://go.dev/dl/) 1.25+
+- [Node.js](https://nodejs.org/) 18+
+- [Wails v3](https://wails.io/docs/guides/linux) (`go install github.com/wailsapp/wails/v3/cmd/wails@latest`)
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+### Run in Development
+
+```bash
+# Ensure wails3 is in PATH
+export PATH="$HOME/go/bin:$PATH"
+
+# Start dev server with hot-reload
+wails3 dev
+```
+
+This starts both the Go backend and Vite frontend with hot-reload.
+
+### Frontend Only
+
+```bash
+cd frontend
+npm install
+npm run dev    # Vite dev server on port 9245
+```
+
+## Building
+
+```bash
+# Build for your current platform
+wails3 build
+
+# The binary will be in the build/ directory
+```
+
+### Platform-Specific
+
+```bash
+# macOS (universal binary)
+task build:darwin
+
+# Windows
+task build:windows
+```
 
 ## Project Structure
 
-Take a moment to familiarize yourself with your project structure:
+```
+one_man_shop/
+├── main.go                 # Entry point, Wails bootstrap
+├── app.go                  # App struct, routes Go methods to handlers
+├── backend/
+│   ├── db/                 # PocketBase init, collection schemas
+│   ├── handlers/           # Business logic (CRUD, reports, backups)
+│   ├── models/             # Shared Go types
+│   └── display/            # Customer display state manager
+├── frontend/
+│   └── src/
+│       ├── bindings.ts     # Auto-generated TypeScript wrappers
+│       ├── pages/          # POS, Products, Reports, Settings
+│       ├── components/     # UI components
+│       └── stores/         # Zustand store
+├── website/                # Landing page (Vite + framer-motion)
+├── build/                  # Build configs, icons, platform tasks
+└── screenshots/            # App screenshots
+```
 
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
+## FAQ
 
-## Next Steps
+**Is it really free?**
+Yes. No subscriptions, no hidden fees, no sign-up. Download and start selling.
 
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
+**Does it work offline?**
+Yes. All data stays on your computer. No internet required.
 
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+**What payment methods?**
+UPI (via QR code) and Cash.
+
+**Can I use a second monitor?**
+Yes. Open the Customer Display on a separate screen.
+
+**How many products?**
+Up to 50 active products.
+
+## Contributing
+
+Contributions are welcome! Open an issue or submit a pull request.
+
+## License
+
+[MIT](LICENSE)

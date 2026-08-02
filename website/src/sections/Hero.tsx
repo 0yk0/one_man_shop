@@ -41,7 +41,7 @@ export const Hero: React.FC = () => {
         >
           Your shop deserves a simple POS.
           <br />
-          <span style={{ color: "#94A3B8" }}>No subscriptions. No internet needed. Just scan & sell.</span>
+          <span style={{ color: "#94A3B8" }}>No subscriptions. No internet needed. Scan to pay.</span>
         </motion.p>
 
         <motion.div
@@ -50,10 +50,10 @@ export const Hero: React.FC = () => {
           transition={{ delay: 0.35, duration: 0.5 }}
           style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 64, flexWrap: "wrap" }}
         >
-          <a href="#download" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
+          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
             <Download size={20} /> Download for macOS
           </a>
-          <a href="#download" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
+          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
             <Download size={20} /> Download for Windows
           </a>
           <a href="https://github.com/0yk0/one_man_shop" target="_blank" rel="noopener noreferrer" style={{ background: "white", color: "#374151", fontWeight: 600, padding: "14px 28px", borderRadius: 12, border: "2px solid #E5E7EB", textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18 }}>
@@ -68,7 +68,7 @@ export const Hero: React.FC = () => {
           style={{ maxWidth: 896, margin: "0 auto" }}
         >
           <div style={{ borderRadius: 16, overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #E2E8F0" }}>
-            <img src="/screenshots/screenshot-01.png" alt="One Man Shop POS Screen" style={{ width: "100%", height: "auto", display: "block" }} />
+            <img src="/screenshots/screenshot-06.png" alt="One Man Shop POS Screen" style={{ width: "100%", height: "auto", display: "block" }} />
           </div>
         </motion.div>
       </div>

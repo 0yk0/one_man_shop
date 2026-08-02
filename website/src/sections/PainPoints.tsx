@@ -4,9 +4,9 @@ import { Wifi, Monitor, CreditCard, BarChart3, Check } from "lucide-react";
 
 const points = [
   { icon: Wifi, problem: "\"My POS needs internet and crashes during rush hour\"", solution: "Works completely offline. No WiFi? No problem." },
-  { icon: Monitor, problem: "\"I can't see what my customer sees\"", solution: "Customer Display shows menu, bill & QR on a second screen." },
-  { icon: CreditCard, problem: "\"I pay monthly fees for a POS I barely use\"", solution: "100% free. No hidden charges. Ever." },
-  { icon: BarChart3, problem: "\"I have no idea how much I sold today\"", solution: "Built-in reports with daily & weekly charts, CSV export." },
+  { icon: Monitor, problem: "\"I can't see what my customer sees on their end\"", solution: "Customer Display shows your menu, bill, and QR on a second screen." },
+  { icon: CreditCard, problem: "\"I pay monthly fees for a POS I barely use\"", solution: "100% free. No hidden charges, no monthly bills. Ever." },
+  { icon: BarChart3, problem: "\"I have no idea how much I sold today\"", solution: "Built-in daily and weekly reports with charts. Export as CSV." },
 ];
 
 export const PainPoints: React.FC = () => {

@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { QrCode, Monitor, Package, BarChart3, Cloud, Palette } from "lucide-react";
 
 const features = [
-  { icon: QrCode, title: "UPI QR Payments", desc: "Generate UPI QR codes instantly. Customers scan & pay with any UPI app." },
-  { icon: Monitor, title: "Customer Display", desc: "Show menu, bill & QR on a second screen. Your customers see everything." },
-  { icon: Package, title: "Product Management", desc: "Add up to 50 products with images, prices, and tax rates." },
-  { icon: BarChart3, title: "Reports & Charts", desc: "Daily & weekly sales summaries with beautiful charts. Export as CSV." },
-  { icon: Cloud, title: "Auto Backups", desc: "Nightly backups to OneDrive/Dropbox. Never lose your data." },
-  { icon: Palette, title: "35 Themes", desc: "Customize the look with 35 built-in DaisyUI themes." },
+  { icon: QrCode, title: "UPI QR Payments", desc: "Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app." },
+  { icon: Monitor, title: "Customer Display", desc: "Show your menu, live bill, and payment QR on a second screen for customers to see." },
+  { icon: Package, title: "Product Management", desc: "Add up to 50 products with images, prices, and optional tax rates." },
+  { icon: BarChart3, title: "Sales Reports", desc: "Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV." },
+  { icon: Cloud, title: "Auto Backups", desc: "Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose data." },
+  { icon: Palette, title: "35 Themes", desc: "Switch between 35 built-in themes instantly. Light, dark, and everything in between." },
 ];
 
 export const Features: React.FC = () => {
@@ -27,7 +27,7 @@ export const Features: React.FC = () => {
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
           style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
-        >A complete POS system designed for small, single-operator shops.</motion.p>
+        >Everything you need to run your shop — nothing you don't.</motion.p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
           {features.map((f, i) => {

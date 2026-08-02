@@ -3,16 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 const faqs = [
-  { q: "Is One Man Shop really free?", a: "Yes, 100% free. No subscriptions, no hidden fees, no sign-up required. Download it and start using it immediately." },
-  { q: "Does it work without internet?", a: "Absolutely. One Man Shop is offline-first. All data stays on your computer using PocketBase (SQLite). No internet required for any feature." },
-  { q: "What payment methods are supported?", a: "UPI (via QR code) and Cash. Customers scan a QR code to pay via any UPI app (GPay, PhonePe, Paytm, etc.)." },
-  { q: "Can I use it on a second monitor?", a: "Yes! The Customer Display window can be opened on a separate screen, showing your menu, bill, and UPI QR code to customers." },
-  { q: "What platforms are supported?", a: "macOS (Apple Silicon + Intel) and Windows 10+. Linux support is planned for the future." },
-  { q: "Is my data safe?", a: "All data is stored locally on your computer. Nothing is sent to any server. You own your data completely." },
-  { q: "Can I export my sales data?", a: "Yes, you can export transactions as CSV with date range filtering. Perfect for accounting and tax filing." },
-  { q: "How do backups work?", a: "Automatic nightly backups to a folder of your choice (e.g., OneDrive, Dropbox). Configurable retention period to manage storage." },
-  { q: "How many products can I add?", a: "Up to 50 active products. This keeps the interface fast and focused for small shops." },
-  { q: "Can I customize the look?", a: "Yes, 35 built-in themes to choose from. Switch themes instantly in Settings." },
+  { q: "Is One Man Shop really free?", a: "Yes, 100% free. No subscriptions, no hidden fees, no sign-up. Download it and start selling immediately." },
+  { q: "Does it work without internet?", a: "Yes. One Man Shop is completely offline. All data stays on your computer — nothing is ever sent to a server." },
+  { q: "What payment methods are supported?", a: "UPI (via QR code) and Cash. Customers scan a QR code to pay with any UPI app — GPay, PhonePe, Paytm, or any other." },
+  { q: "Can I use it on a second monitor?", a: "Yes. Open the Customer Display on a separate screen to show your menu, running bill, and UPI QR code to customers." },
+  { q: "What platforms are supported?", a: "macOS (Apple Silicon and Intel) and Windows 10 or later." },
+  { q: "Can I add product images?", a: "Yes. Upload an image (up to 2 MB) for each product. Images show up on the POS screen and customer display." },
+  { q: "Does it support tax?", a: "Yes. Enable tax in Settings and set a default rate. You can also override the tax rate for individual products." },
+  { q: "Can I see sales reports?", a: "Yes. Built-in daily and weekly reports with charts showing revenue, UPI vs cash breakdown, and transaction counts. Export as CSV." },
+  { q: "How do backups work?", a: "Automatic nightly backups to a folder you choose — OneDrive, Dropbox, or any local folder. You set how many days to keep." },
+  { q: "How many products can I add?", a: "Up to 50 active products. Enough for a juice corner, tea stall, or small retail shop." },
+  { q: "Can I customize the look?", a: "Yes. 35 built-in themes — switch instantly in Settings. Pick one that matches your shop's vibe." },
 ];
 
 export const FAQ: React.FC = () => {

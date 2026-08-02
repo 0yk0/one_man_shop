@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const tabs = [
-  { id: "pos", label: "POS Screen", image: "/screenshots/screenshot-01.png" },
-  { id: "products", label: "Products", image: "/screenshots/screenshot-02.png" },
-  { id: "reports", label: "Reports", image: "/screenshots/screenshot-03.png" },
-  { id: "settings", label: "Settings", image: "/screenshots/screenshot-04.png" },
-  { id: "display", label: "Customer Display", image: "/screenshots/screenshot-05.png" },
+  { id: "pos", label: "POS Screen", image: "/screenshots/screenshot-06.png" },
+  { id: "products", label: "Products", image: "/screenshots/screenshot-03.png" },
+  { id: "reports", label: "Reports", image: "/screenshots/screenshot-10.png" },
+  { id: "settings", label: "Settings", image: "/screenshots/screenshot-12.png" },
+  { id: "display", label: "Customer Display", image: "/screenshots/screenshot-08.png" },
 ];
 
 export const ScreenshotGallery: React.FC = () => {
