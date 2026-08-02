@@ -1,65 +1,75 @@
 version: '3'
 
 vars:
-  APP_NAME: "one-man-shop-v3"
+  APP_NAME: "one_man_shop"
   BIN_DIR: "bin"
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
-  # Target OS for build/package/run. Defaults to the host OS, and is overridden
-  # by `wails3 build GOOS=...` (or the GOOS env var) for cross-compilation. The
-  # tasks below dispatch to the matching platform Taskfile via this variable.
-  GOOS: '{{.GOOS | default OS}}'
 
 includes:
   common: ./build/Taskfile.yml
-  windows: ./build/windows/Taskfile.yml
   darwin: ./build/darwin/Taskfile.yml
-  linux: ./build/linux/Taskfile.yml
-  ios: ./build/ios/Taskfile.yml
-  android: ./build/android/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
 
 tasks:
   build:
-    summary: Builds the application
+    summary: Builds the application for the current platform
     cmds:
-      - task: "{{.GOOS}}:build"
+      - task: '{{if eq OS "darwin"}}darwin:build{{else if eq OS "windows"}}windows:build{{else}}build:unsupported{{end}}'
+
+  build:unsupported:
+    summary: Unsupported platform
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Building on {{OS}} is not supported. Use macOS or Windows.
 
   package:
-    summary: Packages a production build of the application
+    summary: Packages a production build of the application for the current platform
     cmds:
-      - task: "{{.GOOS}}:package"
+      - task: '{{if eq OS "darwin"}}darwin:package{{else if eq OS "windows"}}windows:package{{else}}package:unsupported{{end}}'
+
+  package:unsupported:
+    summary: Unsupported platform
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Packaging on {{OS}} is not supported. Use macOS or Windows.
 
   run:
-    summary: Runs the application
+    summary: Runs the application for the current platform
     cmds:
-      - task: "{{.GOOS}}:run"
+      - task: '{{if eq OS "darwin"}}darwin:run{{else if eq OS "windows"}}windows:run{{else}}run:unsupported{{end}}'
+
+  run:unsupported:
+    summary: Unsupported platform
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Running on {{OS}} is not supported. Use macOS or Windows.
 
   dev:
     summary: Runs the application in development mode
     cmds:
       - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
 
-  setup:docker:
-    summary: Builds Docker image for cross-compilation (~800MB download)
+  test:
+    summary: Runs all tests (Go backend + frontend unit + E2E)
     cmds:
-      - task: common:setup:docker
+      - task: test:go
+      - task: test:frontend
+      - task: test:e2e
 
-  build:server:
-    summary: Builds the application in server mode (no GUI, HTTP server only)
+  test:go:
+    summary: Runs Go backend tests
     cmds:
-      - task: common:build:server
+      - go test ./backend/... -v -race
 
-  run:server:
-    summary: Runs the application in server mode
+  test:frontend:
+    summary: Runs frontend unit tests with Vitest
+    dir: frontend
     cmds:
-      - task: common:run:server
+      - npx vitest run
 
-  build:docker:
-    summary: Builds a Docker image for server mode deployment
+  test:e2e:
+    summary: Runs E2E tests with Playwright
+    dir: frontend
     cmds:
-      - task: common:build:docker
-
-  run:docker:
-    summary: Builds and runs the Docker image
-    cmds:
-      - task: common:run:docker
+      - npx playwright test

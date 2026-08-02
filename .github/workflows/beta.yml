@@ -7,9 +7,6 @@ on:
 permissions:
   contents: write
 
-env:
-  NODE_OPTIONS: "--max-old-space-size=4096"
-
 jobs:
   build:
     strategy:
@@ -19,27 +16,16 @@ jobs:
           - os: macos-latest
             goos: darwin
             goarch: arm64
-            suffix: ""
-            ext: ""
-            artifact: one_man_shop_beta_macos_arm64
+            artifact: one_man_shop_macos_arm64
           - os: macos-latest
             goos: darwin
             goarch: amd64
-            suffix: "-amd64"
-            ext: ""
-            artifact: one_man_shop_beta_macos_amd64
+            artifact: one_man_shop_macos_amd64
           - os: windows-latest
             goos: windows
             goarch: amd64
-            suffix: "-windows-amd64"
             ext: ".exe"
-            artifact: one_man_shop_beta_windows_amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            suffix: "-linux-amd64"
-            ext: ""
-            artifact: one_man_shop_beta_linux_amd64
+            artifact: one_man_shop_windows_amd64
 
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
@@ -57,12 +43,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "24"
-
-      - name: Install Linux build dependencies
-        if: matrix.goos == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev pkg-config
 
       - name: Cache Wails binary
         id: cache-wails
@@ -84,33 +64,30 @@ jobs:
         shell: bash
         run: rm -f frontend/.npmrc
 
-      - name: Install frontend deps
-        working-directory: frontend
-        run: npm install
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-
-      - name: Generate bindings
+      # Build binary (handles frontend, bindings, icons, compilation)
+      - name: Build
         shell: bash
-        run: wails3 generate bindings -clean=true -ts -i
+        run: wails3 task build
 
-      - name: Build binary
+      # macOS: package into .app bundle with code signing
+      - name: Package macOS .app
+        if: matrix.goos == 'darwin'
         shell: bash
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: ${{ matrix.goos == 'windows' && '0' || '1' }}
-          BUILD_TAGS: production
-        run: |
-          go build -tags "$BUILD_TAGS" -trimpath -buildvcs=false -ldflags="-w -s" -o "bin/${{ matrix.artifact }}${{ matrix.ext }}"
+        run: wails3 task darwin:create:app:bundle
 
-      - name: Upload artifact
+      - name: Upload macOS artifact
+        if: matrix.goos == 'darwin'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: bin/${{ matrix.artifact }}${{ matrix.ext }}
+          path: bin/
+
+      - name: Upload Windows artifact
+        if: matrix.goos == 'windows'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: bin/
 
   release:
     needs: build
@@ -137,7 +114,7 @@ jobs:
           for dir in */; do
             name="${dir%/}"
             cd "$name"
-            zip "../../release/${name}.zip" *
+            zip -r "../../release/${name}.zip" *
             cd ..
           done
 
