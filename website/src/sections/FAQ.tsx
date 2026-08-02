@@ -20,23 +20,23 @@ export const FAQ: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section style={{ padding: "96px 16px", background: "#F8FAFC" }}>
-      <div style={{ maxWidth: 768, margin: "0 auto" }}>
+    <section className="py-24 px-4 bg-gray-50">
+      <div className="max-w-3xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}
+          className="text-3xl sm:text-4xl font-bold text-center mb-4"
         >Frequently asked questions</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
+          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
         >Everything you need to know about One Man Shop.</motion.p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-col gap-3">
           {faqs.map((faq, i) => {
             const isOpen = openIndex === i;
             return (
@@ -46,12 +46,12 @@ export const FAQ: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.03 }}
-                style={{ background: "white", borderRadius: 12, border: "1px solid #F1F5F9", overflow: "hidden" }}
+                className="bg-white rounded-xl border border-gray-100 overflow-hidden"
               >
-                <button onClick={() => setOpenIndex(isOpen ? null : i)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}>
-                  <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 16, paddingRight: 16 }}>{faq.q}</span>
-                  <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown size={20} color="#9CA3AF" />
+                <button onClick={() => setOpenIndex(isOpen ? null : i)} className="w-full flex items-center justify-between p-5 text-left bg-none border-none cursor-pointer">
+                  <span className="font-medium text-gray-900 pr-4">{faq.q}</span>
+                  <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0">
+                    <ChevronDown size={20} className="text-gray-400" />
                   </motion.div>
                 </button>
                 <AnimatePresence>
@@ -63,7 +63,7 @@ export const FAQ: React.FC = () => {
                       transition={{ duration: 0.3 }}
                       style={{ overflow: "hidden" }}
                     >
-                      <p style={{ padding: "0 20px 20px", color: "#64748B", lineHeight: 1.6 }}>{faq.a}</p>
+                      <p className="px-5 pb-5 text-gray-500 leading-relaxed">{faq.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

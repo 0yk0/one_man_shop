@@ -11,23 +11,23 @@ const points = [
 
 export const PainPoints: React.FC = () => {
   return (
-    <section style={{ padding: "96px 16px", background: "white" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto" }}>
+    <section className="py-24 px-4 bg-white">
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}
+          className="text-3xl sm:text-4xl font-bold text-center mb-4"
         >Built for real shop problems</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
+          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
         >We know what small shop owners deal with every day.</motion.p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))", gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {points.map((p, i) => {
             const Icon = p.icon;
             return (
@@ -37,16 +37,16 @@ export const PainPoints: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
               >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                  <div style={{ flexShrink: 0, width: 48, height: 48, background: "rgba(37,99,235,0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Icon size={24} color="#2563EB" />
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-12 h-12 bg-blue-600/10 rounded-xl flex items-center justify-center">
+                    <Icon size={24} className="text-blue-600" />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 14, marginBottom: 4, textDecoration: "line-through", textDecorationColor: "#FCA5A5" }}>{p.problem}</p>
-                    <p style={{ color: "#0F172A", fontWeight: 500, display: "flex", alignItems: "center", gap: 8 }}>
-                      <Check size={16} color="#22C55E" style={{ flexShrink: 0 }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-400 text-sm mb-1 line-through decoration-red-300">{p.problem}</p>
+                    <p className="text-gray-900 font-medium flex items-center gap-2">
+                      <Check size={16} className="text-green-500 shrink-0" />
                       {p.solution}
                     </p>
                   </div>

@@ -1,26 +1,46 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
 export const Navbar: React.FC = () => {
+  const [open, setOpen] = useState(false);
+
   return (
     <motion.nav
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)", borderBottom: "1px solid #F1F5F9" }}
+      className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-gray-100"
     >
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 16px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img src="/appicon.png" alt="" style={{ width: 32, height: 32, borderRadius: 8 }} />
-          <span style={{ fontWeight: 700, color: "#0F172A", fontSize: 18 }}>One Man Shop</span>
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/appicon.png" alt="" className="w-8 h-8 rounded-lg" />
+          <span className="font-bold text-gray-900 text-lg">One Man Shop</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-          <a href="#features" style={{ fontSize: 14, color: "#4B5563", textDecoration: "none" }}>Features</a>
-          <a href="#screenshots" style={{ fontSize: 14, color: "#4B5563", textDecoration: "none" }}>Screenshots</a>
-          <a href="#faq" style={{ fontSize: 14, color: "#4B5563", textDecoration: "none" }}>FAQ</a>
-          <a href="#download" style={{ background: "#2563EB", color: "white", fontSize: 14, fontWeight: 600, padding: "8px 16px", borderRadius: 8, textDecoration: "none" }}>Download</a>
+
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+          <a href="#screenshots" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Screenshots</a>
+          <a href="#faq" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+          <a href="#download" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors">Download</a>
         </div>
+
+        {/* Hamburger */}
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 -mr-2">
+          {open ? <X size={24} className="text-gray-700" /> : <Menu size={24} className="text-gray-700" />}
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden bg-white border-b border-gray-100 px-4 pb-4 flex flex-col gap-2">
+          <a href="#features" onClick={() => setOpen(false)} className="text-gray-600 hover:text-gray-900 py-3 px-3 rounded-lg hover:bg-gray-50 transition-colors">Features</a>
+          <a href="#screenshots" onClick={() => setOpen(false)} className="text-gray-600 hover:text-gray-900 py-3 px-3 rounded-lg hover:bg-gray-50 transition-colors">Screenshots</a>
+          <a href="#faq" onClick={() => setOpen(false)} className="text-gray-600 hover:text-gray-900 py-3 px-3 rounded-lg hover:bg-gray-50 transition-colors">FAQ</a>
+          <a href="#download" onClick={() => setOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-3 rounded-lg text-center transition-colors">Download</a>
+        </div>
+      )}
     </motion.nav>
   );
 };

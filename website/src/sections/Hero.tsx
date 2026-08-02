@@ -4,31 +4,27 @@ import { Download, Github } from "lucide-react";
 
 export const Hero: React.FC = () => {
   return (
-    <section style={{
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      padding: "120px 24px 64px", position: "relative", overflow: "hidden",
-      background: "linear-gradient(to bottom, rgba(239,246,255,0.5), #FFFFFF)",
-    }}>
-      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: -160, right: -160, width: 320, height: 320, background: "rgba(37,99,235,0.05)", borderRadius: "50%", filter: "blur(60px)" }} />
-        <div style={{ position: "absolute", bottom: -160, left: -160, width: 320, height: 320, background: "rgba(37,99,235,0.05)", borderRadius: "50%", filter: "blur(60px)" }} />
+    <section className="flex flex-col items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl" />
       </div>
 
-      <div style={{ position: "relative", zIndex: 10, maxWidth: 1024, margin: "0 auto", textAlign: "center" }}>
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", damping: 12, stiffness: 100 }}
-          style={{ marginBottom: 32, display: "inline-block" }}
+          className="mb-8 inline-block"
         >
-          <img src="/appicon.png" alt="One Man Shop" style={{ width: 112, height: 112, borderRadius: 24, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }} />
+          <img src="/appicon.png" alt="One Man Shop" className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl shadow-2xl" />
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          style={{ fontSize: 72, fontWeight: 800, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.02em" }}
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-gray-900 mb-4 tracking-tight"
         >
           One Man Shop
         </motion.h1>
@@ -37,26 +33,26 @@ export const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.5 }}
-          style={{ fontSize: 24, color: "#64748B", marginBottom: 40, maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.6 }}
+          className="text-lg sm:text-xl md:text-2xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
           Your shop deserves a simple POS.
           <br />
-          <span style={{ color: "#94A3B8" }}>No subscriptions. No internet needed. Scan to pay.</span>
+          <span className="text-gray-400">No subscriptions. No internet needed. Scan to pay.</span>
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.5 }}
-          style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 64, flexWrap: "wrap" }}
+          className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
         >
-          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
+          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
             <Download size={20} /> Download for macOS
           </a>
-          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" style={{ background: "#2563EB", color: "white", fontWeight: 600, padding: "14px 28px", borderRadius: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
+          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
             <Download size={20} /> Download for Windows
           </a>
-          <a href="https://github.com/0yk0/one_man_shop" target="_blank" rel="noopener noreferrer" style={{ background: "white", color: "#374151", fontWeight: 600, padding: "14px 28px", borderRadius: 12, border: "2px solid #E5E7EB", textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 18 }}>
+          <a href="https://github.com/0yk0/one_man_shop" target="_blank" rel="noopener noreferrer" className="bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3.5 px-7 rounded-xl border-2 border-gray-200 hover:border-gray-300 flex items-center justify-center gap-2 text-base sm:text-lg transition-all">
             <Github size={20} /> View on GitHub
           </a>
         </motion.div>
@@ -65,10 +61,10 @@ export const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.6 }}
-          style={{ maxWidth: 896, margin: "0 auto" }}
+          className="max-w-4xl mx-auto"
         >
-          <div style={{ borderRadius: 16, overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #E2E8F0" }}>
-            <img src="/screenshots/screenshot-06.png" alt="One Man Shop POS Screen" style={{ width: "100%", height: "auto", display: "block" }} />
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+            <img src="/screenshots/screenshot-06.png" alt="One Man Shop POS Screen" className="w-full h-auto block" />
           </div>
         </motion.div>
       </div>

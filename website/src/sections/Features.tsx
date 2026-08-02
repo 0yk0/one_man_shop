@@ -13,23 +13,23 @@ const features = [
 
 export const Features: React.FC = () => {
   return (
-    <section style={{ padding: "96px 16px", background: "white" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto" }}>
+    <section className="py-24 px-4 bg-white">
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}
-        >Everything you need</motion.h2>
+          className="text-3xl sm:text-4xl font-bold text-center mb-4"
+        >Everything you need to run your shop — nothing you don&apos;t.</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
-        >Everything you need to run your shop — nothing you don't.</motion.p>
+          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
+        />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => {
             const Icon = f.icon;
             return (
@@ -39,13 +39,13 @@ export const Features: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, type: "spring", damping: 15, stiffness: 100 }}
-                style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div style={{ width: 48, height: 48, background: "rgba(37,99,235,0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                  <Icon size={24} color="#2563EB" />
+                <div className="w-12 h-12 bg-blue-600/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon size={24} className="text-blue-600" />
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>{f.title}</h3>
-                <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{f.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
             );
           })}

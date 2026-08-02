@@ -10,23 +10,23 @@ const steps = [
 
 export const HowItWorks: React.FC = () => {
   return (
-    <section style={{ padding: "96px 16px", background: "white" }}>
-      <div style={{ maxWidth: 1024, margin: "0 auto" }}>
+    <section className="py-24 px-4 bg-white">
+      <div className="max-w-5xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}
+          className="text-3xl sm:text-4xl font-bold text-center mb-4"
         >Start selling in 3 steps</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
+          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
         >Takes less than 2 minutes. Seriously.</motion.p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
           {steps.map((step, i) => {
             const Icon = step.icon;
             return (
@@ -36,14 +36,14 @@ export const HowItWorks: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, type: "spring", damping: 12, stiffness: 100 }}
-                style={{ textAlign: "center" }}
+                className="text-center"
               >
-                <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, background: "#2563EB", borderRadius: 16, boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)", marginBottom: 24 }}>
-                  <Icon size={28} color="white" />
-                  <span style={{ position: "absolute", top: -8, right: -8, width: 24, height: 24, background: "#111827", color: "white", fontSize: 12, fontWeight: 700, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{step.number}</span>
+                <div className="relative inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/30 mb-6">
+                  <Icon size={28} className="text-white" />
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 text-white text-xs font-bold rounded-full flex items-center justify-center">{step.number}</span>
                 </div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>{step.title}</h3>
-                <p style={{ color: "#64748B", maxWidth: 256, margin: "0 auto" }}>{step.desc}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-gray-500 max-w-[256px] mx-auto">{step.desc}</p>
               </motion.div>
             );
           })}
