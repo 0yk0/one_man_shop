@@ -13,3 +13,4 @@ build/android/gen/
 frontend/test-results/
 frontend/playwright-report/
 frontend/playwright/.cache/
+website/node_modules/
