@@ -114,7 +114,7 @@ jobs:
           for dir in */; do
             name="${dir%/}"
             cd "$name"
-            zip "../../release/${name}.zip" *
+            zip -r "../../release/${name}.zip" *
             cd ..
           done
 
