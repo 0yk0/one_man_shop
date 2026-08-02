@@ -28,7 +28,6 @@ tasks:
             ref: .BUILD_FLAGS
           DEV:
             ref: .DEV
-      - task: common:generate:icons:windows
     cmds:
       - 'go build {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"'
     vars:
