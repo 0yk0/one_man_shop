@@ -1,27 +1,19 @@
 import React from "react";
-import { Player } from "@remotion/player";
-import { LandingPage } from "./remotion/LandingPage";
+import { Navbar, Hero, TrustBar, Features, PainPoints, ScreenshotGallery, HowItWorks, FAQ, DownloadCTA, Footer } from "./sections";
 
 export const App: React.FC = () => {
   return (
-    <div style={{ width: "100%", minHeight: "100vh", background: "white" }}>
-      <Player
-        component={LandingPage}
-        durationInFrames={300}
-        compositionWidth={1440}
-        compositionHeight={5200}
-        fps={30}
-        style={{
-          width: "100%",
-          height: "auto",
-        }}
-        controls={false}
-        autoPlay={true}
-        loop={false}
-        clickToPlay={false}
-        showVolumeControls={false}
-        spaceKeyToPlayOrPause={false}
-      />
+    <div style={{ fontFamily: "\"Inter\", system-ui, sans-serif" }}>
+      <Navbar />
+      <Hero />
+      <TrustBar />
+      <div id="features"><Features /></div>
+      <PainPoints />
+      <div id="screenshots"><ScreenshotGallery /></div>
+      <HowItWorks />
+      <div id="faq"><FAQ /></div>
+      <DownloadCTA />
+      <Footer />
     </div>
   );
 };

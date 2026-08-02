@@ -1,5 +1,5 @@
 import React from "react";
-import { useCurrentFrame, useVideoConfig, spring } from "remotion";
+import { motion } from "framer-motion";
 import { Shield, Wifi, Heart, Database } from "lucide-react";
 
 const badges = [
@@ -10,20 +10,23 @@ const badges = [
 ];
 
 export const TrustBar: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
   return (
     <section style={{ padding: "32px 16px", background: "#F8FAFC", borderTop: "1px solid #F1F5F9", borderBottom: "1px solid #F1F5F9" }}>
       <div style={{ maxWidth: 1024, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 48 }}>
         {badges.map((badge, i) => {
-          const scale = spring({ frame: frame - i * 5, fps, from: 0, to: 1, config: { damping: 12, stiffness: 100 } });
           const Icon = badge.icon;
           return (
-            <div key={badge.text} style={{ display: "flex", alignItems: "center", gap: 8, color: "#4B5563", transform: `scale(${scale})` }}>
+            <motion.div
+              key={badge.text}
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, type: "spring", damping: 12, stiffness: 100 }}
+              style={{ display: "flex", alignItems: "center", gap: 8, color: "#4B5563" }}
+            >
               <Icon size={18} color="#2563EB" />
               <span style={{ fontWeight: 500, fontSize: 14 }}>{badge.text}</span>
-            </div>
+            </motion.div>
           );
         })}
       </div>

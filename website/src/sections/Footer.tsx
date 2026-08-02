@@ -1,6 +1,5 @@
 import React from "react";
 import { Github, Heart } from "lucide-react";
-import { staticFile } from "remotion";
 
 export const Footer: React.FC = () => {
   return (
@@ -9,17 +8,17 @@ export const Footer: React.FC = () => {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
-              <img src={staticFile("appicon.png")} alt="" style={{ width: 32, height: 32, borderRadius: 8 }} />
+              <img src="/appicon.png" alt="" style={{ width: 32, height: 32, borderRadius: 8 }} />
               <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>One Man Shop</span>
             </div>
             <p style={{ fontSize: 14 }}>Built for small shops, by a small shop owner.</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" style={{ color: "#9CA3AF", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+            <a href="https://github.com/0yk0/one_man_shop" target="_blank" rel="noopener noreferrer" style={{ color: "#9CA3AF", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
               <Github size={18} /> GitHub
             </a>
-            <a href="#" style={{ color: "#9CA3AF", textDecoration: "none" }}>Docs</a>
-            <a href="#" style={{ color: "#9CA3AF", textDecoration: "none" }}>Report Issue</a>
+            <a href="#faq" style={{ color: "#9CA3AF", textDecoration: "none" }}>FAQ</a>
+            <a href="https://github.com/0yk0/one_man_shop/issues" target="_blank" rel="noopener noreferrer" style={{ color: "#9CA3AF", textDecoration: "none" }}>Report Issue</a>
           </div>
         </div>
         <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid #374151", textAlign: "center", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>

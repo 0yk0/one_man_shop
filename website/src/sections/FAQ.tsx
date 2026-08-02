@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCurrentFrame, useVideoConfig, spring } from "remotion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 const faqs = [
@@ -17,30 +17,56 @@ const faqs = [
 
 export const FAQ: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
 
   return (
     <section style={{ padding: "96px 16px", background: "#F8FAFC" }}>
       <div style={{ maxWidth: 768, margin: "0 auto" }}>
-        <h2 style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}>Frequently asked questions</h2>
-        <p style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}>Everything you need to know about One Man Shop.</p>
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          style={{ fontSize: 40, fontWeight: 700, textAlign: "center", marginBottom: 16 }}
+        >Frequently asked questions</motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          style={{ fontSize: 18, color: "#64748B", textAlign: "center", maxWidth: 576, margin: "0 auto 48px" }}
+        >Everything you need to know about One Man Shop.</motion.p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {faqs.map((faq, i) => {
-            const delay = i * 3;
-            const itemScale = spring({ frame: frame - delay, fps, from: 0, to: 1, config: { damping: 15, stiffness: 100 } });
             const isOpen = openIndex === i;
             return (
-              <div key={i} style={{ background: "white", borderRadius: 12, border: "1px solid #F1F5F9", overflow: "hidden", transform: `scale(${itemScale})` }}>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.03 }}
+                style={{ background: "white", borderRadius: 12, border: "1px solid #F1F5F9", overflow: "hidden" }}
+              >
                 <button onClick={() => setOpenIndex(isOpen ? null : i)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}>
                   <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 16, paddingRight: 16 }}>{faq.q}</span>
-                  <ChevronDown size={20} color="#9CA3AF" style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
+                  <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown size={20} color="#9CA3AF" />
+                  </motion.div>
                 </button>
-                <div style={{ maxHeight: isOpen ? 160 : 0, overflow: "hidden", transition: "max-height 0.3s" }}>
-                  <p style={{ padding: "0 20px 20px", color: "#64748B", lineHeight: 1.6 }}>{faq.a}</p>
-                </div>
-              </div>
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <p style={{ padding: "0 20px 20px", color: "#64748B", lineHeight: 1.6 }}>{faq.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
         </div>

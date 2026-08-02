@@ -1,16 +1,16 @@
 import React from "react";
-import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { motion } from "framer-motion";
 import { Apple, Monitor } from "lucide-react";
 
 export const DownloadCTA: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const scale = spring({ frame, fps, from: 0.9, to: 1, config: { damping: 15, stiffness: 100 } });
-  const opacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
-
   return (
     <section id="download" style={{ padding: "96px 16px", background: "linear-gradient(to bottom, #FFFFFF, rgba(239,246,255,0.5))" }}>
-      <div style={{ maxWidth: 896, margin: "0 auto", textAlign: "center", opacity, transform: `scale(${scale})` }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        style={{ maxWidth: 896, margin: "0 auto", textAlign: "center" }}
+      >
         <h2 style={{ fontSize: 48, fontWeight: 700, color: "#0F172A", marginBottom: 16 }}>Ready to simplify your shop?</h2>
         <p style={{ fontSize: 20, color: "#64748B", marginBottom: 40 }}>Free download. No sign-up. No internet required.</p>
 
@@ -23,7 +23,7 @@ export const DownloadCTA: React.FC = () => {
           </a>
         </div>
         <p style={{ fontSize: 14, color: "#9CA3AF" }}>Works on macOS 12+ and Windows 10+ · Version 0.1.0 · MIT License</p>
-      </div>
+      </motion.div>
     </section>
   );
 };
