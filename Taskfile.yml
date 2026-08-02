@@ -19,9 +19,9 @@ tasks:
 
   build:unsupported:
     summary: Unsupported platform
-    cmds:
-      - echo "Error: Building on {{OS}} is not supported. Use macOS or Windows."
-      - exit 1
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Building on {{OS}} is not supported. Use macOS or Windows.
 
   package:
     summary: Packages a production build of the application for the current platform
@@ -30,9 +30,9 @@ tasks:
 
   package:unsupported:
     summary: Unsupported platform
-    cmds:
-      - echo "Error: Packaging on {{OS}} is not supported. Use macOS or Windows."
-      - exit 1
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Packaging on {{OS}} is not supported. Use macOS or Windows.
 
   run:
     summary: Runs the application for the current platform
@@ -41,9 +41,9 @@ tasks:
 
   run:unsupported:
     summary: Unsupported platform
-    cmds:
-      - echo "Error: Running on {{OS}} is not supported. Use macOS or Windows."
-      - exit 1
+    preconditions:
+      - sh: test {{OS}} = unsupported
+        msg: Running on {{OS}} is not supported. Use macOS or Windows.
 
   dev:
     summary: Runs the application in development mode
