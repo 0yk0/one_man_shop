@@ -1,0 +1,58 @@
+version: '3'
+
+includes:
+  common: ../Taskfile.yml
+
+tasks:
+  build:
+    summary: Builds the application for Windows
+    cmds:
+      - task: build:native
+        vars:
+          ARCH: '{{.ARCH}}'
+          DEV: '{{.DEV}}'
+          OUTPUT: '{{.OUTPUT}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+    vars:
+      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}.exe'
+      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+
+  build:native:
+    summary: Builds the application natively on Windows
+    internal: true
+    deps:
+      - task: common:go:mod:tidy
+      - task: common:build:frontend
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+          DEV:
+            ref: .DEV
+      - task: common:generate:icons:windows
+    cmds:
+      - 'go build {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"'
+    vars:
+      BUILD_FLAGS: '{{if eq .DEV "true"}}{{if .EXTRA_TAGS}}-tags {{.EXTRA_TAGS}} {{end}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -trimpath -buildvcs=false -ldflags="-w -s"{{end}}'
+      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}.exe'
+      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+    env:
+      GOOS: windows
+      CGO_ENABLED: 0
+      GOARCH: '{{.ARCH | default "amd64"}}'
+
+  package:
+    summary: Packages the application as a distributable .exe
+    deps:
+      - task: build
+    cmds:
+      - task: create:exe
+
+  create:exe:
+    summary: Copies the .exe to bin/ for distribution
+    internal: true
+    cmds:
+      - echo "Windows .exe ready at {{.BIN_DIR}}/{{.APP_NAME}}.exe"
+
+  run:
+    cmds:
+      - '"{{.BIN_DIR}}/{{.APP_NAME}}.exe"'

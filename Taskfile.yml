@@ -9,22 +9,41 @@ vars:
 includes:
   common: ./build/Taskfile.yml
   darwin: ./build/darwin/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
 
 tasks:
   build:
-    summary: Builds the application
+    summary: Builds the application for the current platform
     cmds:
-      - task: darwin:build
+      - task: '{{if eq OS "darwin"}}darwin:build{{else if eq OS "windows"}}windows:build{{else}}build:unsupported{{end}}'
+
+  build:unsupported:
+    summary: Unsupported platform
+    cmds:
+      - echo "Error: Building on {{OS}} is not supported. Use macOS or Windows."
+      - exit 1
 
   package:
-    summary: Packages a production build of the application
+    summary: Packages a production build of the application for the current platform
     cmds:
-      - task: darwin:package
+      - task: '{{if eq OS "darwin"}}darwin:package{{else if eq OS "windows"}}windows:package{{else}}package:unsupported{{end}}'
+
+  package:unsupported:
+    summary: Unsupported platform
+    cmds:
+      - echo "Error: Packaging on {{OS}} is not supported. Use macOS or Windows."
+      - exit 1
 
   run:
-    summary: Runs the application
+    summary: Runs the application for the current platform
     cmds:
-      - task: darwin:run
+      - task: '{{if eq OS "darwin"}}darwin:run{{else if eq OS "windows"}}windows:run{{else}}run:unsupported{{end}}'
+
+  run:unsupported:
+    summary: Unsupported platform
+    cmds:
+      - echo "Error: Running on {{OS}} is not supported. Use macOS or Windows."
+      - exit 1
 
   dev:
     summary: Runs the application in development mode

@@ -202,6 +202,17 @@ tasks:
     cmds:
       - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -iconcomposerinput appicon.icon -macassetdir darwin
 
+  generate:icons:windows:
+    summary: Generates Windows `.ico` from an image
+    run: once
+    dir: build
+    sources:
+      - "appicon.png"
+    generates:
+      - "windows/icon.ico"
+    cmds:
+      - wails3 generate icons -input appicon.png -winfilename windows/icon.ico
+
   dev:frontend:
     summary: Runs the frontend in development mode
     deps:

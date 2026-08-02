@@ -26,10 +26,6 @@ jobs:
             goarch: amd64
             ext: ".exe"
             artifact: one_man_shop_windows_amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            artifact: one_man_shop_linux_amd64
 
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
@@ -47,12 +43,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "24"
-
-      - name: Install Linux build dependencies
-        if: matrix.goos == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev pkg-config
 
       - name: Cache Wails binary
         id: cache-wails
@@ -85,34 +75,19 @@ jobs:
         shell: bash
         run: wails3 task darwin:create:app:bundle
 
-      # Linux: create AppImage
-      - name: Package Linux AppImage
-        if: matrix.goos == 'linux'
-        shell: bash
-        run: wails3 task linux:create:appimage
-
       - name: Upload macOS artifact
         if: matrix.goos == 'darwin'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: bin/*.app/**
+          path: bin/
 
       - name: Upload Windows artifact
         if: matrix.goos == 'windows'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: bin/*.exe
-
-      - name: Upload Linux artifact
-        if: matrix.goos == 'linux'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.artifact }}
-          path: |
-            bin/*.AppImage
-            bin/one_man_shop
+          path: bin/
 
   release:
     needs: build
