@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, CircleDollarSign } from 'lucide-react'
 import { useDisplayStore, useSyncDisplayState } from '../../stores/displayStore'
 
 export default function CustomerDisplay() {
@@ -55,11 +55,38 @@ export default function CustomerDisplay() {
 
   // Thank You View
   if (view === 'thankyou') {
+    const totalWithTax = total + tax
     return (
       <div className="min-h-screen bg-stone-200 flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4"><CheckCircle size={120} className="text-green-600" strokeWidth={1.5} /></div>
-          <h1 className="text-5xl font-bold text-green-600 mb-3">Thank You!</h1>
+        <div className="text-center px-8">
+          {/* Checkmark with pulse ring */}
+          <div className="relative inline-block mb-8">
+            <span className="absolute inset-0 rounded-full bg-green-500/20 animate-ping"></span>
+            <div className="relative animate-[checkPop_0.5s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+              <CheckCircle size={160} className="text-green-600 drop-shadow-lg" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Thank You */}
+          <h1 className="text-6xl font-black text-stone-800 mb-3 animate-[fadeSlideUp_0.6s_ease-out_forwards]">Thank You!</h1>
+
+          {/* Shop name */}
+          <p className="text-2xl font-bold text-stone-500 tracking-wide mb-6 animate-[fadeSlideUp_0.6s_ease-out_0.3s_forwards] opacity-0">{shop_name}</p>
+
+          {/* Amount paid */}
+          {totalWithTax > 0 && (
+            <div className="animate-[fadeSlideUp_0.6s_ease-out_0.6s_forwards] opacity-0">
+              <div className="inline-block bg-white rounded-2xl px-10 py-5 border-2 border-stone-200 shadow-lg">
+                <CircleDollarSign size={28} className="mx-auto text-stone-400 mb-2" />
+                <p className="text-sm font-bold tracking-[0.2em] text-stone-400 uppercase mb-1">Amount Paid</p>
+                <p className="text-5xl font-black font-mono text-stone-800">₹{totalWithTax.toFixed(2)}</p>
+                <p className="text-sm text-stone-400 mt-2 capitalize">{payment_method} Payment</p>
+              </div>
+            </div>
+          )}
+
+          {/* Visit again */}
+          <p className="text-lg text-stone-400 mt-10 tracking-wide animate-[fadeSlideUp_0.6s_ease-out_0.9s_forwards] opacity-0">We hope to see you again!</p>
         </div>
       </div>
     )

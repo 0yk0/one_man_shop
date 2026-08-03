@@ -9,6 +9,7 @@ import {
 import ProductForm from '../components/Products/ProductForm'
 import { useSnackbar } from 'notistack'
 import { Plus, Pencil, Trash2, Package, Loader2 } from 'lucide-react'
+import { sounds } from '../lib/sounds'
 
 type Product = import("../bindings").Product
 
@@ -46,6 +47,7 @@ export default function ProductsPage() {
         enqueueSnackbar(`Updated "${product.name}"`, { variant: 'success' })
       } else {
         await CreateProduct(product)
+        sounds.create()
         enqueueSnackbar(`Added "${product.name}"`, { variant: 'success' })
       }
       setShowForm(false)
@@ -64,6 +66,7 @@ export default function ProductsPage() {
     if (!deletingProduct) return
     try {
       await DeleteProduct(deletingProduct.id)
+      sounds.delete()
       enqueueSnackbar(`Deleted "${deletingProduct.name}"`, { variant: 'success' })
       loadProducts()
     } catch (err) {

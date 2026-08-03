@@ -12,6 +12,7 @@ import {
   ShoppingCart, Minus, Plus, Trash2, ArrowLeft, CheckCircle, Loader2,
   Receipt, Monitor, MonitorOff, RefreshCw, Search, X
 } from 'lucide-react'
+import { sounds } from '../lib/sounds'
 
 type Product = import("../bindings").Product
 type CartItem = import("../bindings").CartItem
@@ -154,11 +155,13 @@ export default function POSScreen() {
 
   const handleProductTap = (product: Product) => {
     addToCart(product)
+    sounds.addToCart()
     setTappedId(product.id)
     setTimeout(() => setTappedId(null), 150)
   }
 
   const updateQty = (productId: string, delta: number) => {
+    delta > 0 ? sounds.qtyUp() : sounds.qtyDown()
     setCart(prev => prev.map(i => {
       if (i.product_id === productId) {
         const newQty = i.qty + delta
@@ -172,6 +175,7 @@ export default function POSScreen() {
   }
 
   const removeItem = (productId: string) => {
+    sounds.removeFromCart()
     setCart(prev => prev.filter(i => i.product_id !== productId))
   }
 
@@ -181,6 +185,7 @@ export default function POSScreen() {
   }
 
   const confirmClearCart = () => {
+    sounds.clearCart()
     setCart([])
     setShowPayment(false)
     setCompleted(false)
@@ -232,6 +237,7 @@ export default function POSScreen() {
 
       await CreateTransaction(transaction)
       setCompleted(true)
+      sounds.paymentSuccess()
       enqueueSnackbar(`Payment of ₹${total.toFixed(2)} recorded`, { variant: 'success' })
 
       ConfirmPayment()
