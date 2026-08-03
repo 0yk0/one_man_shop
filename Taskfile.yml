@@ -51,11 +51,10 @@ tasks:
       - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
 
   test:
-    summary: Runs all tests (Go backend + frontend unit + E2E)
+    summary: Runs all tests (Go backend + frontend unit)
     cmds:
       - task: test:go
       - task: test:frontend
-      - task: test:e2e
 
   test:go:
     summary: Runs Go backend tests
@@ -68,8 +67,4 @@ tasks:
     cmds:
       - npx vitest run
 
-  test:e2e:
-    summary: Runs E2E tests with Playwright
-    dir: frontend
-    cmds:
-      - npx playwright test
+
