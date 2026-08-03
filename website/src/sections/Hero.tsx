@@ -1,8 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Download, Github } from "lucide-react";
+import { Download } from "lucide-react";
+import { useDownloadUrl } from "../hooks/useDownloadUrl";
 
 export const Hero: React.FC = () => {
+  const { url, label, otherUrl, otherLabel } = useDownloadUrl();
   return (
     <section className="flex flex-col items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -35,9 +37,9 @@ export const Hero: React.FC = () => {
           transition={{ delay: 0.25, duration: 0.5 }}
           className="text-lg sm:text-xl md:text-2xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
-          Your shop deserves a simple POS.
+          Just Scan to Pay.
           <br />
-          <span className="text-gray-400">No subscriptions. No internet needed. Scan to pay.</span>
+          <span className="text-gray-400">No subscriptions. No internet needed.</span>
         </motion.p>
 
         <motion.div
@@ -46,16 +48,16 @@ export const Hero: React.FC = () => {
           transition={{ delay: 0.35, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
         >
-          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
-            <Download size={20} /> Download for macOS
-          </a>
-          <a href="https://github.com/0yk0/one_man_shop/releases/latest" target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
-            <Download size={20} /> Download for Windows
-          </a>
-          <a href="https://github.com/0yk0/one_man_shop" target="_blank" rel="noopener noreferrer" className="bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3.5 px-7 rounded-xl border-2 border-gray-200 hover:border-gray-300 flex items-center justify-center gap-2 text-base sm:text-lg transition-all">
-            <Github size={20} /> View on GitHub
+          <a href={url} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
+            <Download size={20} /> {label}
           </a>
         </motion.div>
+        <p className="text-sm text-gray-400 mb-16">
+          Also available for{" "}
+          <a href={otherUrl} className="underline hover:text-gray-600">
+            {otherLabel}
+          </a>
+        </p>
 
         <motion.div
           initial={{ opacity: 0, y: 40 }}
