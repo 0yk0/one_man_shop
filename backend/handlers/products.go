@@ -97,5 +97,5 @@ func (a *AppHandler) DeleteProduct(id string) error {
 		return fmt.Errorf("product not found: %w", err)
 	}
 	record.Set("active", false)
-	return db.App.Save(record)
+	return db.App.SaveNoValidate(record)
 }

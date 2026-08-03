@@ -34,6 +34,7 @@ export default function POSScreen() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
   const [tappedId, setTappedId] = useState<string | null>(null)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -175,7 +176,11 @@ export default function POSScreen() {
   }
 
   const clearCart = () => {
-    if (cart.length > 0 && !window.confirm('Clear all items from cart?')) return
+    if (cart.length === 0) return
+    setShowClearConfirm(true)
+  }
+
+  const confirmClearCart = () => {
     setCart([])
     setShowPayment(false)
     setCompleted(false)
@@ -184,6 +189,7 @@ export default function POSScreen() {
     if (displayOpen) {
       ClearCustomerDisplay()
     }
+    setShowClearConfirm(false)
   }
 
   // ========== Payment ==========
@@ -261,9 +267,29 @@ export default function POSScreen() {
     <div className="flex h-full">
       {/* Product Grid */}
       <div className="flex-1 p-6 overflow-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Products</h2>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 mb-4">
+          {products.length > 0 && (
+            <div className="relative flex-1 max-w-sm">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search products... (press /)"
+                className="input input-bordered w-full pl-10 pr-10"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+                  onClick={() => { setSearch(''); searchInputRef.current?.focus() }}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          )}
+          <div className="flex items-center gap-2 shrink-0">
             {displayOpen && (
               <button
                 className="btn btn-sm btn-ghost gap-1"
@@ -287,29 +313,6 @@ export default function POSScreen() {
           </div>
         </div>
 
-        {/* Search bar */}
-        {products.length > 0 && (
-          <div className="relative mb-4 max-w-sm">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search products... (press /)"
-              className="input input-bordered w-full pl-10 pr-10"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-                onClick={() => { setSearch(''); searchInputRef.current?.focus() }}
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        )}
-
         {products.length === 0 ? (
           <div className="text-center py-16 text-base-content/40">
             <ShoppingCart size={48} className="mx-auto mb-3 opacity-30" />
@@ -323,7 +326,7 @@ export default function POSScreen() {
             <button className="btn btn-ghost btn-sm mt-2" onClick={() => setSearch('')}>Clear search</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
@@ -335,9 +338,9 @@ export default function POSScreen() {
                   <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQtyMap[product.id]}</span>
                 )}
                 {product.image_data ? (
-                  <img src={product.image_data} alt={product.name} className="w-full h-32 object-cover" />
+                  <img src={product.image_data} alt={product.name} className="w-full h-24 sm:h-28 md:h-32 object-cover" />
                 ) : (
-                  <div className="w-full h-32 bg-base-200 flex items-center justify-center">
+                  <div className="w-full h-24 sm:h-28 md:h-32 bg-base-200 flex items-center justify-center">
                     <ShoppingCart size={32} className="opacity-20" />
                   </div>
                 )}
@@ -352,7 +355,7 @@ export default function POSScreen() {
       </div>
 
       {/* Cart Sidebar */}
-      <div className="w-96 bg-base-100 border-l border-base-300 flex flex-col">
+      <div className="w-72 md:w-80 lg:w-96 bg-base-100 border-l border-base-300 flex flex-col shrink-0">
         <div className="p-4 border-b border-base-300">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold flex items-center gap-2">
@@ -377,7 +380,14 @@ export default function POSScreen() {
           ) : (
             <div className="space-y-2">
               {cart.map(item => (
-                <div key={item.product_id} className="flex items-center gap-2 bg-base-200 rounded-lg p-3">
+                <div key={item.product_id} className="flex items-center gap-3 bg-base-200 rounded-lg p-3">
+                  <button
+                    className="btn btn-sm btn-circle btn-ghost text-error shrink-0"
+                    onClick={() => removeItem(item.product_id)}
+                    aria-label={`Remove ${item.name}`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.name}</p>
                     <p className="text-xs text-base-content/60">₹{item.price.toFixed(2)} × {item.qty}</p>
@@ -399,16 +409,7 @@ export default function POSScreen() {
                       <Plus size={18} />
                     </button>
                   </div>
-                  <div className="text-right min-w-[70px]">
-                    <p className="font-medium text-sm">₹{item.subtotal.toFixed(2)}</p>
-                    <button
-                      className="btn btn-xs btn-ghost text-error gap-1 mt-0.5"
-                      onClick={() => removeItem(item.product_id)}
-                      aria-label={`Remove ${item.name}`}
-                    >
-                      <Trash2 size={12} /> Remove
-                    </button>
-                  </div>
+                  <p className="font-medium text-sm min-w-[70px] text-right">₹{item.subtotal.toFixed(2)}</p>
                 </div>
               ))}
             </div>
@@ -513,6 +514,27 @@ export default function POSScreen() {
           )}
         </div>
       </div>
+
+      {/* Clear Cart Confirmation Modal */}
+      {showClearConfirm && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Clear Cart</h3>
+            <p className="py-4">Are you sure you want to clear all items from the cart?</p>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setShowClearConfirm(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-error" onClick={confirmClearCart}>
+                Clear
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowClearConfirm(false)}>close</button>
+          </form>
+        </dialog>
+      )}
     </div>
   )
 }

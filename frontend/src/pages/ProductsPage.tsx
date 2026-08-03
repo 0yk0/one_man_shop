@@ -20,6 +20,7 @@ export default function ProductsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [taxEnabled, setTaxEnabled] = useState(false)
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const { enqueueSnackbar } = useSnackbar()
 
   const loadProducts = useCallback(async () => {
@@ -55,14 +56,20 @@ export default function ProductsPage() {
     }
   }
 
-  const handleDelete = async (product: Product) => {
-    if (!confirm(`Delete "${product.name}"?`)) return
+  const handleDeleteClick = (product: Product) => {
+    setDeletingProduct(product)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingProduct) return
     try {
-      await DeleteProduct(product.id)
-      enqueueSnackbar(`Deleted "${product.name}"`, { variant: 'success' })
+      await DeleteProduct(deletingProduct.id)
+      enqueueSnackbar(`Deleted "${deletingProduct.name}"`, { variant: 'success' })
       loadProducts()
     } catch (err) {
       enqueueSnackbar(String(err), { variant: 'error' })
+    } finally {
+      setDeletingProduct(null)
     }
   }
 
@@ -161,7 +168,7 @@ export default function ProductsPage() {
                         </button>
                         <button
                           className="btn btn-ghost btn-xs text-error"
-                          onClick={() => handleDelete(product)}
+                          onClick={() => handleDeleteClick(product)}
                         >
                           <Trash2 size={14} />
                           Delete
@@ -187,6 +194,29 @@ export default function ProductsPage() {
             setEditingProduct(null)
           }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Delete Product</h3>
+            <p className="py-4">
+              Are you sure you want to delete <strong>{deletingProduct.name}</strong>?
+            </p>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setDeletingProduct(null)}>
+                Cancel
+              </button>
+              <button className="btn btn-error" onClick={confirmDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setDeletingProduct(null)}>close</button>
+          </form>
+        </dialog>
       )}
     </div>
   )
