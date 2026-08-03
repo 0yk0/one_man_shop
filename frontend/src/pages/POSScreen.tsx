@@ -202,6 +202,7 @@ export default function POSScreen() {
     try {
       const upi = await GetUPIString(amount)
       setUpiString(upi)
+      if (upi) sounds.qrReady()
       return upi
     } catch (err) {
       console.error('Failed to generate UPI string:', err)

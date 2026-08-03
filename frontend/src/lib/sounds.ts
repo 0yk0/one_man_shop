@@ -48,6 +48,13 @@ export const sounds = {
     setTimeout(() => playTone(784, 0.2, 'sine', 0.3), 120)
   },
 
+  /** Bright three-note ascending chime — QR code ready */
+  qrReady: () => {
+    playTone(587, 0.1, 'sine', 0.25)   // D5
+    setTimeout(() => playTone(740, 0.1, 'sine', 0.25), 90)  // F#5
+    setTimeout(() => playTone(880, 0.18, 'sine', 0.3), 180)  // A5
+  },
+
   /** Descending tone — clear cart */
   clearCart: () => playTone(220, 0.2, 'triangle', 0.2),
 
