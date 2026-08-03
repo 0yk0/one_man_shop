@@ -53,6 +53,9 @@ export class Settings {
   backup_folder = ''
   backup_retention_days = 30
   display_screen = 0
+  display_screen_name = ''
+  display_screen_width = 0
+  display_screen_height = 0
   constructor(s: any = {}) {
     Object.assign(this, s || {})
   }

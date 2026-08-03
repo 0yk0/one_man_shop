@@ -32,6 +32,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     backup_folder: '',
     backup_retention_days: 30,
     display_screen: 0,
+    display_screen_name: '',
+    display_screen_width: 0,
+    display_screen_height: 0,
   })
   const [saving, setSaving] = useState(false)
   const [formInitialized, setFormInitialized] = useState(false)
@@ -39,10 +42,12 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
 
   // Load available screens on mount
   useEffect(() => {
-    GetAvailableScreens().then(setScreens).catch(console.error)
+    GetAvailableScreens()
+      .then(s => setScreens(s ?? []))
+      .catch(() => setScreens([]))
   }, [])
 
-  // Populate form from DB only once on initial load
+  // Populate form from DB on initial load
   useEffect(() => {
     if (settings && !formInitialized) {
       setForm({
@@ -55,11 +60,32 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
         backup_enabled: settings.backup_enabled,
         backup_folder: settings.backup_folder,
         backup_retention_days: settings.backup_retention_days,
-        display_screen: settings.display_screen || 0,
+        display_screen: settings.display_screen ?? 0,
+        display_screen_name: settings.display_screen_name || '',
+        display_screen_width: settings.display_screen_width || 0,
+        display_screen_height: settings.display_screen_height || 0,
       })
       setFormInitialized(true)
     }
   }, [settings, currentTheme, formInitialized])
+
+  // Once screens finish loading, validate the saved display is still connected
+  useEffect(() => {
+    if (!formInitialized || screens.length === 0) return
+    setForm(prev => {
+      const match = prev.display_screen_name
+        ? screens.find(s => s.name === prev.display_screen_name && s.width === prev.display_screen_width && s.height === prev.display_screen_height)
+        : screens.find(s => s.index === prev.display_screen)
+      if (match && match.index === prev.display_screen) return prev // already correct
+      return {
+        ...prev,
+        display_screen: match ? match.index : 0,
+        display_screen_name: match ? match.name : (screens[0]?.name ?? ''),
+        display_screen_width: match ? match.width : (screens[0]?.width ?? 0),
+        display_screen_height: match ? match.height : (screens[0]?.height ?? 0),
+      }
+    })
+  }, [screens, formInitialized])
 
   const update = (field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -85,6 +111,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       backup_folder: form.backup_folder,
       backup_retention_days: form.backup_retention_days,
       display_screen: form.display_screen,
+      display_screen_name: form.display_screen_name,
+      display_screen_width: form.display_screen_width,
+      display_screen_height: form.display_screen_height,
     })
     setSaving(false)
     if (success) {
@@ -223,9 +252,16 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             <select
               className="select select-bordered w-full"
               value={form.display_screen}
-              onChange={e => update('display_screen', parseInt(e.target.value))}
+              onChange={e => {
+                const idx = parseInt(e.target.value)
+                const selected = (screens ?? []).find(s => s.index === idx)
+                update('display_screen', idx)
+                update('display_screen_name', selected?.name ?? '')
+                update('display_screen_width', selected?.width ?? 0)
+                update('display_screen_height', selected?.height ?? 0)
+              }}
             >
-              {screens.length === 0 ? (
+              {(screens ?? []).length === 0 ? (
                 <option value={0}>Primary Screen (default)</option>
               ) : (
                 screens.map(s => (
@@ -237,8 +273,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               )}
             </select>
             <label className="label">
-              <span className="label-text-alt text-base-content/60">
-                Select which screen the customer display opens on. Use the "Customer Display" button on the POS screen to open it.
+              <span className="label-text-alt text-base-content/60 text-wrap">
+                Select which screen the customer display opens on.
+                Use the "Customer Display" button on the POS screen to open it.
               </span>
             </label>
           </div>

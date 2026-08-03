@@ -66,7 +66,10 @@ type Settings struct {
 	BackupEnabled       bool    `json:"backup_enabled"`
 	BackupFolder        string  `json:"backup_folder"`
 	BackupRetentionDays int     `json:"backup_retention_days"`
-	DisplayScreen       int     `json:"display_screen"` // 0 = primary, 1+ = secondary monitors
+	DisplayScreen       int    `json:"display_screen"`        // 0 = primary, 1+ = secondary monitors
+	DisplayScreenName   string `json:"display_screen_name"`   // screen name for identification
+	DisplayScreenWidth  int    `json:"display_screen_width"`  // screen width for identification
+	DisplayScreenHeight int    `json:"display_screen_height"` // screen height for identification
 }
 
 // ReportSummary represents a day's or period's sales summary

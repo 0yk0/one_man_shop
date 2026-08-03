@@ -74,6 +74,21 @@ export interface Settings {
      * 0 = primary, 1+ = secondary monitors
      */
     "display_screen": number;
+
+    /**
+     * screen name for identification
+     */
+    "display_screen_name": string;
+
+    /**
+     * screen width for identification
+     */
+    "display_screen_width": number;
+
+    /**
+     * screen height for identification
+     */
+    "display_screen_height": number;
 }
 
 /**

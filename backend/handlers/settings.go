@@ -32,6 +32,9 @@ func (a *AppHandler) GetSettings() (models.Settings, error) {
 		BackupFolder:        r.GetString("backup_folder"),
 		BackupRetentionDays: int(r.GetInt("backup_retention_days")),
 		DisplayScreen:       int(r.GetInt("display_screen")),
+		DisplayScreenName:   r.GetString("display_screen_name"),
+		DisplayScreenWidth:  int(r.GetInt("display_screen_width")),
+		DisplayScreenHeight: int(r.GetInt("display_screen_height")),
 	}, nil
 }
 
@@ -57,6 +60,9 @@ func (a *AppHandler) SaveSettings(s models.Settings) error {
 	record.Set("backup_folder", s.BackupFolder)
 	record.Set("backup_retention_days", s.BackupRetentionDays)
 	record.Set("display_screen", s.DisplayScreen)
+	record.Set("display_screen_name", s.DisplayScreenName)
+	record.Set("display_screen_width", s.DisplayScreenWidth)
+	record.Set("display_screen_height", s.DisplayScreenHeight)
 
 	if err := db.App.SaveNoValidate(record); err != nil {
 		return fmt.Errorf("failed to save settings: %w", err)

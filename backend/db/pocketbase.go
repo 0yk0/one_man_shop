@@ -128,6 +128,9 @@ func createSettingsCollection() {
 		&core.TextField{Name: "backup_folder", Max: 500},
 		&core.NumberField{Name: "backup_retention_days", Min: types.Pointer(1.0), OnlyInt: true},
 		&core.NumberField{Name: "display_screen", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.TextField{Name: "display_screen_name", Max: 100},
+		&core.NumberField{Name: "display_screen_width", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true},
 	)
 
 	collection.ViewRule = types.Pointer("")
@@ -162,6 +165,9 @@ func ensureDefaultSettings() {
 		record.Set("backup_folder", "")
 		record.Set("backup_retention_days", 30)
 		record.Set("display_screen", 0)
+		record.Set("display_screen_name", "")
+		record.Set("display_screen_width", 0)
+		record.Set("display_screen_height", 0)
 
 		if err := App.Save(record); err != nil {
 			log.Printf("Failed to create default settings: %v", err)
