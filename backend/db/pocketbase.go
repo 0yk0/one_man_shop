@@ -57,6 +57,9 @@ func initCollections() {
 	settingsCol, _ := App.FindCollectionByNameOrId("settings")
 	if settingsCol == nil {
 		createSettingsCollection()
+	} else {
+		// Migrate existing collection if display fields are missing
+		migrateSettingsCollection(settingsCol)
 	}
 
 	// Ensure default settings record
@@ -143,6 +146,39 @@ func createSettingsCollection() {
 		log.Printf("Failed to create settings collection: %v", err)
 	} else {
 		log.Println("Created settings collection")
+	}
+}
+
+// migrateSettingsCollection adds missing fields to an existing settings collection
+func migrateSettingsCollection(col *core.Collection) {
+	// Check which fields exist
+	existingFields := make(map[string]bool)
+	for _, f := range col.Fields {
+		existingFields[f.GetName()] = true
+	}
+
+	// Add missing display fields
+	fieldsToAdd := []core.Field{}
+	if !existingFields["display_screen"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "display_screen", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+	if !existingFields["display_screen_name"] {
+		fieldsToAdd = append(fieldsToAdd, &core.TextField{Name: "display_screen_name", Max: 100})
+	}
+	if !existingFields["display_screen_width"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "display_screen_width", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+	if !existingFields["display_screen_height"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+
+	if len(fieldsToAdd) > 0 {
+		col.Fields.Add(fieldsToAdd...)
+		if err := App.Save(col); err != nil {
+			log.Printf("Failed to migrate settings collection: %v", err)
+		} else {
+			log.Printf("Migrated settings collection: added %d missing fields", len(fieldsToAdd))
+		}
 	}
 }
 

@@ -29,7 +29,9 @@ export function useSettings() {
     try {
       setError(null)
       await SaveSettings(s)
-      setSettings(s)
+      // Re-read from DB to confirm what was actually persisted
+      const confirmed = await GetSettings()
+      setSettings(confirmed)
       return true
     } catch (err) {
       setError(String(err))

@@ -159,6 +159,20 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     setChangingPin(true)
     const success = await save({
       ...settings,
+      // Include current form values to prevent clobbering unsaved display settings
+      shop_name: form.shop_name,
+      upi_vpa: form.upi_vpa,
+      merchant_name: form.merchant_name,
+      theme: form.theme,
+      tax_enabled: form.tax_enabled,
+      default_tax_rate: form.default_tax_rate / 100,
+      backup_enabled: form.backup_enabled,
+      backup_folder: form.backup_folder,
+      backup_retention_days: form.backup_retention_days,
+      display_screen: form.display_screen,
+      display_screen_name: form.display_screen_name,
+      display_screen_width: form.display_screen_width,
+      display_screen_height: form.display_screen_height,
       admin_pin: newPin,
     })
     setChangingPin(false)

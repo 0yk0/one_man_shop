@@ -71,9 +71,10 @@ func (a *App) Shutdown(ctx context.Context) {
 // ========== Customer Display Window ==========
 
 func (a *App) OpenCustomerDisplay(screenIndex int) error {
+	// Close existing window if open, then open on the target screen
 	if a.customerWindow != nil {
-		a.customerWindow.Show()
-		return nil
+		a.customerWindow.Close()
+		a.customerWindow = nil
 	}
 
 	screens := a.app.Screen.GetAll()
