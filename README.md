@@ -25,6 +25,50 @@ Built for a friend's small shop. Made open source for everyone.
 |---|---|---|
 | ![Products](website/public/screenshots/screenshot-03.png) | ![Settings](website/public/screenshots/screenshot-12.png) | ![Setup](website/public/screenshots/screenshot-01.png) |
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Desktop["Desktop App (Wails v3)"]
+        subgraph Main["Main Window — POS Screen"]
+            ReactFE["React + TypeScript<br/>Vite + Tailwind + DaisyUI"]
+        end
+
+        subgraph SecondWin["Second Window — Customer Display"]
+            CustDisp["CustomerDisplay<br/>(React)"]
+        end
+
+        subgraph Backend["Go Backend"]
+            AppStruct["App Struct<br/>(app.go)"]
+            Handlers["Handlers<br/>CRUD · Reports · Backups"]
+            DisplayMgr["Display Manager<br/>WebSocket Hub"]
+        end
+
+        subgraph Data["Data Layer"]
+            PB["PocketBase<br/>(Embedded SQLite)"]
+        end
+    end
+
+    subgraph External["External"]
+        FS["Filesystem<br/>Backups"]
+        UPI["UPI Apps<br/>GPay · PhonePe"]
+    end
+
+    ReactFE -->|"Wails Bindings<br/>(IPC)"| AppStruct
+    AppStruct --> Handlers
+    Handlers --> PB
+    Handlers -->|"Backup Scheduler"| FS
+    AppStruct --> DisplayMgr
+    DisplayMgr -->|"WebSocket :9246"| CustDisp
+    CustDisp -.->|"QR Code Scan"| UPI
+```
+
+### Data Flow
+
+1. **POS Screen** — React frontend calls Go methods via Wails bindings (auto-generated `bindings.ts`). Go handlers read/write to PocketBase (embedded SQLite).
+2. **Customer Display** — A separate native window runs the same React app on route `/#/customer-display`. It connects to a WebSocket server (`ws://127.0.0.1:9246`) that the Go backend pushes state to via the Display Manager.
+3. **Backups** — A Go scheduler runs nightly, exporting PocketBase data to a user-chosen folder (OneDrive, Dropbox, etc.).
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -33,9 +77,10 @@ Built for a friend's small shop. Made open source for everyone.
 | Backend | Go |
 | Frontend | React 18, TypeScript, Vite |
 | Database | [PocketBase](https://pocketbase.io/) (embedded SQLite) |
-| Styling | Tailwind CSS, DaisyUI |
-| State | Zustand |
+| Styling | Tailwind CSS v4, DaisyUI v5 |
+| State | Zustand (customer display), React state + `useSettings` hook |
 | Charts | Recharts |
+| Testing | Vitest + React Testing Library (frontend), `go test` (backend) |
 
 ## Installation
 
@@ -100,6 +145,45 @@ task build:darwin
 task build:windows
 ```
 
+## Testing
+
+### Frontend (Vitest)
+
+```bash
+cd frontend
+npm test                # Run all tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # With coverage
+```
+
+### Backend (Go)
+
+```bash
+go test ./backend/...       # Run all backend tests
+go test ./backend/... -v    # Verbose output
+go test -race ./backend/... # With race detector
+```
+
+### Test Coverage
+
+| Area | Tests | What's Covered |
+|---|---|---|
+| **Backend — Handlers** | 17 | Products CRUD, transactions, settings, reports, CSV export, UPI string |
+| **Backend — Models** | 7 | JSON serialization for all model types |
+| **Backend — Display** | 10 | State manager, concurrent access, listener callbacks |
+| **Frontend — Reports** | 18 | Date helpers, filtering, summation, presets |
+| **Frontend — useSettings** | 9 | Settings load/save, setup status, error handling |
+| **Frontend — PinInput** | 16 | Input handling, paste, keyboard nav, validation |
+| **Frontend — AdminPinModal** | 9 | PIN entry, auto-submit, error state, reset |
+| **Frontend — displayStore** | 4 | Zustand state, merge, view transitions |
+| **Frontend — SettingsPage** | 6 | PIN section, save button, setup alerts |
+| **Frontend — Layout** | 7 | Nav items, PIN gating, sidebar collapse |
+| **Frontend — ProductForm** | 22 | Add/edit modes, image upload, tax, validation |
+| **Frontend — SetupWizard** | 13 | Multi-step flow, navigation, PIN entry, completion |
+| **Frontend — CustomerDisplay** | 17 | Menu/bill/thankyou views, payments, QR code |
+| **Frontend — sounds** | 13 | Audio tones, oscillator parameters, singleton reuse |
+| **Total** | **181** | |
+
 ## Project Structure
 
 ```
@@ -116,10 +200,12 @@ one_man_shop/
 │       ├── bindings.ts     # Auto-generated TypeScript wrappers
 │       ├── pages/          # POS, Products, Reports, Settings
 │       ├── components/     # UI components
-│       └── stores/         # Zustand store
+│       ├── stores/         # Zustand store
+│       ├── hooks/          # useSettings hook
+│       ├── lib/            # Utilities (reports helpers, sounds)
+│       └── test/           # Vitest setup
 ├── website/                # Landing page (Vite + framer-motion)
-├── build/                  # Build configs, icons, platform tasks
-└── screenshots/            # App screenshots
+└── build/                  # Build configs, icons, platform tasks
 ```
 
 ## FAQ
@@ -142,6 +228,16 @@ Up to 50 active products.
 ## Contributing
 
 Contributions are welcome! Open an issue or submit a pull request.
+
+### Running Tests Before Submitting
+
+```bash
+# Backend
+go test ./backend/...
+
+# Frontend
+cd frontend && npm test
+```
 
 ## License
 

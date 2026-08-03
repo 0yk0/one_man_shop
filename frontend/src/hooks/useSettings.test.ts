@@ -79,6 +79,10 @@ describe('useSettings', () => {
       expect(result.current.loading).toBe(false)
     })
 
+    // After save, GetSettings is called again to confirm persisted state
+    const confirmedSettings = new Settings({ id: '1', shop_name: 'Updated Shop', upi_vpa: '' })
+    mockGetSettings.mockResolvedValue(confirmedSettings)
+
     const newSettings = new Settings({ ...initialSettings, shop_name: 'Updated Shop' })
     const success = await result.current.save(newSettings)
 
