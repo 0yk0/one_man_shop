@@ -227,17 +227,39 @@ Up to 50 active products.
 
 ## Contributing
 
-Contributions are welcome! Open an issue or submit a pull request.
+Contributions are welcome! Whether it's a bug report, feature request, or code contribution, we appreciate your help.
+
+- **[Contributing Guide](CONTRIBUTING.md)** — How to set up development, make changes, and submit PRs
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards we follow
+- **[Security Policy](SECURITY.md)** — How to report vulnerabilities
+
+### Quick Start for Contributors
+
+```bash
+# Fork and clone the repo
+git clone https://github.com/YOUR_USERNAME/one_man_shop.git
+cd one_man_shop
+
+# Install dependencies
+cd frontend && npm install && cd ..
+
+# Start development
+wails3 dev
+```
 
 ### Running Tests Before Submitting
 
 ```bash
 # Backend
-go test ./backend/...
+go test ./backend/... -v
 
 # Frontend
 cd frontend && npm test
 ```
+
+## Security
+
+For security vulnerabilities, please see our [Security Policy](SECURITY.md). **Do not** report security issues through public GitHub issues.
 
 ## License
 
