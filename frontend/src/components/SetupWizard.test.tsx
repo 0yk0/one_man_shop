@@ -216,7 +216,7 @@ describe('SetupWizard', () => {
     // When saving, the finish button shows a spinner (Loader2) instead of "Start Selling" text
     // Find the disabled primary button on the Confirm step (it's the last button with btn-primary)
     const allPrimaryBtns = screen.getAllByText('', { selector: 'button' })
-    const finishBtn = allPrimaryBtns.find(btn => btn.className.includes('btn-primary') && btn.disabled)
+    const finishBtn = allPrimaryBtns.find(btn => btn.className.includes('btn-primary') && (btn as HTMLButtonElement).disabled)
     expect(finishBtn).toBeDefined()
     expect(finishBtn).toBeDisabled()
   })

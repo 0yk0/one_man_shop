@@ -187,7 +187,7 @@ describe('ProductForm', () => {
       render(<ProductForm {...defaultProps} product={existingProduct} />)
       expect(getNameInput()).toHaveValue('Existing Product')
       // Price is stored as string in component state via String(product.price)
-      expect(getPriceInput().value).toBe('50')
+      expect((getPriceInput() as HTMLInputElement).value).toBe('50')
     })
 
     it('shows Save Changes button instead of Add Product', () => {
@@ -211,7 +211,7 @@ describe('ProductForm', () => {
     it('converts tax_rate from decimal to percentage for display', () => {
       render(<ProductForm {...defaultProps} product={existingProduct} taxEnabled={true} />)
       // Tax rate is stored as String(product.tax_rate * 100)
-      expect(getTaxRateInput().value).toBe('10')
+      expect((getTaxRateInput() as HTMLInputElement).value).toBe('10')
     })
   })
 
