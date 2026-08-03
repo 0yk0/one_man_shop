@@ -63,6 +63,7 @@ export interface Settings {
     "shop_name": string;
     "upi_vpa": string;
     "merchant_name": string;
+    "admin_pin": string;
     "theme": string;
     "tax_enabled": boolean;
     "default_tax_rate": number;

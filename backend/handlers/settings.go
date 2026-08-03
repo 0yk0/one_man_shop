@@ -25,6 +25,7 @@ func (a *AppHandler) GetSettings() (models.Settings, error) {
 		ShopName:            r.GetString("shop_name"),
 		UPIVPA:              r.GetString("upi_vpa"),
 		MerchantName:        r.GetString("merchant_name"),
+		AdminPin:            r.GetString("admin_pin"),
 		Theme:               r.GetString("theme"),
 		TaxEnabled:          r.GetBool("tax_enabled"),
 		DefaultTaxRate:      r.GetFloat("default_tax_rate"),
@@ -53,6 +54,7 @@ func (a *AppHandler) SaveSettings(s models.Settings) error {
 	record.Set("shop_name", s.ShopName)
 	record.Set("upi_vpa", s.UPIVPA)
 	record.Set("merchant_name", s.MerchantName)
+	record.Set("admin_pin", s.AdminPin)
 	record.Set("theme", s.Theme)
 	record.Set("tax_enabled", s.TaxEnabled)
 	record.Set("default_tax_rate", s.DefaultTaxRate)

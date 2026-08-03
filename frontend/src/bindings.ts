@@ -15,7 +15,7 @@ export class Transaction {
   constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new CartItem(i)) }
 }
 export class Settings {
-  id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; theme = 'light'
+  id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; admin_pin = ''; theme = 'light'
   tax_enabled = false; default_tax_rate = 0; backup_enabled = false
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
 import { GetAvailableScreens } from '../bindings'
-import { Save, Loader2, Palette, Monitor } from 'lucide-react'
+import { Save, Loader2, Palette, Monitor, Shield } from 'lucide-react'
+import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
   'light', 'dark', 'cupcake', 'bumblebee', 'emerald', 'corporate',
@@ -39,6 +40,11 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   const [saving, setSaving] = useState(false)
   const [formInitialized, setFormInitialized] = useState(false)
   const [screens, setScreens] = useState<{ index: number; name: string; width: number; height: number }[]>([])
+  const [currentPin, setCurrentPin] = useState('')
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [changingPin, setChangingPin] = useState(false)
 
   // Load available screens on mount
   useEffect(() => {
@@ -121,6 +127,49 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       onThemeChange(form.theme)
     } else {
       enqueueSnackbar('Failed to save settings', { variant: 'error' })
+    }
+  }
+
+  const handlePinChange = async () => {
+    if (!settings) return
+    setPinError('')
+
+    // Verify current PIN
+    if (settings.admin_pin && currentPin !== settings.admin_pin) {
+      setPinError('Current PIN is incorrect')
+      return
+    }
+
+    // Validate new PIN
+    if (newPin.length !== 6) {
+      setPinError('New PIN must be 6 digits')
+      return
+    }
+
+    if (newPin !== confirmPin) {
+      setPinError('New PINs do not match')
+      return
+    }
+
+    if (newPin === settings.admin_pin) {
+      setPinError('New PIN must be different from current PIN')
+      return
+    }
+
+    setChangingPin(true)
+    const success = await save({
+      ...settings,
+      admin_pin: newPin,
+    })
+    setChangingPin(false)
+
+    if (success) {
+      enqueueSnackbar('Admin PIN updated successfully', { variant: 'success' })
+      setCurrentPin('')
+      setNewPin('')
+      setConfirmPin('')
+    } else {
+      enqueueSnackbar('Failed to update PIN', { variant: 'error' })
     }
   }
 
@@ -279,6 +328,68 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               </span>
             </label>
           </div>
+
+          <div className="divider"></div>
+
+          {/* Security / Admin PIN */}
+          <h2 className="card-title flex items-center gap-2"><Shield size={18} />Security</h2>
+
+          <p className="text-sm text-base-content/60">
+            Change the 6-digit admin PIN used to protect Products, Reports, and Settings access.
+          </p>
+
+          {settings?.admin_pin ? (
+            <div className="form-control w-full">
+              <label className="label"><span className="label-text">Current PIN</span></label>
+              <PinInput
+                length={6}
+                value={currentPin}
+                onChange={setCurrentPin}
+                autoFocus={false}
+              />
+            </div>
+          ) : (
+            <div className="alert alert-info">
+              <span>No PIN is currently set. Enter a new PIN below to enable protection.</span>
+            </div>
+          )}
+
+          <div className="form-control w-full">
+            <label className="label"><span className="label-text">New PIN</span></label>
+            <PinInput
+              length={6}
+              value={newPin}
+              onChange={setNewPin}
+              autoFocus={false}
+            />
+          </div>
+
+          <div className="form-control w-full">
+            <label className="label"><span className="label-text">Confirm New PIN</span></label>
+            <PinInput
+              length={6}
+              value={confirmPin}
+              onChange={setConfirmPin}
+              autoFocus={false}
+            />
+          </div>
+
+          {pinError && (
+            <div className="text-sm text-error font-medium">{pinError}</div>
+          )}
+
+          {(currentPin || newPin || confirmPin) && (
+            <div className="flex justify-end">
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={handlePinChange}
+                disabled={changingPin || newPin.length !== 6 || confirmPin.length !== 6}
+              >
+                {changingPin ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
+                Update PIN
+              </button>
+            </div>
+          )}
 
           <div className="card-actions justify-end mt-6">
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}>

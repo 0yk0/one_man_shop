@@ -14,7 +14,7 @@ vi.mock('../bindings', () => ({
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0 },
   Transaction: class Transaction { id = ''; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = '' },
   Settings: class Settings {
-    id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; theme = 'light'
+    id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; admin_pin = ''; theme = 'light'
     tax_enabled = false; default_tax_rate = 0; backup_enabled = false
     backup_folder = ''; backup_retention_days = 30; display_screen = 0
     constructor(s: any = {}) { Object.assign(this, s || {}) }

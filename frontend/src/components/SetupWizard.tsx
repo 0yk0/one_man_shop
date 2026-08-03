@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Store, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
+import { Store, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Loader2, Shield } from 'lucide-react'
+import PinInput from './PinInput'
 
 interface SetupData {
   shop_name: string
   upi_vpa: string
   merchant_name: string
+  admin_pin: string
 }
 
 interface Props {
@@ -13,7 +15,7 @@ interface Props {
   error?: string | null
 }
 
-const steps = ['Shop Info', 'UPI Setup', 'Confirm']
+const steps = ['Shop Info', 'UPI Setup', 'Security PIN', 'Confirm']
 
 export default function SetupWizard({ onComplete, saving, error }: Props) {
   const [step, setStep] = useState(0)
@@ -21,6 +23,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
     shop_name: '',
     upi_vpa: '',
     merchant_name: '',
+    admin_pin: '',
   })
 
   const update = (field: keyof SetupData, value: string) => {
@@ -30,6 +33,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
   const canNext = () => {
     if (step === 0) return data.shop_name.trim().length > 0
     if (step === 1) return data.upi_vpa.trim().length > 0 && data.merchant_name.trim().length > 0
+    if (step === 2) return data.admin_pin.length === 6
     return true
   }
 
@@ -135,6 +139,29 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
             {step === 2 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Shield size={20} />
+                  Security PIN
+                </h2>
+                <p className="text-sm text-base-content/60">
+                  Set a 6-digit PIN to protect admin settings. Only you should know this PIN.
+                </p>
+                <div className="flex justify-center py-4">
+                  <PinInput
+                    length={6}
+                    value={data.admin_pin}
+                    onChange={v => update('admin_pin', v)}
+                    autoFocus
+                  />
+                </div>
+                <p className="text-xs text-base-content/50 text-center">
+                  This PIN will be required to access Products, Reports, and Settings.
+                </p>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
                   <CheckCircle size={20} />
                   Confirm Setup
                 </h2>
@@ -150,6 +177,10 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
                   <div className="flex justify-between">
                     <span className="text-base-content/60">UPI VPA</span>
                     <span className="font-medium font-mono">{data.upi_vpa}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base-content/60">Admin PIN</span>
+                    <span className="font-medium font-mono tracking-widest">{'•'.repeat(6)}</span>
                   </div>
                 </div>
                 <p className="text-sm text-base-content/60">

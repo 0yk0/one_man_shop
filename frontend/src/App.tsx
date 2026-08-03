@@ -42,14 +42,14 @@ function App() {
   }, [])
 
   const handleSetupComplete = useCallback(async (data: {
-    shop_name: string; upi_vpa: string; merchant_name: string
+    shop_name: string; upi_vpa: string; merchant_name: string; admin_pin: string
   }) => {
     setSetupError(null)
     setSetupSaving(true)
     try {
       await SaveSettings({
         id: '', shop_name: data.shop_name, upi_vpa: data.upi_vpa,
-        merchant_name: data.merchant_name, theme: 'light',
+        merchant_name: data.merchant_name, admin_pin: data.admin_pin, theme: 'light',
         tax_enabled: false, default_tax_rate: 0,
         backup_enabled: false, backup_folder: '', backup_retention_days: 30, display_screen: 0,
         display_screen_name: '', display_screen_width: 0, display_screen_height: 0,
@@ -87,7 +87,7 @@ function App() {
   return (
     <SnackbarProvider
       maxSnack={1}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       autoHideDuration={3000}
       preventDuplicate
     >

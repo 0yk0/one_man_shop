@@ -121,6 +121,7 @@ func createSettingsCollection() {
 		&core.TextField{Name: "shop_name", Max: 100},
 		&core.TextField{Name: "upi_vpa", Max: 100},
 		&core.TextField{Name: "merchant_name", Max: 100},
+		&core.TextField{Name: "admin_pin", Max: 10},
 		&core.TextField{Name: "theme", Max: 50},
 		&core.BoolField{Name: "tax_enabled"},
 		&core.NumberField{Name: "default_tax_rate", Min: types.Pointer(0.0), Max: types.Pointer(1.0)},
@@ -158,6 +159,7 @@ func ensureDefaultSettings() {
 		record.Set("shop_name", "My Shop")
 		record.Set("upi_vpa", "")
 		record.Set("merchant_name", "Shop Owner")
+		record.Set("admin_pin", "")
 		record.Set("theme", "light")
 		record.Set("tax_enabled", false)
 		record.Set("default_tax_rate", 0.0)

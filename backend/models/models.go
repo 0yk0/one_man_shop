@@ -60,6 +60,7 @@ type Settings struct {
 	ShopName            string  `json:"shop_name"`
 	UPIVPA              string  `json:"upi_vpa"`
 	MerchantName        string  `json:"merchant_name"`
+	AdminPin            string  `json:"admin_pin"`
 	Theme               string  `json:"theme"`
 	TaxEnabled          bool    `json:"tax_enabled"`
 	DefaultTaxRate      float64 `json:"default_tax_rate"`
