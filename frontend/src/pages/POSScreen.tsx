@@ -336,8 +336,8 @@ export default function POSScreen() {
             {filteredProducts.map(product => (
               <button
                 key={product.id}
-                className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
-                onClick={() => handleProductTap(product)}
+                className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                onClick={showPayment ? undefined : () => handleProductTap(product)}
               >
                 {/* Cart count badge */}
                 {cartQtyMap[product.id] != null && (
@@ -368,7 +368,7 @@ export default function POSScreen() {
               <Receipt size={20} /> Cart
               {cart.length > 0 && <span className="badge badge-sm">{cart.reduce((s, i) => s + i.qty, 0)}</span>}
             </h2>
-            {cart.length > 0 && (
+            {cart.length > 0 && !showPayment && (
               <button className="btn btn-sm btn-ghost text-error gap-1" onClick={clearCart}>
                 <Trash2 size={14} /> Clear
               </button>
@@ -387,33 +387,41 @@ export default function POSScreen() {
             <div className="space-y-2">
               {cart.map(item => (
                 <div key={item.product_id} className="flex items-center gap-3 bg-base-200 rounded-lg p-3">
-                  <button
-                    className="btn btn-sm btn-circle btn-ghost text-error shrink-0"
-                    onClick={() => removeItem(item.product_id)}
-                    aria-label={`Remove ${item.name}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {!showPayment && (
+                    <button
+                      className="btn btn-sm btn-circle btn-ghost text-error shrink-0"
+                      onClick={() => removeItem(item.product_id)}
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.name}</p>
                     <p className="text-xs text-base-content/60">₹{item.price.toFixed(2)} × {item.qty}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button
-                      className="btn btn-sm btn-circle btn-ghost"
-                      onClick={() => updateQty(item.product_id, -1)}
-                      aria-label={`Decrease ${item.name} quantity`}
-                    >
-                      <Minus size={18} />
-                    </button>
-                    <span className="w-10 text-center text-base font-bold">{item.qty}</span>
-                    <button
-                      className="btn btn-sm btn-circle btn-ghost"
-                      onClick={() => updateQty(item.product_id, 1)}
-                      aria-label={`Increase ${item.name} quantity`}
-                    >
-                      <Plus size={18} />
-                    </button>
+                    {!showPayment ? (
+                      <>
+                        <button
+                          className="btn btn-sm btn-circle btn-ghost"
+                          onClick={() => updateQty(item.product_id, -1)}
+                          aria-label={`Decrease ${item.name} quantity`}
+                        >
+                          <Minus size={18} />
+                        </button>
+                        <span className="w-10 text-center text-base font-bold">{item.qty}</span>
+                        <button
+                          className="btn btn-sm btn-circle btn-ghost"
+                          onClick={() => updateQty(item.product_id, 1)}
+                          aria-label={`Increase ${item.name} quantity`}
+                        >
+                          <Plus size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="w-10 text-center text-base font-bold">{item.qty}</span>
+                    )}
                   </div>
                   <p className="font-medium text-sm min-w-[70px] text-right">₹{item.subtotal.toFixed(2)}</p>
                 </div>
@@ -504,7 +512,7 @@ export default function POSScreen() {
               <div className="flex gap-2">
                 <button
                   className="btn btn-ghost flex-1"
-                  onClick={() => { setShowPayment(false); setUpiString('') }}
+                  onClick={() => { setShowPayment(false); setUpiString(''); if (displayOpen) SendProductsToDisplay() }}
                 >
                   <ArrowLeft size={16} /> Back
                 </button>
