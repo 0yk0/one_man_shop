@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { GetTransactions } from '../../bindings'
-import { type Transaction, getMonday, toStr, shortDate, dayOfWeek, filterTxns, sumTxns } from '../../lib/reports'
-import { BarChart3, IndianRupee, Loader2, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { type Transaction, getMonday, toStr, shortDate, dayOfWeek, filterTxns, sumTxns, getTopProducts } from '../../lib/reports'
+import { BarChart3, IndianRupee, Loader2, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 export default function SummaryTab() {
@@ -45,6 +45,9 @@ export default function SummaryTab() {
       cash: dayTxns.filter(t => t.payment_method === 'cash').reduce((a, t) => a + t.total, 0),
     }
   })
+
+  const topProducts = useMemo(() => getTopProducts(weekTxns, 3, false), [weekTxns])
+  const leastProducts = useMemo(() => getTopProducts(weekTxns, 3, true), [weekTxns])
 
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 size={32} className="animate-spin text-primary" /></div>
 
@@ -117,6 +120,65 @@ export default function SummaryTab() {
               <Bar dataKey="cash" name="Cash" stackId="a" fill="#0284c7" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Top & Least Products */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Top 3 Products */}
+        <div className="card bg-base-100 shadow-md">
+          <div className="card-body">
+            <h2 className="card-title flex items-center gap-2">
+              <TrendingUp size={18} className="text-success" />
+              Top 3 Products
+            </h2>
+            {topProducts.length === 0 ? (
+              <p className="text-base-content/40 text-sm">No sales this week</p>
+            ) : (
+              <div className="space-y-3">
+                {topProducts.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="badge badge-sm badge-primary">{i + 1}</span>
+                      <span className="font-medium">{p.name}</span>
+                    </div>
+                    <div className="text-right text-sm">
+                      <span className="font-mono">{p.qty} sold</span>
+                      <span className="text-base-content/50 ml-2">₹{p.revenue.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Least 3 Products */}
+        <div className="card bg-base-100 shadow-md">
+          <div className="card-body">
+            <h2 className="card-title flex items-center gap-2">
+              <TrendingDown size={18} className="text-warning" />
+              Least 3 Products
+            </h2>
+            {leastProducts.length === 0 ? (
+              <p className="text-base-content/40 text-sm">No sales this week</p>
+            ) : (
+              <div className="space-y-3">
+                {leastProducts.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="badge badge-sm badge-outline">{i + 1}</span>
+                      <span className="font-medium">{p.name}</span>
+                    </div>
+                    <div className="text-right text-sm">
+                      <span className="font-mono">{p.qty} sold</span>
+                      <span className="text-base-content/50 ml-2">₹{p.revenue.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

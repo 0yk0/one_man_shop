@@ -4,23 +4,15 @@ import {
   getFilteredRowModel, getPaginationRowModel, flexRender,
   type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
-import { GetTransactions, GetSettings, PrintReceipt } from '../bindings'
+import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, SelectFolder } from '../bindings'
 import { useSnackbar } from 'notistack'
 import { fmtDate, fmtTime, filterTxns, getDateRange, type DatePreset } from '../lib/reports'
 import type { Transaction } from '../bindings'
 import {
   ReceiptText, Search, Loader2, Printer, ChevronDown, ChevronUp,
-  ChevronLeft, ChevronRight, RefreshCw,
+  ChevronLeft, ChevronRight, RefreshCw, Download,
 } from 'lucide-react'
-
-const DATE_PRESETS: { label: string; value: DatePreset }[] = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'This Week', value: 'this_week' },
-  { label: 'Last Week', value: 'last_week' },
-  { label: 'This Month', value: 'this_month' },
-  { label: 'Custom', value: 'custom' },
-]
+import DateRangePicker from '../components/ui/DateRangePicker'
 
 function formatID(num: number): string {
   if (!num) return '-'
@@ -40,6 +32,7 @@ export default function ReceiptsPage() {
   const [customEnd, setCustomEnd] = useState('')
   const [search, setSearch] = useState('')
   const [printing, setPrinting] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   // Table
   const [sorting, setSorting] = useState<SortingState>([{ id: 'created', desc: true }])
@@ -97,6 +90,22 @@ export default function ReceiptsPage() {
     }
   }
 
+  // Export CSV
+  const handleExportCSV = async () => {
+    try {
+      const dir = await SelectFolder('Select folder to save CSV')
+      if (!dir) return
+      setExporting(true)
+      const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
+      enqueueSnackbar(`CSV exported to ${path}`, { variant: 'success' })
+    } catch (err) {
+      if (String(err).includes('cancel')) return
+      enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   // Table columns
   const columns = useMemo<ColumnDef<Transaction>[]>(() => [
     {
@@ -105,7 +114,7 @@ export default function ReceiptsPage() {
       cell: ({ row }) => (
         <button
           className="btn btn-ghost btn-xs"
-          onClick={() => toggleRow(row.original.id)}
+          onClick={(e) => { e.stopPropagation(); toggleRow(row.original.id) }}
         >
           {expandedRows.has(row.original.id) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
@@ -194,12 +203,38 @@ export default function ReceiptsPage() {
     },
   ], [taxEnabled, expandedRows, printerAvailable, printing])
 
+  // Custom search filter - searches across receipt number, amounts, items, payment method
+  const globalFilterFn = useMemo(() => {
+    return (row: any, _columnId: string, filterValue: string) => {
+      const txn = row.original as Transaction
+      const search = filterValue.toLowerCase().trim()
+      if (!search) return true
+
+      // Receipt number
+      if (String(txn.receipt_number).includes(search)) return true
+
+      // Amounts (total, subtotal, tax)
+      if (String(txn.total).includes(search)) return true
+      if (String(txn.subtotal).includes(search)) return true
+      if (String(txn.tax_total).includes(search)) return true
+
+      // Payment method
+      if (txn.payment_method.toLowerCase().includes(search)) return true
+
+      // Item names
+      if (txn.items?.some(item => item.name.toLowerCase().includes(search))) return true
+
+      return false
+    }
+  }, [])
+
   const table = useReactTable({
     data: filtered,
     columns,
     state: { sorting, globalFilter: search },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearch,
+    globalFilterFn: globalFilterFn,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -217,140 +252,133 @@ export default function ReceiptsPage() {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <ReceiptText size={28} /> Receipts
         </h1>
-        <button className="btn btn-ghost btn-sm gap-1" onClick={loadData}>
-          <RefreshCw size={14} /> Refresh
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {DATE_PRESETS.map(p => (
-          <button
-            key={p.value}
-            className={`btn btn-sm ${preset === p.value ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setPreset(p.value)}
-          >
-            {p.label}
+        <div className="flex items-center gap-2">
+          <button className="btn btn-outline btn-sm gap-1" onClick={handleExportCSV} disabled={exporting}>
+            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
           </button>
-        ))}
-        <div className="relative ml-auto">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="input input-bordered input-sm pl-9 w-48"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <button className="btn btn-ghost btn-sm gap-1" onClick={loadData}>
+            <RefreshCw size={14} /> Refresh
+          </button>
         </div>
       </div>
 
-      {/* Custom Date Range */}
-      {preset === 'custom' && (
-        <div className="flex items-center gap-3 bg-base-200 rounded-lg p-3 mb-4">
-          <div className="form-control">
-            <label className="label py-0"><span className="label-text-alt text-xs">From</span></label>
-            <input type="date" className="input input-bordered input-sm w-40" value={customStart} max={customEnd || undefined} onChange={e => setCustomStart(e.target.value)} />
+      {/* Filter Section */}
+      <div className="bg-base-100 border border-base-300 rounded-xl p-4 mb-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <DateRangePicker
+            value={{ preset, customStart, customEnd }}
+            onChange={(v) => { setPreset(v.preset); setCustomStart(v.customStart); setCustomEnd(v.customEnd); }}
+          />
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+              <input
+                type="text"
+                placeholder="Search by #, amount, item..."
+                className="input input-bordered w-full pl-9"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
           </div>
-          <span className="text-base-content/40 mt-4">→</span>
-          <div className="form-control">
-            <label className="label py-0"><span className="label-text-alt text-xs">To</span></label>
-            <input type="date" className="input input-bordered input-sm w-40" value={customEnd} min={customStart || undefined} onChange={e => setCustomEnd(e.target.value)} />
-          </div>
+        </div>
+      </div>
+
+      {/* Printer Warning */}
+      {!printerAvailable && (
+        <div className="text-warning text-xs mb-4">
+          No printer configured — go to Settings to set one up
         </div>
       )}
 
-      {/* Stats */}
-      <div className="text-sm text-base-content/60 mb-3">
-        {filtered.length} receipt(s) found
-        {!printerAvailable && (
-          <span className="ml-2 text-warning text-xs">No printer configured — go to Settings to set one up</span>
-        )}
-      </div>
-
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="table table-sm w-full">
-          <thead>
-            {table.getHeaderGroups().map(hg => (
-              <tr key={hg.id}>
-                {hg.headers.map(h => (
-                  <th
-                    key={h.id}
-                    className={h.column.getCanSort() ? 'cursor-pointer select-none' : ''}
-                    onClick={h.column.getToggleSortingHandler()}
-                    style={{ width: h.column.getSize() }}
-                  >
-                    <div className="flex items-center gap-1">
-                      {flexRender(h.column.columnDef.header, h.getContext())}
-                      {{ asc: ' ↑', desc: ' ↓' }[h.column.getIsSorted() as string] ?? ''}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <>
-                <tr
-                  key={row.id}
-                  className="hover cursor-pointer"
-                  onClick={() => toggleRow(row.original.id)}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} style={{ width: cell.column.getSize() }}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-                {expandedRows.has(row.original.id) && (
-                  <tr key={`${row.id}-expanded`}>
-                    <td colSpan={columns.length} className="bg-base-200/50 py-3 px-6">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-base-content/50 mb-2">Items</p>
-                        {row.original.items?.map((item, j) => (
-                          <div key={j} className="flex justify-between text-sm">
-                            <span>{item.name} × {item.qty}</span>
-                            <span className="font-mono">₹{item.subtotal.toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="card bg-base-100 shadow-md">
+        {/* Pagination - above table */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-base-300">
+          <span className="text-sm text-base-content/60">
+            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+            -{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filtered.length)}
+            {' '}of {filtered.length}
+          </span>
+          <div className="flex gap-1">
+            <button
+              className="btn btn-sm btn-outline"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft size={14} /> Prev
+            </button>
+            <button
+              className="btn btn-sm btn-outline"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4">
-        <span className="text-sm text-base-content/60">
-          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-          -{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filtered.length)}
-          {' '}of {filtered.length}
-        </span>
-        <div className="flex gap-1">
-          <button
-            className="btn btn-sm btn-outline"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft size={14} /> Prev
-          </button>
-          <button
-            className="btn btn-sm btn-outline"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next <ChevronRight size={14} />
-          </button>
+        <div className="card-body p-0">
+          <div className="overflow-x-auto">
+            <table className="table table-sm w-full">
+              <thead>
+                {table.getHeaderGroups().map(hg => (
+                  <tr key={hg.id}>
+                    {hg.headers.map(h => (
+                      <th
+                        key={h.id}
+                        className={h.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+                        onClick={h.column.getToggleSortingHandler()}
+                        style={{ width: h.column.getSize() }}
+                      >
+                        <div className="flex items-center gap-1">
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {{ asc: ' ↑', desc: ' ↓' }[h.column.getIsSorted() as string] ?? ''}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map(row => (
+                  <>
+                    <tr
+                      key={row.id}
+                      className="hover cursor-pointer"
+                      onClick={() => toggleRow(row.original.id)}
+                    >
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} style={{ width: cell.column.getSize() }}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandedRows.has(row.original.id) && (
+                      <tr key={`${row.id}-expanded`}>
+                        <td colSpan={columns.length} className="bg-base-200/50 py-3 px-6">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-base-content/50 mb-2">Items</p>
+                            {row.original.items?.map((item, j) => (
+                              <div key={j} className="flex justify-between text-sm">
+                                <span>{item.name} × {item.qty}</span>
+                                <span className="font-mono">₹{item.subtotal.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

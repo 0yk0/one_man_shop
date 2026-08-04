@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { BarChart3, List } from 'lucide-react'
+import { BarChart3, List, Calendar } from 'lucide-react'
 import SummaryTab from '../components/Reports/SummaryTab'
 import TransactionsTab from '../components/Reports/TransactionsTab'
+import CalendarTab from '../components/Reports/CalendarTab'
 
 export default function ReportsPage() {
-  const [tab, setTab] = useState<'summary' | 'transactions'>('summary')
+  const [tab, setTab] = useState<'summary' | 'transactions' | 'calendar'>('summary')
 
   return (
     <div className="p-6">
@@ -19,9 +20,14 @@ export default function ReportsPage() {
         <button className={`tab ${tab === 'transactions' ? 'tab-active' : ''}`} onClick={() => setTab('transactions')}>
           <List size={16} className="mr-1" />Transactions
         </button>
+        <button className={`tab ${tab === 'calendar' ? 'tab-active' : ''}`} onClick={() => setTab('calendar')}>
+          <Calendar size={16} className="mr-1" />Calendar
+        </button>
       </div>
 
-      {tab === 'summary' ? <SummaryTab /> : <TransactionsTab />}
+      {tab === 'summary' && <SummaryTab />}
+      {tab === 'transactions' && <TransactionsTab />}
+      {tab === 'calendar' && <CalendarTab />}
     </div>
   )
 }

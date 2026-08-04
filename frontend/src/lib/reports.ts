@@ -119,3 +119,86 @@ export function sumTxns(txns: Transaction[]) {
     cash: a.cash + (t.payment_method === 'cash' ? 1 : 0),
   }), { total: 0, tax: 0, upi: 0, cash: 0 })
 }
+
+// ── Product Helpers ──────────────────────────────────────
+
+export interface ProductStat {
+  name: string
+  qty: number
+  revenue: number
+}
+
+// Get top or least products by quantity sold
+export function getTopProducts(
+  txns: Transaction[],
+  count: number,
+  ascending: boolean = false
+): ProductStat[] {
+  const productMap = new Map<string, ProductStat>()
+
+  for (const txn of txns) {
+    for (const item of txn.items || []) {
+      const existing = productMap.get(item.product_id) || { name: item.name, qty: 0, revenue: 0 }
+      existing.qty += item.qty
+      existing.revenue += item.subtotal
+      productMap.set(item.product_id, existing)
+    }
+  }
+
+  const products = Array.from(productMap.values())
+  products.sort((a, b) => ascending ? a.qty - b.qty : b.qty - a.qty)
+  return products.slice(0, count)
+}
+
+// ── Calendar Helpers ─────────────────────────────────────
+
+export interface DayData {
+  date: string
+  transactions: number
+  revenue: number
+  upi: number
+  cash: number
+  items: ProductStat[]
+}
+
+// Get data for a specific day
+export function getDayData(txns: Transaction[], date: string): DayData {
+  const dayTxns = filterTxns(txns, date, date)
+  const itemMap = new Map<string, ProductStat>()
+
+  for (const txn of dayTxns) {
+    for (const item of txn.items || []) {
+      const existing = itemMap.get(item.product_id) || { name: item.name, qty: 0, revenue: 0 }
+      existing.qty += item.qty
+      existing.revenue += item.subtotal
+      itemMap.set(item.product_id, existing)
+    }
+  }
+
+  return {
+    date,
+    transactions: dayTxns.length,
+    revenue: dayTxns.reduce((a, t) => a + t.total, 0),
+    upi: dayTxns.filter(t => t.payment_method === 'upi').reduce((a, t) => a + t.total, 0),
+    cash: dayTxns.filter(t => t.payment_method === 'cash').reduce((a, t) => a + t.total, 0),
+    items: Array.from(itemMap.values()).sort((a, b) => b.qty - a.qty),
+  }
+}
+
+// Format month name: "January 2026"
+export function formatMonth(year: number, month: number): string {
+  return new Date(year, month, 1).toLocaleDateString('en-IN', {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+// Format full day name: "Wednesday, Jan 1, 2026"
+export function formatFullDay(dateStr: string): string {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-IN', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
