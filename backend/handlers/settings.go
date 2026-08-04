@@ -36,6 +36,9 @@ func (a *AppHandler) GetSettings() (models.Settings, error) {
 		DisplayScreenName:   r.GetString("display_screen_name"),
 		DisplayScreenWidth:  int(r.GetInt("display_screen_width")),
 		DisplayScreenHeight: int(r.GetInt("display_screen_height")),
+		PrinterName:         r.GetString("printer_name"),
+		AutoPrint:           r.GetBool("auto_print"),
+		PaperWidth:          int(r.GetInt("paper_width")),
 	}, nil
 }
 
@@ -65,6 +68,9 @@ func (a *AppHandler) SaveSettings(s models.Settings) error {
 	record.Set("display_screen_name", s.DisplayScreenName)
 	record.Set("display_screen_width", s.DisplayScreenWidth)
 	record.Set("display_screen_height", s.DisplayScreenHeight)
+	record.Set("printer_name", s.PrinterName)
+	record.Set("auto_print", s.AutoPrint)
+	record.Set("paper_width", s.PaperWidth)
 
 	if err := db.App.SaveNoValidate(record); err != nil {
 		return fmt.Errorf("failed to save settings: %w", err)

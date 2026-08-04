@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  GetProducts, GetSettings, GetUPIString, CreateTransaction,
+  GetProducts, GetSettings, GetUPIString, CreateTransaction, PrintReceipt,
   OpenCustomerDisplay, CloseCustomerDisplay, UpdateCustomerDisplay,
   ShowQROnDisplay, ClearCustomerDisplay, SendProductsToDisplay,
   SendPaymentMethodToDisplay, ConfirmPayment
@@ -10,13 +10,14 @@ import { useSnackbar } from 'notistack'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   ShoppingCart, Minus, Plus, Trash2, ArrowLeft, CheckCircle, Loader2,
-  Receipt, Monitor, MonitorOff, RefreshCw, Search, X
+  Receipt, Monitor, MonitorOff, RefreshCw, Search, X, Printer
 } from 'lucide-react'
 import { sounds } from '../lib/sounds'
 
 type Product = import("../bindings").Product
 type CartItem = import("../bindings").CartItem
 type Settings = import("../bindings").Settings
+type Transaction = import("../bindings").Transaction
 
 export default function POSScreen() {
   const [products, setProducts] = useState<Product[]>([])
@@ -28,6 +29,8 @@ export default function POSScreen() {
   const [upiString, setUpiString] = useState('')
   const [processing, setProcessing] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [printing, setPrinting] = useState(false)
+  const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null)
   const { enqueueSnackbar } = useSnackbar()
   const processingRef = useRef(false)
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -191,6 +194,7 @@ export default function POSScreen() {
     setCompleted(false)
     setUpiString('')
     setPaymentMethod('upi')
+    setLastTransaction(null)
     if (displayOpen) {
       ClearCustomerDisplay()
     }
@@ -236,12 +240,18 @@ export default function POSScreen() {
       transaction.id = ''
       transaction.created = ''
 
-      await CreateTransaction(transaction)
+      const savedTransaction = await CreateTransaction(transaction)
+      setLastTransaction(savedTransaction)
       setCompleted(true)
       sounds.paymentSuccess()
       enqueueSnackbar(`Payment of ₹${total.toFixed(2)} recorded`, { variant: 'success' })
 
       ConfirmPayment()
+
+      // Auto-print receipt if enabled and printer is configured
+      if (settings?.auto_print && settings?.printer_name) {
+        handlePrintReceipt(savedTransaction)
+      }
 
       // Auto-clear after 3 seconds (thank you view duration)
       clearTimerRef.current = setTimeout(() => {
@@ -249,6 +259,7 @@ export default function POSScreen() {
         setCart([])
         setShowPayment(false)
         setPaymentMethod('upi')
+        setLastTransaction(null)
         if (displayOpen) {
           SendProductsToDisplay()
         }
@@ -259,6 +270,24 @@ export default function POSScreen() {
     } finally {
       setProcessing(false)
       processingRef.current = false
+    }
+  }
+
+  // ========== Print Receipt ==========
+  const handlePrintReceipt = async (transaction: Transaction) => {
+    if (!settings?.printer_name) {
+      enqueueSnackbar('No printer configured. Set one in Settings.', { variant: 'warning' })
+      return
+    }
+    setPrinting(true)
+    try {
+      await PrintReceipt(transaction)
+      enqueueSnackbar('Receipt printed', { variant: 'success' })
+    } catch (err) {
+      console.error('Print failed:', err)
+      enqueueSnackbar('Failed to print receipt: ' + String(err), { variant: 'error' })
+    } finally {
+      setPrinting(false)
     }
   }
 
@@ -468,6 +497,16 @@ export default function POSScreen() {
                 <CheckCircle size={20} />
                 <span>Payment recorded!</span>
               </div>
+              {settings?.printer_name && lastTransaction && (
+                <button
+                  className="btn btn-outline btn-block gap-2"
+                  onClick={() => handlePrintReceipt(lastTransaction)}
+                  disabled={printing}
+                >
+                  {printing ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                  {printing ? 'Printing...' : 'Print Receipt'}
+                </button>
+              )}
               <button className="btn btn-ghost btn-block gap-2" disabled>
                 <Loader2 size={16} className="animate-spin" />
                 Waiting for display...

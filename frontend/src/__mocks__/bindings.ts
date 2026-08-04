@@ -46,6 +46,7 @@ export class Settings {
   shop_name = ''
   upi_vpa = ''
   merchant_name = ''
+  admin_pin = ''
   theme = 'light'
   tax_enabled = false
   default_tax_rate = 0
@@ -56,6 +57,9 @@ export class Settings {
   display_screen_name = ''
   display_screen_width = 0
   display_screen_height = 0
+  printer_name = ''
+  auto_print = true
+  paper_width = 80
   constructor(s: any = {}) {
     Object.assign(this, s || {})
   }
@@ -103,3 +107,5 @@ export const SelectFolder = vi.fn().mockResolvedValue('/tmp/test')
 export const SelectSaveFile = vi.fn().mockResolvedValue('/tmp/test.csv')
 export const ExportTransactionsCSVToDir = vi.fn().mockResolvedValue('/tmp/test.csv')
 export const GetAvailableScreens = vi.fn().mockResolvedValue([])
+export const GetAvailablePrinters = vi.fn().mockResolvedValue([])
+export const PrintReceipt = vi.fn().mockResolvedValue(undefined)

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
-import { GetAvailableScreens } from '../bindings'
-import { Save, Loader2, Palette, Monitor, Shield } from 'lucide-react'
+import { GetAvailableScreens, GetAvailablePrinters } from '../bindings'
+import { Save, Loader2, Palette, Monitor, Shield, Printer } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -36,10 +36,14 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     display_screen_name: '',
     display_screen_width: 0,
     display_screen_height: 0,
+    printer_name: '',
+    auto_print: true,
+    paper_width: 80,
   })
   const [saving, setSaving] = useState(false)
   const [formInitialized, setFormInitialized] = useState(false)
   const [screens, setScreens] = useState<{ index: number; name: string; width: number; height: number }[]>([])
+  const [printers, setPrinters] = useState<{ name: string; is_default: boolean }[]>([])
   const [currentPin, setCurrentPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -51,6 +55,13 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     GetAvailableScreens()
       .then(s => setScreens(s ?? []))
       .catch(() => setScreens([]))
+  }, [])
+
+  // Load available printers on mount
+  useEffect(() => {
+    GetAvailablePrinters()
+      .then(p => setPrinters(p ?? []))
+      .catch(() => setPrinters([]))
   }, [])
 
   // Populate form from DB on initial load
@@ -70,6 +81,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
         display_screen_name: settings.display_screen_name || '',
         display_screen_width: settings.display_screen_width || 0,
         display_screen_height: settings.display_screen_height || 0,
+        printer_name: settings.printer_name || '',
+        auto_print: settings.auto_print ?? true,
+        paper_width: settings.paper_width || 80,
       })
       setFormInitialized(true)
     }
@@ -92,6 +106,18 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       }
     })
   }, [screens, formInitialized])
+
+  // Validate saved printer is still available (e.g. virtual printer might have stopped)
+  useEffect(() => {
+    if (!formInitialized || printers.length === 0) return
+    setForm(prev => {
+      if (!prev.printer_name) return prev // nothing selected, no change
+      const match = printers.find(p => p.name === prev.printer_name)
+      if (match) return prev // still available
+      // Printer no longer available — clear selection
+      return { ...prev, printer_name: '' }
+    })
+  }, [printers, formInitialized])
 
   const update = (field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -120,6 +146,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      printer_name: form.printer_name,
+      auto_print: form.auto_print,
+      paper_width: form.paper_width,
     })
     setSaving(false)
     if (success) {
@@ -173,6 +202,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      printer_name: form.printer_name,
+      auto_print: form.auto_print,
+      paper_width: form.paper_width,
       admin_pin: newPin,
     })
     setChangingPin(false)
@@ -301,6 +333,58 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               <div className="badge badge-secondary">Badge</div>
               <div className="badge badge-accent">Badge</div>
             </div>
+          </div>
+
+          <div className="divider"></div>
+
+          {/* Receipt Printer */}
+          <h2 className="card-title flex items-center gap-2"><Printer size={18} />Receipt Printer</h2>
+
+          <div className="form-control w-full">
+            <label className="label">
+              <span className="label-text">Printer</span>
+            </label>
+            <select
+              className="select select-bordered w-full"
+              value={form.printer_name}
+              onChange={e => update('printer_name', e.target.value)}
+            >
+              <option value="">No Printer (disabled)</option>
+              {printers.map(p => (
+                <option key={p.name} value={p.name}>
+                  {p.name} {p.is_default ? '(Default)' : ''}
+                </option>
+              ))}
+            </select>
+            <label className="label">
+              <span className="label-text-alt text-base-content/60 text-wrap">
+                Select a printer for receipts. Supports thermal (58mm/80mm) and regular printers.
+              </span>
+            </label>
+          </div>
+
+          <div className="form-control">
+            <label className="label cursor-pointer justify-start gap-4">
+              <input type="checkbox" className="toggle toggle-primary" checked={form.auto_print} onChange={e => update('auto_print', e.target.checked)} />
+              <span className="label-text">Auto-print after payment</span>
+            </label>
+          </div>
+
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Paper Width</span>
+            </label>
+            <select
+              className="select select-bordered w-full"
+              value={form.paper_width}
+              onChange={e => update('paper_width', parseInt(e.target.value))}
+            >
+              <option value={80}>80mm (Standard)</option>
+              <option value={58}>58mm (Narrow)</option>
+            </select>
+            <label className="label">
+              <span className="label-text-alt text-base-content/60">Match your thermal paper roll width</span>
+            </label>
           </div>
 
           <div className="divider"></div>

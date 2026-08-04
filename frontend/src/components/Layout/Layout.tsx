@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSettings } from '../../hooks/useSettings'
 import AdminPinModal from '../AdminPinModal'
-import { Store, Package, BarChart3, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Store, Monitor, Package, BarChart3, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Browser } from '@wailsio/runtime'
 
 interface Props {
@@ -39,38 +39,45 @@ export default function Layout({ onThemeChange }: Props) {
     }
   }, [pendingRoute, navigate])
 
-  const navLinkClass = (isActive: boolean) =>
-    `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-      isActive
-        ? 'bg-primary text-primary-content'
-        : 'hover:bg-base-300 text-base-content'
-    } ${collapsed ? 'justify-center' : ''}`
-
   return (
     <div className="flex h-screen bg-base-200">
       {/* Sidebar */}
       <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-base-100 shadow-lg flex flex-col transition-all duration-200`}>
-        <div className={`${collapsed ? 'px-2 py-3' : 'px-4 py-4'} border-b border-base-300 flex items-center ${collapsed ? 'justify-center' : ''}`}>
+        <NavLink
+          to="/"
+          className={`${collapsed ? 'px-2 py-3' : 'px-4 py-4'} border-b border-base-300 flex items-center ${collapsed ? 'justify-center' : ''} hover:bg-base-300 transition-colors ${collapsed ? 'tooltip tooltip-right' : ''}`}
+          data-tip={collapsed ? (settings?.shop_name || 'One Man Shop') : undefined}
+        >
           <h1 className="text-xl font-bold text-primary flex items-center gap-2">
             <Store size={22} />
             {!collapsed && (settings?.shop_name || 'One Man Shop')}
           </h1>
-        </div>
+        </NavLink>
 
         <nav className="flex-1 p-2 space-y-1">
           <NavLink
             to="/"
             end
-            className={({ isActive }) => navLinkClass(isActive)}
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary text-primary-content'
+                : 'hover:bg-base-300 text-base-content'
+            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+            data-tip={collapsed ? 'POS' : undefined}
             title="POS"
           >
-            <Store size={20} />
+            <Monitor size={20} />
             {!collapsed && <span>POS</span>}
           </NavLink>
 
           <button
             onClick={() => handleProtectedClick('/products')}
-            className={`w-full ${navLinkClass(location.pathname === '/products')}`}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+              location.pathname === '/products'
+                ? 'bg-primary text-primary-content'
+                : 'hover:bg-base-300 text-base-content'
+            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+            data-tip={collapsed ? 'Products' : undefined}
             title="Products"
           >
             <Package size={20} />
@@ -79,7 +86,12 @@ export default function Layout({ onThemeChange }: Props) {
 
           <button
             onClick={() => handleProtectedClick('/reports')}
-            className={`w-full ${navLinkClass(location.pathname === '/reports')}`}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+              location.pathname === '/reports'
+                ? 'bg-primary text-primary-content'
+                : 'hover:bg-base-300 text-base-content'
+            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+            data-tip={collapsed ? 'Reports' : undefined}
             title="Reports"
           >
             <BarChart3 size={20} />
@@ -88,7 +100,12 @@ export default function Layout({ onThemeChange }: Props) {
 
           <button
             onClick={() => handleProtectedClick('/settings')}
-            className={`w-full ${navLinkClass(location.pathname === '/settings')}`}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+              location.pathname === '/settings'
+                ? 'bg-primary text-primary-content'
+                : 'hover:bg-base-300 text-base-content'
+            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+            data-tip={collapsed ? 'Settings' : undefined}
             title="Settings"
           >
             <Settings size={20} />
@@ -104,11 +121,12 @@ export default function Layout({ onThemeChange }: Props) {
                 <p className="mt-1">Made by <button onClick={() => Browser.OpenURL('https://linkedin.com/in/yatheeshkonduru')} className="hover:text-base-content transition-colors link link-hover">Yatheesh</button></p>
               </div>
               <button
-                className="btn btn-ghost btn-xs"
+                className="btn btn-ghost btn-xs tooltip tooltip-right"
+                data-tip="Collapse sidebar"
+                aria-label="Collapse sidebar"
                 onClick={() => setCollapsed(true)}
-                title="Collapse sidebar"
               >
-                <PanelLeftClose size={16} />
+                <PanelLeftClose size={20} />
               </button>
             </div>
           </div>
@@ -117,11 +135,12 @@ export default function Layout({ onThemeChange }: Props) {
         {collapsed && (
           <div className="p-2 border-t border-base-300">
             <button
-              className="btn btn-ghost btn-xs w-full"
+              className="btn btn-ghost btn-xs w-full tooltip tooltip-right"
+              data-tip="Expand sidebar"
+              aria-label="Expand sidebar"
               onClick={() => setCollapsed(false)}
-              title="Expand sidebar"
             >
-              <PanelLeftOpen size={16} />
+              <PanelLeftOpen size={20} />
             </button>
           </div>
         )}

@@ -135,6 +135,9 @@ func createSettingsCollection() {
 		&core.TextField{Name: "display_screen_name", Max: 100},
 		&core.NumberField{Name: "display_screen_width", Min: types.Pointer(0.0), OnlyInt: true},
 		&core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.TextField{Name: "printer_name", Max: 200},
+		&core.BoolField{Name: "auto_print"},
+		&core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true},
 	)
 
 	collection.ViewRule = types.Pointer("")
@@ -171,6 +174,15 @@ func migrateSettingsCollection(col *core.Collection) {
 	if !existingFields["display_screen_height"] {
 		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true})
 	}
+	if !existingFields["printer_name"] {
+		fieldsToAdd = append(fieldsToAdd, &core.TextField{Name: "printer_name", Max: 200})
+	}
+	if !existingFields["auto_print"] {
+		fieldsToAdd = append(fieldsToAdd, &core.BoolField{Name: "auto_print"})
+	}
+	if !existingFields["paper_width"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true})
+	}
 
 	if len(fieldsToAdd) > 0 {
 		col.Fields.Add(fieldsToAdd...)
@@ -206,6 +218,9 @@ func ensureDefaultSettings() {
 		record.Set("display_screen_name", "")
 		record.Set("display_screen_width", 0)
 		record.Set("display_screen_height", 0)
+		record.Set("printer_name", "")
+		record.Set("auto_print", true)
+		record.Set("paper_width", 80)
 
 		if err := App.Save(record); err != nil {
 			log.Printf("Failed to create default settings: %v", err)

@@ -44,6 +44,10 @@ export function ExportTransactionsCSVToDir(startDate: string, endDate: string, d
     return $Call.ByID(340704382, startDate, endDate, dir);
 }
 
+export function GetAvailablePrinters(): $CancellablePromise<({ [_ in string]?: any } | null)[] | null> {
+    return $Call.ByID(1404596867);
+}
+
 export function GetAvailableScreens(): $CancellablePromise<({ [_ in string]?: any } | null)[] | null> {
     return $Call.ByID(1652254419);
 }
@@ -78,6 +82,10 @@ export function IsSetupComplete(): $CancellablePromise<boolean> {
 
 export function OpenCustomerDisplay(screenIndex: number): $CancellablePromise<void> {
     return $Call.ByID(2705716685, screenIndex);
+}
+
+export function PrintReceipt(t: models$0.Transaction): $CancellablePromise<void> {
+    return $Call.ByID(1053202724, t);
 }
 
 export function SaveSettings(s: models$0.Settings): $CancellablePromise<void> {

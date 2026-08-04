@@ -155,13 +155,13 @@ describe('Layout - PIN gating', () => {
     expect(screen.getByText('Test')).toBeInTheDocument()
 
     // Collapse
-    fireEvent.click(screen.getByTitle('Collapse sidebar'))
+    fireEvent.click(screen.getByRole('button', { name: /Collapse sidebar/ }))
 
     // After collapse, shop name should not be visible
     expect(screen.queryByText('Test')).not.toBeInTheDocument()
 
     // Expand
-    fireEvent.click(screen.getByTitle('Expand sidebar'))
+    fireEvent.click(screen.getByRole('button', { name: /Expand sidebar/ }))
 
     expect(screen.getByText('Test')).toBeInTheDocument()
   })

@@ -90,6 +90,21 @@ export interface Settings {
      * screen height for identification
      */
     "display_screen_height": number;
+
+    /**
+     * selected printer name for receipts
+     */
+    "printer_name": string;
+
+    /**
+     * auto-print after payment
+     */
+    "auto_print": boolean;
+
+    /**
+     * 58 or 80 (mm) for thermal paper
+     */
+    "paper_width": number;
 }
 
 /**

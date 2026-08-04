@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Printer Emulator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #333; }
+        header h1 { font-size: 24px; font-weight: 600; }
+        header h1 span { color: #4ade80; }
+        .status { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+        .status-dot.connected { background: #4ade80; }
+        .toolbar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .toolbar button { padding: 8px 16px; border: 1px solid #444; border-radius: 6px; background: #2a2a3e; color: #eee; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .toolbar button:hover { background: #3a3a4e; border-color: #666; }
+        .paper-width-toggle { display: flex; border: 1px solid #444; border-radius: 6px; overflow: hidden; }
+        .paper-width-toggle button { border: none; border-radius: 0; padding: 8px 16px; }
+        .paper-width-toggle button.active { background: #4ade80; color: #000; }
+        .receipts-list { display: flex; flex-direction: column; gap: 16px; }
+        .receipt-card { background: #2a2a3e; border-radius: 12px; padding: 16px; border: 1px solid #333; }
+        .receipt-card h3 { font-size: 14px; color: #888; margin-bottom: 12px; }
+        .thermal-paper { background: #fff; color: #000; font-family: 'Courier New', Courier, monospace; font-size: 13px; line-height: 1.3; padding: 16px 12px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); position: relative; white-space: pre; transition: width 0.3s ease; overflow-x: hidden; }
+        .thermal-paper.w80 { width: 400px; }
+        .thermal-paper.w58 { width: 280px; font-size: 11px; }
+        .thermal-paper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: repeating-linear-gradient(90deg, transparent 0px, transparent 4px, #ddd 4px, #ddd 8px); }
+        .thermal-paper::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: repeating-linear-gradient(90deg, transparent 0px, transparent 4px, #ddd 4px, #ddd 8px); }
+        .receipt-line { margin: 0; padding: 0; white-space: pre; font-family: 'Courier New', Courier, monospace; }
+        .receipt-line.bold { font-weight: bold; }
+        .receipt-line.center { text-align: center; }
+        .receipt-line.right { text-align: right; }
+        .receipt-line.double { font-size: 150%; line-height: 1.2; }
+        .receipt-line.underline { text-decoration: underline; }
+        .receipt-line .reverse { background: #000; color: #fff; padding: 0 2px; }
+        .cut-line { border-top: 2px dashed #999; margin: 6px 0; }
+        .cut-line-full { border-top: 2px solid #999; margin: 6px 0; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .receipt-count { font-size: 14px; color: #888; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Thermal Printer <span>Emulator</span></h1>
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </header>
+        <div class="toolbar">
+            <div class="paper-width-toggle">
+                <button id="btn80" class="active" onclick="setPaperWidth(80)">80mm</button>
+                <button id="btn58" onclick="setPaperWidth(58)">58mm</button>
+            </div>
+            <button onclick="clearReceipts()">Clear All</button>
+            <button onclick="exportLast()">Export Last</button>
+        </div>
+        <div class="receipt-count" id="receiptCount">No receipts yet</div>
+        <div class="receipts-list" id="receiptsList">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">...</div>
+                <p>Waiting for print jobs...</p>
+                <p style="font-size:13px;margin-top:8px;color:#555">ESC/POS data will appear here when sent to port 9100</p>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

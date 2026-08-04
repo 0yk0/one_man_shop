@@ -268,6 +268,31 @@ func (a *App) GetAvailableScreens() ([]map[string]interface{}, error) {
 	return result, nil
 }
 
+// ========== Printer ==========
+
+func (a *App) GetAvailablePrinters() ([]map[string]interface{}, error) {
+	printers, err := a.handlers.GetAvailablePrinters()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]map[string]interface{}, 0, len(printers))
+	for _, p := range printers {
+		result = append(result, map[string]interface{}{
+			"name":       p.Name,
+			"is_default": p.IsDefault,
+		})
+	}
+	return result, nil
+}
+
+func (a *App) PrintReceipt(t models.Transaction) error {
+	s, err := a.handlers.GetSettings()
+	if err != nil {
+		return fmt.Errorf("failed to get settings: %w", err)
+	}
+	return a.handlers.PrintReceipt(t, s)
+}
+
 // ========== Backup ==========
 
 func (a *App) TriggerBackup() error {

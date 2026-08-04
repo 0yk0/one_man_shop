@@ -19,6 +19,7 @@ export class Settings {
   tax_enabled = false; default_tax_rate = 0; backup_enabled = false
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0
+  printer_name = ''; auto_print = true; paper_width = 80
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class ReportSummary {
@@ -56,3 +57,5 @@ export const SelectFolder = (title: string): Promise<string> => Call.ByID(237181
 export const SelectSaveFile = (title: string, defaultName: string): Promise<string> => Call.ByID(893202942, title, defaultName)
 export const ExportTransactionsCSVToDir = (startDate: string, endDate: string, dir: string): Promise<string> => Call.ByID(340704382, startDate, endDate, dir)
 export const GetAvailableScreens = (): Promise<any[]> => Call.ByID(1652254419)
+export const GetAvailablePrinters = (): Promise<any[]> => Call.ByID(1404596867)
+export const PrintReceipt = (t: Transaction): Promise<void> => Call.ByID(1053202724, t)
