@@ -88,6 +88,13 @@ export function PrintReceipt(t: models$0.Transaction): $CancellablePromise<void>
     return $Call.ByID(1053202724, t);
 }
 
+/**
+ * SaveFile opens a save dialog and writes base64-encoded content to the chosen path
+ */
+export function SaveFile(title: string, defaultName: string, contentBase64: string): $CancellablePromise<string> {
+    return $Call.ByID(1396636678, title, defaultName, contentBase64);
+}
+
 export function SaveSettings(s: models$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(1949631069, s);
 }

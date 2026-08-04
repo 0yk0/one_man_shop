@@ -55,6 +55,7 @@ export const SendPaymentMethodToDisplay = (method: string): Promise<void> => Cal
 export const ConfirmPayment = (): Promise<void> => Call.ByID(295967811)
 export const SelectFolder = (title: string): Promise<string> => Call.ByID(237181597, title)
 export const SelectSaveFile = (title: string, defaultName: string): Promise<string> => Call.ByID(893202942, title, defaultName)
+export const SaveFile = (title: string, defaultName: string, contentBase64: string): Promise<string> => Call.ByID(1396636678, title, defaultName, contentBase64)
 export const ExportTransactionsCSVToDir = (startDate: string, endDate: string, dir: string): Promise<string> => Call.ByID(340704382, startDate, endDate, dir)
 export const GetAvailableScreens = (): Promise<any[]> => Call.ByID(1652254419)
 export const GetAvailablePrinters = (): Promise<any[]> => Call.ByID(1404596867)

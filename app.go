@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"one_man_shop/backend/db"
 	"one_man_shop/backend/display"
@@ -252,6 +254,31 @@ func (a *App) SelectSaveFile(title, defaultName string) (string, error) {
 		return "", err
 	}
 	return result, nil
+}
+
+// SaveFile opens a save dialog and writes base64-encoded content to the chosen path
+func (a *App) SaveFile(title, defaultName string, contentBase64 string) (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("app not initialized")
+	}
+
+	path, err := a.app.Dialog.SaveFile().
+		SetFilename(defaultName).
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(contentBase64)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode content: %w", err)
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return "", fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return path, nil
 }
 
 func (a *App) GetAvailableScreens() ([]map[string]interface{}, error) {

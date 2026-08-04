@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BarChart3, List, Calendar } from 'lucide-react'
 import SummaryTab from '../components/Reports/SummaryTab'
 import TransactionsTab from '../components/Reports/TransactionsTab'
-import CalendarTab from '../components/Reports/CalendarTab'
+import CalendarTab from '../components/Reports/Calendar/CalendarTab'
 
 export default function ReportsPage() {
   const [tab, setTab] = useState<'summary' | 'transactions' | 'calendar'>('summary')
