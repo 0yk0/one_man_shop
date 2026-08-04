@@ -11,7 +11,7 @@ export class CartItem {
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class Transaction {
-  id = ''; items: CartItem[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''
+  id = ''; receipt_number = 0; items: CartItem[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''
   constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new CartItem(i)) }
 }
 export class Settings {
@@ -19,7 +19,7 @@ export class Settings {
   tax_enabled = false; default_tax_rate = 0; backup_enabled = false
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0
-  printer_name = ''; auto_print = true; paper_width = 80
+  printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class ReportSummary {

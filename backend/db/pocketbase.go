@@ -52,6 +52,8 @@ func initCollections() {
 	transactionsCol, _ := App.FindCollectionByNameOrId("transactions")
 	if transactionsCol == nil {
 		createTransactionsCollection()
+	} else {
+		migrateTransactionsCollection(transactionsCol)
 	}
 
 	settingsCol, _ := App.FindCollectionByNameOrId("settings")
@@ -101,6 +103,7 @@ func createTransactionsCollection() {
 		&core.NumberField{Name: "tax_total", Required: true},
 		&core.NumberField{Name: "total", Required: true},
 		&core.TextField{Name: "payment_method", Required: true, Max: 10},
+		&core.NumberField{Name: "receipt_number", Min: types.Pointer(0.0), OnlyInt: true},
 		&core.AutodateField{Name: "created", OnCreate: true},
 		&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true},
 	)
@@ -138,6 +141,7 @@ func createSettingsCollection() {
 		&core.TextField{Name: "printer_name", Max: 200},
 		&core.BoolField{Name: "auto_print"},
 		&core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true},
+		&core.NumberField{Name: "last_receipt_number", Min: types.Pointer(0.0), OnlyInt: true},
 	)
 
 	collection.ViewRule = types.Pointer("")
@@ -183,6 +187,9 @@ func migrateSettingsCollection(col *core.Collection) {
 	if !existingFields["paper_width"] {
 		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true})
 	}
+	if !existingFields["last_receipt_number"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "last_receipt_number", Min: types.Pointer(0.0), OnlyInt: true})
+	}
 
 	if len(fieldsToAdd) > 0 {
 		col.Fields.Add(fieldsToAdd...)
@@ -190,6 +197,52 @@ func migrateSettingsCollection(col *core.Collection) {
 			log.Printf("Failed to migrate settings collection: %v", err)
 		} else {
 			log.Printf("Migrated settings collection: added %d missing fields", len(fieldsToAdd))
+		}
+	}
+}
+
+// migrateTransactionsCollection adds receipt_number field and backfills existing transactions
+func migrateTransactionsCollection(col *core.Collection) {
+	existingFields := make(map[string]bool)
+	for _, f := range col.Fields {
+		existingFields[f.GetName()] = true
+	}
+
+	fieldsToAdd := []core.Field{}
+	if !existingFields["receipt_number"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "receipt_number", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+
+	if len(fieldsToAdd) > 0 {
+		col.Fields.Add(fieldsToAdd...)
+		if err := App.Save(col); err != nil {
+			log.Printf("Failed to migrate transactions collection: %v", err)
+			return
+		}
+		log.Printf("Migrated transactions collection: added %d missing fields", len(fieldsToAdd))
+
+		// Backfill receipt numbers for existing transactions (ordered by created time)
+		records, err := App.FindRecordsByFilter("transactions", "", "created", 0, 0)
+		if err != nil {
+			log.Printf("Failed to fetch transactions for backfill: %v", err)
+			return
+		}
+
+		if len(records) > 0 {
+			for i, r := range records {
+				r.Set("receipt_number", i+1)
+				if err := App.SaveNoValidate(r); err != nil {
+					log.Printf("Failed to backfill receipt_number for transaction %s: %v", r.Id, err)
+				}
+			}
+			log.Printf("Backfilled receipt numbers for %d transactions", len(records))
+
+			// Update last_receipt_number in settings
+			settingsRecords, _ := App.FindRecordsByFilter("settings", "", "", 0, 0)
+			if len(settingsRecords) > 0 {
+				settingsRecords[0].Set("last_receipt_number", len(records))
+				App.SaveNoValidate(settingsRecords[0])
+			}
 		}
 	}
 }
@@ -221,6 +274,7 @@ func ensureDefaultSettings() {
 		record.Set("printer_name", "")
 		record.Set("auto_print", true)
 		record.Set("paper_width", 80)
+		record.Set("last_receipt_number", 0)
 
 		if err := App.Save(record); err != nil {
 			log.Printf("Failed to create default settings: %v", err)

@@ -105,6 +105,11 @@ export interface Settings {
      * 58 or 80 (mm) for thermal paper
      */
     "paper_width": number;
+
+    /**
+     * rolling receipt counter
+     */
+    "last_receipt_number": number;
 }
 
 /**
@@ -112,6 +117,11 @@ export interface Settings {
  */
 export interface Transaction {
     "id": string;
+
+    /**
+     * Rolling receipt number (e.g., 42 → "#000042")
+     */
+    "receipt_number": number;
     "items": CartItem[] | null;
     "subtotal": number;
     "tax_total": number;

@@ -8,6 +8,7 @@ import POSScreen from './pages/POSScreen'
 import ProductsPage from './pages/ProductsPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
+import ReceiptsPage from './pages/ReceiptsPage'
 import { IsSetupComplete, SaveSettings, GetSettings } from './bindings'
 
 function App() {
@@ -53,7 +54,7 @@ function App() {
         tax_enabled: false, default_tax_rate: 0,
         backup_enabled: false, backup_folder: '', backup_retention_days: 30, display_screen: 0,
         display_screen_name: '', display_screen_width: 0, display_screen_height: 0,
-        printer_name: '', auto_print: true, paper_width: 80,
+        printer_name: '', auto_print: true, paper_width: 80, last_receipt_number: 0,
       })
       setTheme('light')
       setIsComplete(true)
@@ -98,6 +99,7 @@ function App() {
           <Route index element={<POSScreen />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="receipts" element={<ReceiptsPage />} />
           <Route path="settings" element={<SettingsPage currentTheme={theme} onThemeChange={handleThemeChange} />} />
         </Route>
       </Routes>

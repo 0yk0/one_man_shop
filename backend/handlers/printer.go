@@ -287,7 +287,14 @@ func buildReceiptText(t models.Transaction, s models.Settings) string {
 		b.WriteString("\n")
 	}
 
-	b.WriteString(centerText(getCurrentDateTime(), width))
+	// Receipt ID (if available)
+	if t.ReceiptNumber > 0 {
+		b.WriteString(centerText(formatReceiptID(t.ReceiptNumber), width))
+		b.WriteString("\n")
+	}
+
+	// Date/time (from transaction, not current time)
+	b.WriteString(centerText(formatReceiptTime(t.Created), width))
 	b.WriteString("\n")
 	b.WriteString(line)
 	b.WriteString("\n")
@@ -377,9 +384,19 @@ func getItemCount(items []models.CartItem) int {
 	return total
 }
 
-// getCurrentDateTime returns formatted current date and time
-func getCurrentDateTime() string {
-	return time.Now().Format("02-Jan-2006 15:04")
+// formatReceiptID formats the receipt number as #000042
+func formatReceiptID(num int) string {
+	return fmt.Sprintf("#%06d", num)
+}
+
+// formatReceiptTime formats the transaction's created time for receipts
+func formatReceiptTime(created string) string {
+	t, err := time.Parse(time.RFC3339, created)
+	if err != nil {
+		// Fallback: return the raw string or current time
+		return time.Now().Format("02-Jan-2006 15:04")
+	}
+	return t.Format("02-Jan-2006 15:04")
 }
 
 // ========== ESC/POS Builder ==========
@@ -404,19 +421,25 @@ func buildEscposBytes(t models.Transaction, s models.Settings) []byte {
 	buf = append(buf, 0x1B, 0x61, 0x01) // ESC a 1 (center)
 	buf = append(buf, 0x1B, 0x45, 0x01) // ESC E 1 (bold on)
 	buf = append(buf, 0x1D, 0x21, 0x11) // GS ! 17 (double size)
-	buf = append(buf, []byte(centerText(s.ShopName, width/2))...) // double width = half chars
+	buf = append(buf, []byte(s.ShopName)...)
 	buf = append(buf, 0x0A) // LF
 	buf = append(buf, 0x1D, 0x21, 0x00) // GS ! 0 (normal size)
 	buf = append(buf, 0x1B, 0x45, 0x00) // ESC E 0 (bold off)
 
 	// Merchant name
 	if s.MerchantName != "" {
-		buf = append(buf, []byte(centerText(s.MerchantName, width))...)
+		buf = append(buf, []byte(s.MerchantName)...)
 		buf = append(buf, 0x0A)
 	}
 
-	// Date/time (centered)
-	buf = append(buf, []byte(centerText(getCurrentDateTime(), width))...)
+	// Receipt ID (if available)
+	if t.ReceiptNumber > 0 {
+		buf = append(buf, []byte(formatReceiptID(t.ReceiptNumber))...)
+		buf = append(buf, 0x0A)
+	}
+
+	// Date/time (from transaction, not current time)
+	buf = append(buf, []byte(formatReceiptTime(t.Created))...)
 	buf = append(buf, 0x0A)
 
 	// Separator

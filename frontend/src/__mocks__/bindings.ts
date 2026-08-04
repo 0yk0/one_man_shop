@@ -29,6 +29,7 @@ export class CartItem {
 
 export class Transaction {
   id = ''
+  receipt_number = 0
   items: CartItem[] = []
   subtotal = 0
   tax_total = 0
@@ -60,6 +61,7 @@ export class Settings {
   printer_name = ''
   auto_print = true
   paper_width = 80
+  last_receipt_number = 0
   constructor(s: any = {}) {
     Object.assign(this, s || {})
   }

@@ -39,6 +39,7 @@ func (a *AppHandler) GetSettings() (models.Settings, error) {
 		PrinterName:         r.GetString("printer_name"),
 		AutoPrint:           r.GetBool("auto_print"),
 		PaperWidth:          int(r.GetInt("paper_width")),
+		LastReceiptNumber:   int(r.GetInt("last_receipt_number")),
 	}, nil
 }
 
@@ -71,6 +72,7 @@ func (a *AppHandler) SaveSettings(s models.Settings) error {
 	record.Set("printer_name", s.PrinterName)
 	record.Set("auto_print", s.AutoPrint)
 	record.Set("paper_width", s.PaperWidth)
+	record.Set("last_receipt_number", s.LastReceiptNumber)
 
 	if err := db.App.SaveNoValidate(record); err != nil {
 		return fmt.Errorf("failed to save settings: %w", err)

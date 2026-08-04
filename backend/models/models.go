@@ -35,6 +35,7 @@ type Cart struct {
 // Transaction represents a completed sale
 type Transaction struct {
 	ID            string       `json:"id"`
+	ReceiptNumber int          `json:"receipt_number"` // Rolling receipt number (e.g., 42 → "#000042")
 	Items         []CartItem   `json:"items"`
 	Subtotal      float64      `json:"subtotal"`
 	TaxTotal      float64      `json:"tax_total"`
@@ -74,6 +75,7 @@ type Settings struct {
 	PrinterName         string `json:"printer_name"`          // selected printer name for receipts
 	AutoPrint           bool   `json:"auto_print"`            // auto-print after payment
 	PaperWidth          int    `json:"paper_width"`           // 58 or 80 (mm) for thermal paper
+	LastReceiptNumber   int    `json:"last_receipt_number"`   // rolling receipt counter
 }
 
 // ReportSummary represents a day's or period's sales summary

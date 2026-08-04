@@ -163,10 +163,10 @@ describe('getDateRange', () => {
 
 describe('filterTxns', () => {
   const txns: Transaction[] = [
-    { id: '1', items: [], subtotal: 10, tax_total: 1, total: 11, payment_method: 'upi', created: '2026-08-01T10:00:00Z' },
-    { id: '2', items: [], subtotal: 20, tax_total: 2, total: 22, payment_method: 'cash', created: '2026-08-02T10:00:00Z' },
-    { id: '3', items: [], subtotal: 30, tax_total: 3, total: 33, payment_method: 'upi', created: '2026-08-03T10:00:00Z' },
-    { id: '4', items: [], subtotal: 40, tax_total: 4, total: 44, payment_method: 'cash', created: '2026-08-04T10:00:00Z' },
+    { id: '1', receipt_number: 1, items: [], subtotal: 10, tax_total: 1, total: 11, payment_method: 'upi', created: '2026-08-01T10:00:00Z' },
+    { id: '2', receipt_number: 2, items: [], subtotal: 20, tax_total: 2, total: 22, payment_method: 'cash', created: '2026-08-02T10:00:00Z' },
+    { id: '3', receipt_number: 3, items: [], subtotal: 30, tax_total: 3, total: 33, payment_method: 'upi', created: '2026-08-03T10:00:00Z' },
+    { id: '4', receipt_number: 4, items: [], subtotal: 40, tax_total: 4, total: 44, payment_method: 'cash', created: '2026-08-04T10:00:00Z' },
   ]
 
   it('filters transactions within date range', () => {
@@ -190,9 +190,9 @@ describe('filterTxns', () => {
 describe('sumTxns', () => {
   it('sums transaction totals correctly', () => {
     const txns: Transaction[] = [
-      { id: '1', items: [], subtotal: 10, tax_total: 1, total: 11, payment_method: 'upi', created: '' },
-      { id: '2', items: [], subtotal: 20, tax_total: 2, total: 22, payment_method: 'cash', created: '' },
-      { id: '3', items: [], subtotal: 30, tax_total: 3, total: 33, payment_method: 'upi', created: '' },
+      { id: '1', receipt_number: 1, items: [], subtotal: 10, tax_total: 1, total: 11, payment_method: 'upi', created: '' },
+      { id: '2', receipt_number: 2, items: [], subtotal: 20, tax_total: 2, total: 22, payment_method: 'cash', created: '' },
+      { id: '3', receipt_number: 3, items: [], subtotal: 30, tax_total: 3, total: 33, payment_method: 'upi', created: '' },
     ]
 
     const result = sumTxns(txns)

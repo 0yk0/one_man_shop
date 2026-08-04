@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSettings } from '../../hooks/useSettings'
 import AdminPinModal from '../AdminPinModal'
-import { Store, Monitor, Package, BarChart3, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Store, Monitor, Package, BarChart3, ReceiptText, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Browser } from '@wailsio/runtime'
 
 interface Props {
@@ -68,6 +68,20 @@ export default function Layout({ onThemeChange }: Props) {
           >
             <Monitor size={20} />
             {!collapsed && <span>POS</span>}
+          </NavLink>
+
+          <NavLink
+            to="/receipts"
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary text-primary-content'
+                : 'hover:bg-base-300 text-base-content'
+            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+            data-tip={collapsed ? 'Receipts' : undefined}
+            title="Receipts"
+          >
+            <ReceiptText size={20} />
+            {!collapsed && <span>Receipts</span>}
           </NavLink>
 
           <button
