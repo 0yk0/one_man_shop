@@ -42,3 +42,146 @@
 .scroll-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* Safe area padding for notched devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Position an element above the bottom nav bar.
+   Uses the --app-nav-h CSS variable set on the <nav> in Layout.tsx.
+   Add safe-area-bottom for notched devices. */
+.above-nav {
+  bottom: var(--app-nav-h, 72px);
+}
+
+/* Padding to clear the bottom nav bar (with optional extra spacing) */
+.above-nav-pad {
+  padding-bottom: calc(var(--app-nav-h, 72px) + 12px);
+}
+
+/* Bottom sheet animation */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.bottom-sheet {
+  animation: slideUp 0.3s ease-out;
+}
+
+.bottom-sheet-closing {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Backdrop overlay */
+.backdrop-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Mobile-optimized touch targets (minimum 44px) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent 300ms tap delay on mobile */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Remove tap highlight on mobile */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Card grid for mobile products */
+.product-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .product-card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .product-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+/* Transaction card for mobile */
+.transaction-card {
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* ── Shared bottom-sheet components ────────────────────── */
+
+/* Bottom sheet backdrop — consistent across all sheets */
+.sheet-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Bottom sheet container with slide-up animation */
+.sheet-container {
+  border-radius: 1rem 1rem 0 0;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ── Carousel / horizontal scroll ──────────────────────── */
+
+/* Hide scrollbar on carousel containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fade edge hint on right side of scrollable carousel */
+.carousel-fade-edge {
+  position: relative;
+}
+.carousel-fade-edge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2rem;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, oklch(var(--b1)));
+}
+
+/* ── Tap feedback ──────────────────────────────────────── */
+
+/* Scale-down on active for tactile feedback */
+.tap-scale {
+  transition: transform 100ms ease;
+}
+.tap-scale:active {
+  transform: scale(0.95);
+}

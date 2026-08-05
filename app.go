@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"one_man_shop/backend/db"
 	"one_man_shop/backend/display"
@@ -330,6 +332,73 @@ func (a *App) SetBackupSchedule(enabled bool) error {
 	return a.handlers.SetBackupSchedule(enabled)
 }
 
+// ========== Mobile/Data Directory Methods ==========
+
+// IsMobile returns true if running on Android or iOS
+func (a *App) IsMobile() bool {
+	return runtime.GOOS == "android" || runtime.GOOS == "ios"
+}
+
+// GetDataDir returns the current data directory path
+func (a *App) GetDataDir() string {
+	return getDataDirForDisplay()
+}
+
+// SelectDataDir opens a folder picker and returns the selected path
+func (a *App) SelectDataDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("app not initialized")
+	}
+	result, err := a.app.Dialog.OpenFile().
+		SetTitle("Select Data Directory").
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
+// SaveDataDir saves the selected data directory to config after validating it's writable
+func (a *App) SaveDataDir(path string) error {
+	if path == "" {
+		return fmt.Errorf("data directory path cannot be empty")
+	}
+
+	// Normalize the path
+	normalized := path
+	if runtime.GOOS != "windows" {
+		normalized = filepath.Clean(path)
+	}
+
+	log.Printf("[DataDir] Validating data directory: %s", normalized)
+
+	// Create the directory if it doesn't exist
+	if err := os.MkdirAll(normalized, 0755); err != nil {
+		return fmt.Errorf("cannot create directory %q: %w", normalized, err)
+	}
+
+	// Test write access by creating a temp file
+	testFile := filepath.Join(normalized, ".write_test")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return fmt.Errorf("directory %q is not writable: %w", normalized, err)
+	}
+	f.Close()
+	os.Remove(testFile)
+
+	log.Printf("[DataDir] Directory validated, saving preference: %s", normalized)
+
+	// Save to config
+	if err := saveDataDir(normalized); err != nil {
+		return fmt.Errorf("failed to save data directory preference: %w", err)
+	}
+
+	log.Printf("[DataDir] Data directory preference saved. Restart app to use new location.")
+	return nil
+}
+
 // ========== Helpers ==========
 
 func (a *App) getShopName() string {
@@ -340,6 +409,6 @@ func (a *App) getShopName() string {
 	return s.ShopName
 }
 
-func getAppDataDir() string {
-	return "data"
-}
+// getAppDataDir is defined in platform-specific files:
+// - app_desktop.go (//go:build !android)
+// - app_android.go (//go:build android)

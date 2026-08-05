@@ -10,7 +10,7 @@ import { useSnackbar } from 'notistack'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   ShoppingCart, Minus, Plus, Trash2, ArrowLeft, CheckCircle, Loader2,
-  Receipt, Monitor, MonitorOff, RefreshCw, Search, X, Printer
+  Receipt, Monitor, MonitorOff, RefreshCw, Search, X, Printer, ChevronUp
 } from 'lucide-react'
 import { sounds } from '../lib/sounds'
 
@@ -39,6 +39,15 @@ export default function POSScreen() {
   const [search, setSearch] = useState('')
   const [tappedId, setTappedId] = useState<string | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth < 768)
+  const [cartSheetOpen, setCartSheetOpen] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsSmallScreen(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const loadData = useCallback(async () => {
     try {
@@ -71,21 +80,21 @@ export default function POSScreen() {
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0)
   const taxTotal = cart.reduce((sum, item) => sum + item.tax_amount, 0)
   const total = subtotal + taxTotal
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0)
 
-  // ========== Keyboard shortcuts ==========
+  // ========== Keyboard shortcuts (desktop only) ==========
   useEffect(() => {
+    if (isSmallScreen) return
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT'
 
-      // / — focus search
       if (e.key === '/' && !isInput) {
         e.preventDefault()
         searchInputRef.current?.focus()
         return
       }
 
-      // Escape — clear search or go back from payment
       if (e.key === 'Escape') {
         if (search) {
           setSearch('')
@@ -97,13 +106,12 @@ export default function POSScreen() {
         return
       }
 
-      // Skip remaining shortcuts if typing in an input or in payment view
       if (isInput || showPayment || completed) return
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [search, showPayment, completed, filteredProducts])
+  }, [search, showPayment, completed, filteredProducts, isSmallScreen])
 
   // ========== Display ==========
   const toggleDisplay = async () => {
@@ -199,6 +207,7 @@ export default function POSScreen() {
       ClearCustomerDisplay()
     }
     setShowClearConfirm(false)
+    setCartSheetOpen(false)
   }
 
   // ========== Payment ==========
@@ -248,18 +257,17 @@ export default function POSScreen() {
 
       ConfirmPayment()
 
-      // Auto-print receipt if enabled and printer is configured
       if (settings?.auto_print && settings?.printer_name) {
         handlePrintReceipt(savedTransaction)
       }
 
-      // Auto-clear after 3 seconds (thank you view duration)
       clearTimerRef.current = setTimeout(() => {
         setCompleted(false)
         setCart([])
         setShowPayment(false)
         setPaymentMethod('upi')
         setLastTransaction(null)
+        setCartSheetOpen(false)
         if (displayOpen) {
           SendProductsToDisplay()
         }
@@ -299,6 +307,323 @@ export default function POSScreen() {
     )
   }
 
+  // ========== Mobile Layout ==========
+  if (isSmallScreen) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Mobile Header */}
+        <div className="p-3 border-b border-base-300 bg-base-100 safe-area-top">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search products..."
+                className="input input-bordered w-full pl-10 pr-10 h-11 text-sm"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  onClick={() => setSearch('')}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <button
+              className={`btn btn-sm gap-1 min-h-[44px] px-3 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
+              onClick={toggleDisplay}
+            >
+              {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Product Grid (mobile) */}
+        <div className="flex-1 overflow-auto p-4">
+          {products.length === 0 ? (
+            <div className="text-center py-16 text-base-content/40">
+              <ShoppingCart size={48} className="mx-auto mb-3 opacity-30" />
+              <p className="text-lg">No products yet</p>
+              <p className="text-sm mt-1">Add products from the Products page</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16 text-base-content/40">
+              <Search size={48} className="mx-auto mb-3 opacity-30" />
+              <p className="text-lg">No products match "{search}"</p>
+              <button className="btn btn-ghost btn-sm mt-2" onClick={() => setSearch('')}>Clear search</button>
+            </div>
+          ) : (
+            <div className="product-card-grid">
+              {filteredProducts.map(product => (
+                <button
+                  key={product.id}
+                  className={`relative card bg-base-100 shadow-sm transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                  onClick={showPayment ? undefined : () => handleProductTap(product)}
+                >
+                  {cartQtyMap[product.id] != null && (
+                    <span className="badge badge-primary badge-sm absolute top-1 right-1 z-10">{cartQtyMap[product.id]}</span>
+                  )}
+                  {product.image_data ? (
+                    <img src={product.image_data} alt={product.name} className="w-full h-28 object-cover" />
+                  ) : (
+                    <div className="w-full h-28 bg-base-200 flex items-center justify-center">
+                      <ShoppingCart size={24} className="opacity-20" />
+                    </div>
+                  )}
+                  <div className="p-2">
+                    <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
+                    <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Cart Bottom Sheet */}
+        {/* Collapsed cart bar */}
+        {!cartSheetOpen && !showPayment && (
+          <div className="fixed bottom-[var(--app-nav-h)] left-0 right-0 z-40 safe-area-bottom px-3 pb-2">
+            <div className="bg-primary text-primary-content shadow-lg rounded-xl overflow-hidden">
+              <button
+                className="w-full flex items-center justify-between px-3 sm:px-4 h-14"
+                onClick={() => setCartSheetOpen(true)}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Receipt size={20} className="shrink-0" />
+                  <span className="font-bold text-sm sm:text-base">{cartCount} items</span>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <span className="font-bold font-mono tabular-nums text-sm sm:text-base">₹{total.toFixed(2)}</span>
+                  <ChevronUp size={20} />
+                </div>
+              </button>
+              {cart.length > 0 && (
+                <button
+                  className="w-full btn btn-accent btn-lg rounded-none rounded-b-xl min-h-[48px]"
+                  onClick={() => {
+                    setShowPayment(true)
+                    if (displayOpen) {
+                      UpdateCustomerDisplay(cart, subtotal, taxTotal)
+                      SendPaymentMethodToDisplay('upi')
+                    }
+                  }}
+                >
+                  Pay ₹{total.toFixed(2)}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Expanded cart sheet */}
+        {cartSheetOpen && !showPayment && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-40 sheet-backdrop"
+              onClick={() => setCartSheetOpen(false)}
+            />
+            {/* Sheet */}
+            <div className="fixed bottom-0 left-0 right-0 bg-base-100 z-50 max-h-[85vh] flex flex-col sheet-container">
+              {/* Handle */}
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 bg-base-content/20 rounded-full" />
+              </div>
+
+              {/* Header */}
+              <div className="px-4 pb-3 border-b border-base-300 flex justify-between items-center">
+                <h2 className="font-bold flex items-center gap-2">
+                  <Receipt size={18} /> Cart
+                  {cart.length > 0 && <span className="badge badge-sm">{cartCount}</span>}
+                </h2>
+                <div className="flex items-center gap-2">
+                  {cart.length > 0 && (
+                    <button className="btn btn-sm btn-ghost text-error gap-1" onClick={clearCart}>
+                      <Trash2 size={14} /> Clear
+                    </button>
+                  )}
+                  <button className="btn btn-sm btn-ghost" onClick={() => setCartSheetOpen(false)}>
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Cart Items */}
+              <div className="flex-1 overflow-auto p-4">
+                {cart.length === 0 ? (
+                  <div className="text-center py-8 text-base-content/40">
+                    <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
+                    <p>Tap a product to add</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {cart.map(item => (
+                      <div key={item.product_id} className="flex items-center gap-3 bg-base-200 rounded-lg p-3">
+                        <button
+                          className="btn btn-circle btn-ghost text-error shrink-0 min-h-[44px] min-w-[44px]"
+                          onClick={() => removeItem(item.product_id)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.name}</p>
+                          <p className="text-xs text-base-content/60">₹{item.price.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="btn btn-circle btn-ghost min-h-[44px] min-w-[44px]"
+                            onClick={() => updateQty(item.product_id, -1)}
+                          >
+                            <Minus size={18} />
+                          </button>
+                          <span className="w-10 text-center font-bold text-lg">{item.qty}</span>
+                          <button
+                            className="btn btn-circle btn-ghost min-h-[44px] min-w-[44px]"
+                            onClick={() => updateQty(item.product_id, 1)}
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                        <p className="font-medium text-sm min-w-[70px] text-right">₹{item.subtotal.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Summary + Pay */}
+              <div className="border-t border-base-300 p-4 pb-[calc(var(--app-nav-h)+12px)] space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span><span className="font-mono tabular-nums">₹{subtotal.toFixed(2)}</span>
+                </div>
+                {taxTotal > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Tax</span><span className="font-mono tabular-nums">₹{taxTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold border-t border-base-300 pt-2">
+                  <span>Total</span><span className="font-mono tabular-nums">₹{total.toFixed(2)}</span>
+                </div>
+                <button
+                  className="btn btn-primary btn-block btn-lg min-h-[48px]"
+                  disabled={cart.length === 0}
+                  onClick={() => {
+                    setShowPayment(true)
+                    if (displayOpen) {
+                      UpdateCustomerDisplay(cart, subtotal, taxTotal)
+                      SendPaymentMethodToDisplay('upi')
+                    }
+                  }}
+                >
+                  Pay ₹{total.toFixed(2)}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Mobile Payment View */}
+        {showPayment && (
+          <div className="fixed inset-0 bg-base-100 z-50 flex flex-col safe-area-top safe-area-bottom">
+            <div className="p-4 border-b border-base-300 flex items-center gap-3">
+              {!completed && (
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => { setShowPayment(false); setUpiString(''); if (displayOpen) SendProductsToDisplay() }}
+                >
+                  <ArrowLeft size={18} /> Back
+                </button>
+              )}
+              <h2 className="font-bold text-lg">Payment</h2>
+            </div>
+            <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
+              {completed ? (
+                <div className="space-y-4 w-full max-w-sm">
+                  <div className="alert alert-success gap-2">
+                    <CheckCircle size={20} />
+                    <span>Payment recorded!</span>
+                  </div>
+                  {settings?.printer_name && lastTransaction && (
+                    <button
+                      className="btn btn-outline btn-block gap-2"
+                      onClick={() => handlePrintReceipt(lastTransaction)}
+                      disabled={printing}
+                    >
+                      {printing ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                      {printing ? 'Printing...' : 'Print Receipt'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4 w-full max-w-sm">
+                  <div className="flex gap-2">
+                    <button
+                      className={`btn flex-1 ${paymentMethod === 'upi' ? 'btn-primary' : 'btn-outline'}`}
+                      onClick={() => { setPaymentMethod('upi'); if (displayOpen) SendPaymentMethodToDisplay('upi') }}
+                    >
+                      UPI QR
+                    </button>
+                    <button
+                      className={`btn flex-1 ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-outline'}`}
+                      onClick={() => { setPaymentMethod('cash'); if (displayOpen) SendPaymentMethodToDisplay('cash') }}
+                    >
+                      Cash
+                    </button>
+                  </div>
+                  {paymentMethod === 'upi' && upiString && (
+                    <div className="text-center">
+                      <div className="bg-white p-4 rounded-2xl inline-block mb-2">
+                        <QRCodeSVG value={upiString} size={180} />
+                      </div>
+                      <p className="text-xl font-bold text-primary">₹{total.toFixed(2)}</p>
+                      <p className="text-xs text-base-content/60 mt-1 font-mono">{settings?.upi_vpa}</p>
+                    </div>
+                  )}
+                  {paymentMethod === 'cash' && (
+                    <div className="text-center py-4">
+                      <p className="text-3xl font-bold">₹{total.toFixed(2)}</p>
+                      <p className="text-sm text-base-content/60">Collect cash from customer</p>
+                    </div>
+                  )}
+                  <button
+                    className="btn btn-primary btn-block btn-lg"
+                    onClick={handlePayment}
+                    disabled={processing}
+                  >
+                    {processing ? <Loader2 size={18} className="animate-spin" /> : <><CheckCircle size={18} /> Confirm Payment</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Clear Cart Confirmation Modal */}
+        {showClearConfirm && (
+          <dialog className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Clear Cart</h3>
+              <p className="py-4">Are you sure you want to clear all items from the cart?</p>
+            <div className="modal-action safe-area-bottom">
+                <button className="btn" onClick={() => setShowClearConfirm(false)}>Cancel</button>
+                <button className="btn btn-error" onClick={confirmClearCart}>Clear</button>
+              </div>
+            </div>
+            <form method="dialog" className="modal-backdrop">
+              <button onClick={() => setShowClearConfirm(false)}>close</button>
+            </form>
+          </dialog>
+        )}
+      </div>
+    )
+  }
+
+  // ========== Desktop Layout (unchanged) ==========
   return (
     <div className="flex h-full">
       {/* Product Grid */}
@@ -369,7 +694,6 @@ export default function POSScreen() {
                 className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
                 onClick={showPayment ? undefined : () => handleProductTap(product)}
               >
-                {/* Cart count badge */}
                 {cartQtyMap[product.id] != null && (
                   <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQtyMap[product.id]}</span>
                 )}
@@ -390,13 +714,13 @@ export default function POSScreen() {
         )}
       </div>
 
-      {/* Cart Sidebar */}
+      {/* Cart Sidebar (desktop) */}
       <div className="w-72 md:w-80 lg:w-96 bg-base-100 border-l border-base-300 flex flex-col shrink-0">
         <div className="p-4 border-b border-base-300">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Receipt size={20} /> Cart
-              {cart.length > 0 && <span className="badge badge-sm">{cart.reduce((s, i) => s + i.qty, 0)}</span>}
+              {cart.length > 0 && <span className="badge badge-sm">{cartCount}</span>}
             </h2>
             {cart.length > 0 && !showPayment && (
               <button className="btn btn-sm btn-ghost text-error gap-1" onClick={clearCart}>
@@ -406,7 +730,6 @@ export default function POSScreen() {
           </div>
         </div>
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-auto p-4">
           {cart.length === 0 ? (
             <div className="text-center py-12 text-base-content/40">
@@ -421,7 +744,6 @@ export default function POSScreen() {
                     <button
                       className="btn btn-sm btn-circle btn-ghost text-error shrink-0"
                       onClick={() => removeItem(item.product_id)}
-                      aria-label={`Remove ${item.name}`}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -433,19 +755,11 @@ export default function POSScreen() {
                   <div className="flex items-center gap-1">
                     {!showPayment ? (
                       <>
-                        <button
-                          className="btn btn-sm btn-circle btn-ghost"
-                          onClick={() => updateQty(item.product_id, -1)}
-                          aria-label={`Decrease ${item.name} quantity`}
-                        >
+                        <button className="btn btn-sm btn-circle btn-ghost" onClick={() => updateQty(item.product_id, -1)}>
                           <Minus size={18} />
                         </button>
                         <span className="w-10 text-center text-base font-bold">{item.qty}</span>
-                        <button
-                          className="btn btn-sm btn-circle btn-ghost"
-                          onClick={() => updateQty(item.product_id, 1)}
-                          aria-label={`Increase ${item.name} quantity`}
-                        >
+                        <button className="btn btn-sm btn-circle btn-ghost" onClick={() => updateQty(item.product_id, 1)}>
                           <Plus size={18} />
                         </button>
                       </>
@@ -460,33 +774,31 @@ export default function POSScreen() {
           )}
         </div>
 
-        {/* Cart Summary */}
         <div className="border-t border-base-300 p-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span>
+            <span>Subtotal</span><span className="font-mono tabular-nums">₹{subtotal.toFixed(2)}</span>
           </div>
           {taxTotal > 0 && (
             <div className="flex justify-between text-sm">
-              <span>Tax</span><span>₹{taxTotal.toFixed(2)}</span>
+              <span>Tax</span><span className="font-mono tabular-nums">₹{taxTotal.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between text-lg font-bold border-t border-base-300 pt-2">
-            <span>Total</span><span>₹{total.toFixed(2)}</span>
+            <span>Total</span><span className="font-mono tabular-nums">₹{total.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Pay Button / Payment UI */}
         <div className="p-4 border-t border-base-300">
-            {!showPayment ? (
+          {!showPayment ? (
             <button
               className="btn btn-primary btn-block btn-lg"
               disabled={cart.length === 0}
               onClick={() => {
                 setShowPayment(true)
-              if (displayOpen) {
-                UpdateCustomerDisplay(cart, subtotal, taxTotal)
-                SendPaymentMethodToDisplay('upi')
-              }
+                if (displayOpen) {
+                  UpdateCustomerDisplay(cart, subtotal, taxTotal)
+                  SendPaymentMethodToDisplay('upi')
+                }
               }}
             >
               Pay ₹{total.toFixed(2)}
@@ -517,19 +829,13 @@ export default function POSScreen() {
               <div className="flex gap-2">
                 <button
                   className={`btn flex-1 ${paymentMethod === 'upi' ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => {
-                    setPaymentMethod('upi')
-                    if (displayOpen) SendPaymentMethodToDisplay('upi')
-                  }}
+                  onClick={() => { setPaymentMethod('upi'); if (displayOpen) SendPaymentMethodToDisplay('upi') }}
                 >
                   UPI QR
                 </button>
                 <button
                   className={`btn flex-1 ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => {
-                    setPaymentMethod('cash')
-                    if (displayOpen) SendPaymentMethodToDisplay('cash')
-                  }}
+                  onClick={() => { setPaymentMethod('cash'); if (displayOpen) SendPaymentMethodToDisplay('cash') }}
                 >
                   Cash
                 </button>
@@ -576,12 +882,8 @@ export default function POSScreen() {
             <h3 className="font-bold text-lg">Clear Cart</h3>
             <p className="py-4">Are you sure you want to clear all items from the cart?</p>
             <div className="modal-action">
-              <button className="btn" onClick={() => setShowClearConfirm(false)}>
-                Cancel
-              </button>
-              <button className="btn btn-error" onClick={confirmClearCart}>
-                Clear
-              </button>
+              <button className="btn" onClick={() => setShowClearConfirm(false)}>Cancel</button>
+              <button className="btn btn-error" onClick={confirmClearCart}>Clear</button>
             </div>
           </div>
           <form method="dialog" className="modal-backdrop">

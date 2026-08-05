@@ -20,7 +20,14 @@ export default function TransactionsTab() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [pageIndex, setPageIndex] = useState(0)
+  const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth < 768)
   const { enqueueSnackbar } = useSnackbar()
+
+  useEffect(() => {
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const loadAll = useCallback(async () => {
     try {
@@ -128,12 +135,12 @@ export default function TransactionsTab() {
     <div className="space-y-4">
       {/* Filter Section */}
       <div className="bg-base-100 border border-base-300 rounded-xl p-4">
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
           <DateRangePicker
             value={{ preset, customStart, customEnd }}
             onChange={(v) => { setPreset(v.preset); setCustomStart(v.customStart); setCustomEnd(v.customEnd); }}
           />
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
               <input
@@ -145,7 +152,7 @@ export default function TransactionsTab() {
               />
             </div>
           </div>
-          <button className="btn btn-outline btn-sm gap-1" onClick={handleExportCSV} disabled={exporting}>
+          <button className="btn btn-outline btn-sm gap-1 w-full sm:w-auto" onClick={handleExportCSV} disabled={exporting}>
             {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
           </button>
         </div>
@@ -153,30 +160,104 @@ export default function TransactionsTab() {
 
       {/* Stats Bar */}
       {filtered.length > 0 && (
-        <div className="flex flex-wrap gap-4 text-sm">
-          <span className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg">
-            Transactions: <strong className="text-base-content">{filtered.length}</strong>
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-sm">
+          <span className="bg-base-100 border border-base-300 px-3 py-2 rounded-lg">
+            Txns: <strong className="text-base-content">{filtered.length}</strong>
           </span>
-          <span className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg">
-            Total: <strong className="text-primary">₹{stats.total.toFixed(2)}</strong>
+          <span className="bg-base-100 border border-base-300 px-3 py-2 rounded-lg">
+            Total: <strong className="text-primary font-mono tabular-nums">₹{stats.total.toFixed(2)}</strong>
           </span>
           {taxEnabled && (
-            <span className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg">
-              Tax: <strong className="text-secondary">₹{stats.tax.toFixed(2)}</strong>
+            <span className="bg-base-100 border border-base-300 px-3 py-2 rounded-lg">
+              Tax: <strong className="text-secondary font-mono tabular-nums">₹{stats.tax.toFixed(2)}</strong>
             </span>
           )}
-          <span className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg">
+          <span className="bg-base-100 border border-base-300 px-3 py-2 rounded-lg">
             UPI: <strong>{stats.upi}</strong>
           </span>
-          <span className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg">
+          <span className="bg-base-100 border border-base-300 px-3 py-2 rounded-lg">
             Cash: <strong>{stats.cash}</strong>
           </span>
         </div>
       )}
 
-      {/* Table */}
+      {/* Table / Mobile Cards */}
       {loading ? (
         <div className="flex items-center justify-center py-16"><Loader2 size={32} className="animate-spin text-primary" /></div>
+      ) : isSmallScreen ? (
+        <>
+          {/* Pagination - above cards */}
+          <div className="flex items-center justify-between px-3 py-2 bg-base-100 border border-base-300 rounded-xl">
+            <span className="text-xs text-base-content/60">
+              {filtered.length > 0
+                ? `${pageIndex * 20 + 1}–${Math.min((pageIndex + 1) * 20, filtered.length)} of ${filtered.length}`
+                : 'No results'}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                className="btn btn-ghost btn-sm min-h-[40px] min-w-[40px] px-3"
+                onClick={() => setPageIndex(p => Math.max(0, p - 1))}
+                disabled={pageIndex === 0}
+              >
+                ‹ Prev
+              </button>
+              <span className="text-xs text-base-content/60 px-2 tabular-nums font-mono">
+                {pageIndex + 1}/{totalPages}
+              </span>
+              <button
+                className="btn btn-ghost btn-sm min-h-[40px] min-w-[40px] px-3"
+                onClick={() => setPageIndex(p => Math.min(totalPages - 1, p + 1))}
+                disabled={pageIndex >= totalPages - 1}
+              >
+                Next ›
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="space-y-2">
+            {table.getRowModel().rows.length === 0 ? (
+              <div className="text-center py-8 text-base-content/40">
+                <Receipt size={32} className="mx-auto mb-2 opacity-30" />
+                <p>No transactions found</p>
+              </div>
+            ) : (
+              table.getRowModel().rows.map(row => (
+                <div key={row.original.id}>
+                  <div
+                    className="bg-base-100 border border-base-300 rounded-xl p-3 cursor-pointer active:bg-base-200 transition-colors"
+                    onClick={() => setExpandedId(expandedId === row.original.id ? null : row.original.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="text-sm font-medium">#{String(row.original.receipt_number).padStart(5, '0')}</div>
+                      <div className="text-sm font-semibold">₹{row.original.total.toFixed(2)}</div>
+                    </div>
+                    <div className="text-xs text-base-content/50 mt-0.5">
+                      {fmtDate(row.original.created)} • {fmtTime(row.original.created)}
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-xs text-base-content/60">{row.original.items?.length || 0} items</span>
+                      <span className={`badge badge-xs ${row.original.payment_method === 'upi' ? 'badge-primary' : 'badge-secondary'}`}>
+                        {row.original.payment_method === 'upi' ? 'UPI' : 'Cash'}
+                      </span>
+                    </div>
+                  </div>
+                  {expandedId === row.original.id && (
+                    <div className="bg-base-200 border border-base-300 border-t-0 rounded-b-xl px-3 py-2 -mt-2 pt-4">
+                      <p className="text-xs font-medium mb-1.5">Items:</p>
+                      {row.original.items?.map((item, j) => (
+                        <div key={j} className="flex justify-between text-xs py-0.5">
+                          <span>{item.name} × {item.qty}</span>
+                          <span>₹{item.subtotal.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </>
       ) : (
         <>
           <div className="card bg-base-100 shadow-md">

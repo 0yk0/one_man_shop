@@ -7,7 +7,7 @@ version: '3'
 info:
   companyName: "One Man Shop" # The name of the company
   productName: "One Man Shop" # The name of the application
-  productIdentifier: "com.onemanshop.pos" # The unique product identifier
+  productIdentifier: "in.yk0.oms" # The unique product identifier
   description: "Offline POS System for Small Shops" # The application description
   copyright: "(c) 2026, One Man Shop" # Copyright text
   comments: "Offline POS System for Small Shops" # Comments

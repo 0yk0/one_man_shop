@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
-import { GetAvailableScreens, GetAvailablePrinters } from '../bindings'
-import { Save, Loader2, Palette, Monitor, Shield, Printer } from 'lucide-react'
+import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile } from '../bindings'
+import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -49,6 +49,9 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   const [confirmPin, setConfirmPin] = useState('')
   const [pinError, setPinError] = useState('')
   const [changingPin, setChangingPin] = useState(false)
+  const [dataDir, setDataDir] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+  const [changingDataDir, setChangingDataDir] = useState(false)
 
   // Load available screens on mount
   useEffect(() => {
@@ -62,6 +65,12 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     GetAvailablePrinters()
       .then(p => setPrinters(p ?? []))
       .catch(() => setPrinters([]))
+  }, [])
+
+  // Load data dir and platform on mount
+  useEffect(() => {
+    GetDataDir().then(setDataDir).catch(() => {})
+    IsMobile().then(setIsMobile).catch(() => setIsMobile(false))
   }, [])
 
   // Populate form from DB on initial load
@@ -159,6 +168,23 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     }
   }
 
+  const handleChangeDataDir = async () => {
+    if (isMobile) return // Not supported on Android
+    try {
+      setChangingDataDir(true)
+      const selected = await SelectDataDir()
+      if (selected && selected.length > 0) {
+        await SaveDataDir(selected)
+        setDataDir(selected)
+        enqueueSnackbar('Data directory updated. Restart the app to use the new location.', { variant: 'info' })
+      }
+    } catch (err) {
+      console.error('Failed to change data directory:', err)
+    } finally {
+      setChangingDataDir(false)
+    }
+  }
+
   const handlePinChange = async () => {
     if (!settings) return
     setPinError('')
@@ -238,9 +264,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
-
+    <div className="p-4 md:p-6">
       <div className="card bg-base-100 shadow-md max-w-2xl">
         <div className="card-body">
           <h2 className="card-title">Shop Information</h2>
@@ -259,6 +283,31 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
           <div className="form-control w-full">
             <label className="label"><span className="label-text">Merchant Name</span></label>
             <input type="text" className="input input-bordered w-full" value={form.merchant_name} onChange={e => update('merchant_name', e.target.value)} />
+          </div>
+
+          <div className="divider"></div>
+
+          <h2 className="card-title flex items-center gap-2"><FolderOpen size={18} />Data Location</h2>
+
+          <div className="form-control w-full">
+            <label className="label"><span className="label-text">Data Directory</span></label>
+            {isMobile ? (
+              <input type="text" className="input input-bordered w-full text-sm" value={dataDir} readOnly />
+            ) : (
+              <div className="flex gap-2">
+                <input type="text" className="input input-bordered flex-1 text-sm" value={dataDir} readOnly />
+                <button className="btn btn-outline" onClick={handleChangeDataDir} disabled={changingDataDir}>
+                  {changingDataDir ? <Loader2 size={14} className="animate-spin" /> : 'Change'}
+                </button>
+              </div>
+            )}
+            <label className="label">
+              <span className="label-text-alt text-base-content/60">
+                {isMobile 
+                  ? 'On Android, data is stored in the app\'s external storage and persists across updates.'
+                  : 'Your products, transactions, and settings are stored in this directory.'}
+              </span>
+            </label>
           </div>
 
           <div className="divider"></div>
@@ -322,7 +371,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
 
           <div className="bg-base-200 rounded-lg p-4 space-y-2">
             <p className="text-sm font-medium">Preview</p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button className="btn btn-primary btn-sm">Primary</button>
               <button className="btn btn-secondary btn-sm">Secondary</button>
               <button className="btn btn-accent btn-sm">Accent</button>
@@ -489,7 +538,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             </div>
           )}
 
-          <div className="card-actions justify-end mt-6">
+          <div className="card-actions justify-end mt-6 sticky bottom-0 bg-base-100 py-3 -mx-6 px-6 z-10 md:static md:bg-transparent md:py-0 md:mx-0 md:px-0">
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               Save Settings

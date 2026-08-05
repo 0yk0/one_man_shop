@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Store, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Loader2, Shield } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Store, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Loader2, Shield, FolderOpen } from 'lucide-react'
+import { GetDataDir, SelectDataDir, IsMobile } from '../bindings'
 import PinInput from './PinInput'
 
 interface SetupData {
@@ -15,7 +16,7 @@ interface Props {
   error?: string | null
 }
 
-const steps = ['Shop Info', 'UPI Setup', 'Security PIN', 'Confirm']
+const steps = ['Data Location', 'Shop Info', 'UPI Setup', 'Security PIN', 'Confirm']
 
 export default function SetupWizard({ onComplete, saving, error }: Props) {
   const [step, setStep] = useState(0)
@@ -25,15 +26,23 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
     merchant_name: '',
     admin_pin: '',
   })
+  const [dataDir, setDataDir] = useState('')
+  const [mobile, setMobile] = useState(false)
+
+  useEffect(() => {
+    GetDataDir().then(setDataDir)
+    IsMobile().then(setMobile)
+  }, [])
 
   const update = (field: keyof SetupData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }))
   }
 
   const canNext = () => {
-    if (step === 0) return data.shop_name.trim().length > 0
-    if (step === 1) return data.upi_vpa.trim().length > 0 && data.merchant_name.trim().length > 0
-    if (step === 2) return data.admin_pin.length === 6
+    if (step === 0) return true
+    if (step === 1) return data.shop_name.trim().length > 0
+    if (step === 2) return data.upi_vpa.trim().length > 0 && data.merchant_name.trim().length > 0
+    if (step === 3) return data.admin_pin.length === 6
     return true
   }
 
@@ -58,7 +67,8 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
           <ul className="steps steps-horizontal w-full mb-8">
             {steps.map((s, i) => (
               <li key={s} className={`step ${i <= step ? 'step-primary' : ''}`}>
-                {s}
+                <span className="hidden sm:inline">{s}</span>
+                <span className="sm:hidden">{i + 1}</span>
               </li>
             ))}
           </ul>
@@ -73,6 +83,60 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
           {/* Step Content */}
           <div className="min-h-[200px]">
             {step === 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <FolderOpen size={20} />
+                  {mobile ? 'Storage' : 'Data Location'}
+                </h2>
+                {mobile ? (
+                  <>
+                    <div className="flex items-start gap-3 bg-base-200 rounded-lg p-4">
+                      <div className="mt-0.5">
+                        <FolderOpen size={24} className="text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Secure App Storage</p>
+                        <p className="text-xs text-base-content/60">
+                          Your shop data is stored safely within the app and will persist across updates.
+                        </p>
+                        <p className="text-xs font-mono text-base-content/40 break-all">{dataDir || 'Loading...'}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-base-content/50">
+                      Products, transactions, and settings are stored here automatically.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-base-content/60">
+                      Where should your data be stored?
+                    </p>
+                    <div className="bg-base-200 rounded-lg p-4">
+                      <p className="text-sm font-mono break-all">{dataDir || 'Loading...'}</p>
+                    </div>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={async () => {
+                        try {
+                          const dir = await SelectDataDir()
+                          if (dir && dir.length > 0) setDataDir(dir)
+                        } catch (err) {
+                          console.error('Failed to select directory:', err)
+                        }
+                      }}
+                    >
+                      <FolderOpen size={16} className="mr-1" />
+                      Change Location
+                    </button>
+                    <p className="text-xs text-base-content/50">
+                      Your products, transactions, and settings will be stored here.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {step === 1 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold">Shop Information</h2>
                 <p className="text-sm text-base-content/60">
@@ -94,7 +158,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
               </div>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <CreditCard size={20} />
@@ -136,7 +200,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <Shield size={20} />
@@ -159,7 +223,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <CheckCircle size={20} />
@@ -193,7 +257,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
           {/* Navigation */}
           <div className="flex justify-between mt-6">
             <button
-              className="btn btn-ghost"
+              className="btn btn-ghost min-h-[44px]"
               onClick={() => setStep(s => s - 1)}
               disabled={step === 0 || saving}
             >
@@ -203,7 +267,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
 
             {step < steps.length - 1 ? (
               <button
-                className="btn btn-primary"
+                className="btn btn-primary min-h-[44px]"
                 onClick={() => setStep(s => s + 1)}
                 disabled={!canNext()}
               >
@@ -212,7 +276,7 @@ export default function SetupWizard({ onComplete, saving, error }: Props) {
               </button>
             ) : (
               <button
-                className="btn btn-primary"
+                className="btn btn-primary min-h-[44px]"
                 onClick={handleFinish}
                 disabled={saving}
               >

@@ -5,6 +5,7 @@ import {
   UpdateProduct,
   DeleteProduct,
   GetSettings,
+  IsMobile,
 } from '../bindings'
 import ProductForm from '../components/Products/ProductForm'
 import { useSnackbar } from 'notistack'
@@ -22,7 +23,12 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [taxEnabled, setTaxEnabled] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
+
+  useEffect(() => {
+    IsMobile().then(setIsMobile)
+  }, [])
 
   const loadProducts = useCallback(async () => {
     try {
@@ -95,20 +101,17 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-base-content/60 mt-1">
-            {products.length} of {MAX_PRODUCTS} products
-          </p>
-        </div>
+    <div className="p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+        <p className="text-sm text-base-content/60">
+          {products.length} of {MAX_PRODUCTS} products
+        </p>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary btn-sm hidden sm:flex"
           onClick={handleAddNew}
           disabled={products.length >= MAX_PRODUCTS}
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Add Product
         </button>
       </div>
@@ -122,7 +125,51 @@ export default function ProductsPage() {
         ></progress>
       </div>
 
-      {/* Product Table */}
+      {/* Mobile: Card Grid */}
+      {isMobile ? (
+        <div className="product-card-grid">
+          {products.length === 0 ? (
+            <div className="col-span-2 text-center py-12 text-base-content/40">
+              <Package size={40} className="mx-auto mb-2 opacity-30" />
+              <p>No products yet</p>
+              <p className="text-sm">Tap "Add Product" to get started</p>
+            </div>
+          ) : (
+            products.map(product => (
+              <div key={product.id} className="card bg-base-100 shadow-sm">
+                {product.image_data ? (
+                  <img src={product.image_data} alt={product.name} className="w-full h-28 object-cover" />
+                ) : (
+                  <div className="w-full h-28 bg-base-200 flex items-center justify-center">
+                    <Package size={24} className="opacity-20" />
+                  </div>
+                )}
+                <div className="p-3">
+                  <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                  <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                  {taxEnabled && (
+                    <p className="text-xs text-base-content/60">{(product.tax_rate * 100).toFixed(1)}% tax</p>
+                  )}
+                  <div className="flex gap-1 mt-2">
+                    <button
+                      className="btn btn-sm btn-outline flex-1 gap-1 min-h-[44px]"
+                      onClick={() => handleEdit(product)}
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline btn-error gap-1 min-h-[44px]"
+                      onClick={() => handleDeleteClick(product)}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
       <div className="card bg-base-100 shadow-md">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
@@ -185,6 +232,7 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Product Form Modal */}
       {showForm && (
@@ -208,10 +256,10 @@ export default function ProductsPage() {
               Are you sure you want to delete <strong>{deletingProduct.name}</strong>?
             </p>
             <div className="modal-action">
-              <button className="btn" onClick={() => setDeletingProduct(null)}>
+              <button className="btn min-h-[44px]" onClick={() => setDeletingProduct(null)}>
                 Cancel
               </button>
-              <button className="btn btn-error" onClick={confirmDelete}>
+              <button className="btn btn-error min-h-[44px]" onClick={confirmDelete}>
                 Delete
               </button>
             </div>
@@ -221,6 +269,15 @@ export default function ProductsPage() {
           </form>
         </dialog>
       )}
+
+      {/* Mobile FAB */}
+      <button
+        className="sm:hidden fixed bottom-[88px] right-4 z-40 btn btn-primary btn-circle w-14 h-14 shadow-lg"
+        onClick={handleAddNew}
+        disabled={products.length >= MAX_PRODUCTS}
+      >
+        <Plus size={24} />
+      </button>
     </div>
   )
 }

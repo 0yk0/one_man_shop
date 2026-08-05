@@ -81,7 +81,7 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
 
   return (
     <dialog className="modal modal-open">
-      <div className="modal-box max-w-md">
+      <div className="modal-box max-w-md w-[calc(100vw-2rem)]">
         <h3 className="font-bold text-lg mb-4">
           {product ? 'Edit Product' : 'Add Product'}
         </h3>
@@ -102,7 +102,7 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
                 />
                 <button
                   type="button"
-                  className="btn btn-circle btn-xs btn-error absolute top-2 right-2"
+                  className="btn btn-circle btn-sm min-h-[36px] min-w-[36px] btn-error absolute top-2 right-2"
                   onClick={removeImage}
                 >
                   <X size={14} />
@@ -181,10 +181,10 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
           )}
 
           <div className="modal-action">
-            <button type="button" className="btn btn-ghost" onClick={onClose}>
+            <button type="button" className="btn btn-ghost min-h-[44px]" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={!name.trim()}>
+            <button type="submit" className="btn btn-primary min-h-[44px]" disabled={!name.trim()}>
               <Save size={16} />
               {product ? 'Save Changes' : 'Add Product'}
             </button>
