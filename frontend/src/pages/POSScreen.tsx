@@ -255,7 +255,11 @@ export default function POSScreen() {
       sounds.paymentSuccess()
       enqueueSnackbar(`Payment of ₹${total.toFixed(2)} recorded`, { variant: 'success' })
 
-      ConfirmPayment()
+      try {
+        await ConfirmPayment(savedTransaction.receipt_number || 0)
+      } catch (displayErr) {
+        console.error('ConfirmPayment display update failed:', displayErr)
+      }
 
       if (settings?.auto_print && settings?.printer_name) {
         handlePrintReceipt(savedTransaction)
@@ -271,7 +275,7 @@ export default function POSScreen() {
         if (displayOpen) {
           SendProductsToDisplay()
         }
-      }, 3000)
+      }, 5000)
     } catch (err) {
       console.error('Payment failed:', err)
       enqueueSnackbar('Failed to record transaction: ' + String(err), { variant: 'error' })
@@ -530,46 +534,100 @@ export default function POSScreen() {
         {/* Mobile Payment View */}
         {showPayment && (
           <div className="fixed inset-0 bg-base-100 z-50 flex flex-col safe-area-top safe-area-bottom">
-            <div className="p-4 border-b border-base-300 flex items-center gap-3">
-              {!completed && (
+            {!completed && (
+              <div className="p-4 border-b border-base-300 flex items-center gap-3">
                 <button
-                  className="btn btn-sm btn-ghost"
+                  className="btn btn-ghost min-h-[44px] min-w-[44px]"
                   onClick={() => { setShowPayment(false); setUpiString(''); if (displayOpen) SendProductsToDisplay() }}
                 >
                   <ArrowLeft size={18} /> Back
                 </button>
-              )}
-              <h2 className="font-bold text-lg">Payment</h2>
-            </div>
+                <h2 className="font-bold text-lg">Payment</h2>
+              </div>
+            )}
             <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
               {completed ? (
-                <div className="space-y-4 w-full max-w-sm">
-                  <div className="alert alert-success gap-2">
-                    <CheckCircle size={20} />
-                    <span>Payment recorded!</span>
+                <div className="space-y-5 w-full max-w-sm text-center">
+                  {/* Animated checkmark */}
+                  <div className="relative inline-block">
+                    <span className="absolute inset-0 rounded-full bg-success/20 animate-ping"></span>
+                    <div className="relative animate-[checkPop_0.5s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+                      <CheckCircle size={80} className="text-success drop-shadow-lg" strokeWidth={1.5} />
+                    </div>
                   </div>
-                  {settings?.printer_name && lastTransaction && (
-                    <button
-                      className="btn btn-outline btn-block gap-2"
-                      onClick={() => handlePrintReceipt(lastTransaction)}
-                      disabled={printing}
-                    >
-                      {printing ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
-                      {printing ? 'Printing...' : 'Print Receipt'}
-                    </button>
+
+                  {/* Title */}
+                  <h2 className="text-2xl font-bold animate-[fadeSlideUp_0.4s_ease-out_0.2s_forwards] opacity-0">
+                    Payment Recorded!
+                  </h2>
+
+                  {/* Details card */}
+                  {lastTransaction && (
+                    <div className="bg-base-200 rounded-2xl p-5 space-y-3 text-left animate-[fadeSlideUp_0.4s_ease-out_0.35s_forwards] opacity-0">
+                      <div className="text-center">
+                        <p className="text-3xl font-black font-mono tabular-nums">₹{lastTransaction.total.toFixed(2)}</p>
+                        <p className="text-sm text-base-content/60 mt-1 capitalize">
+                          {lastTransaction.payment_method} Payment
+                        </p>
+                      </div>
+                      <div className="divider my-1"></div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-base-content/60">Receipt</span>
+                        <span className="font-mono font-medium">#{String(lastTransaction.receipt_number).padStart(6, '0')}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-base-content/60">Items</span>
+                        <span className="font-medium">{lastTransaction.items.length}</span>
+                      </div>
+                      {lastTransaction.tax_total > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-base-content/60">Tax</span>
+                          <span className="font-mono">₹{lastTransaction.tax_total.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
+
+                  {/* Actions */}
+                  <div className="space-y-2 pt-1 animate-[fadeSlideUp_0.4s_ease-out_0.5s_forwards] opacity-0">
+                    {settings?.printer_name && lastTransaction && (
+                      <button
+                        className="btn btn-outline btn-block gap-2 min-h-[48px]"
+                        onClick={() => handlePrintReceipt(lastTransaction)}
+                        disabled={printing}
+                      >
+                        {printing ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                        {printing ? 'Printing...' : 'Print Receipt'}
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-primary btn-block min-h-[48px]"
+                      onClick={() => {
+                        if (clearTimerRef.current) clearTimeout(clearTimerRef.current)
+                        setCompleted(false)
+                        setCart([])
+                        setShowPayment(false)
+                        setPaymentMethod('upi')
+                        setLastTransaction(null)
+                        setCartSheetOpen(false)
+                        if (displayOpen) SendProductsToDisplay()
+                      }}
+                    >
+                      <CheckCircle size={18} /> Done
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4 w-full max-w-sm">
                   <div className="flex gap-2">
                     <button
-                      className={`btn flex-1 ${paymentMethod === 'upi' ? 'btn-primary' : 'btn-outline'}`}
+                      className={`btn flex-1 min-h-[44px] ${paymentMethod === 'upi' ? 'btn-primary' : 'btn-outline'}`}
                       onClick={() => { setPaymentMethod('upi'); if (displayOpen) SendPaymentMethodToDisplay('upi') }}
                     >
                       UPI QR
                     </button>
                     <button
-                      className={`btn flex-1 ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-outline'}`}
+                      className={`btn flex-1 min-h-[44px] ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-outline'}`}
                       onClick={() => { setPaymentMethod('cash'); if (displayOpen) SendPaymentMethodToDisplay('cash') }}
                     >
                       Cash
@@ -578,7 +636,7 @@ export default function POSScreen() {
                   {paymentMethod === 'upi' && upiString && (
                     <div className="text-center">
                       <div className="bg-white p-4 rounded-2xl inline-block mb-2">
-                        <QRCodeSVG value={upiString} size={180} />
+                        <QRCodeSVG value={upiString} size={220} />
                       </div>
                       <p className="text-xl font-bold text-primary">₹{total.toFixed(2)}</p>
                       <p className="text-xs text-base-content/60 mt-1 font-mono">{settings?.upi_vpa}</p>

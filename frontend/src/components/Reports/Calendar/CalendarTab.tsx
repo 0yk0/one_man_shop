@@ -108,7 +108,7 @@ export default function CalendarTab() {
     try {
       const path = await generateDailyReportPDF(selectedDay, shopName, taxEnabled, topItems, taxCollected)
       if (path) {
-        enqueueSnackbar(`PDF saved to ${path}`, { variant: 'success' })
+        enqueueSnackbar(`PDF saved as ${path.split(/[/\\]/).pop()}`, { variant: 'success' })
       }
     } catch (err) {
       console.error('PDF generation failed:', err)

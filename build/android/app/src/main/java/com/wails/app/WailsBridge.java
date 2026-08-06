@@ -464,6 +464,89 @@ public class WailsBridge {
     }
 
     /**
+     * Save a base64-encoded file to the app's external storage and open the
+     * Android share sheet so the user can save/send it anywhere.
+     * json: {"filename": "report.pdf", "mimeType": "application/pdf", "contentBase64": "..."}
+     * Returns the saved file path.
+     */
+    public String saveAndShareFile(final String json) {
+        try {
+            JSONObject opts = new JSONObject(json);
+            String filename = opts.optString("filename", "file");
+            String mimeType = opts.optString("mimeType", "application/octet-stream");
+            String contentBase64 = opts.optString("contentBase64", "");
+
+            if (contentBase64.isEmpty()) {
+                throw new IllegalArgumentException("No content provided");
+            }
+
+            // Decode base64 content
+            byte[] data = android.util.Base64.decode(contentBase64, android.util.Base64.DEFAULT);
+
+            // Save to app's external files directory (persists across restarts)
+            java.io.File dir = activity.getExternalFilesDir(null);
+            if (dir == null) {
+                throw new IllegalStateException("Cannot access external storage");
+            }
+            java.io.File file = new java.io.File(dir, filename);
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(file);
+            fos.write(data);
+            fos.close();
+
+            Log.i(TAG, "saveAndShareFile: saved " + file.getAbsolutePath() + " (" + data.length + " bytes)");
+
+            // Open share sheet
+            Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                    activity,
+                    activity.getPackageName() + ".fileprovider",
+                    file);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType(mimeType);
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.putExtra(Intent.EXTRA_SUBJECT, filename);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(share, "Save or share " + filename);
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(chooser);
+
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e(TAG, "saveAndShareFile failed", e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Launch the Android save file dialog (ACTION_CREATE_DOCUMENT).
+     * The user picks a location and filename, then the file is written there.
+     * json: {"filename": "report.pdf", "mimeType": "application/pdf", "contentBase64": "..."}
+     * Returns the saved file URI path via event 'android:saveFileResult'.
+     */
+    public void saveFileDialog(final String json) {
+        try {
+            JSONObject opts = new JSONObject(json);
+            String filename = opts.optString("filename", "file");
+            String mimeType = opts.optString("mimeType", "application/octet-stream");
+            String contentBase64 = opts.optString("contentBase64", "");
+
+            if (contentBase64.isEmpty()) {
+                Log.e(TAG, "saveFileDialog: no content provided");
+                return;
+            }
+
+            byte[] data = android.util.Base64.decode(contentBase64, android.util.Base64.DEFAULT);
+
+            if (activity instanceof MainActivity) {
+                ((MainActivity) activity).launchSaveFile(filename, mimeType, data);
+            } else {
+                Log.e(TAG, "saveFileDialog: activity is not MainActivity");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "saveFileDialog failed", e);
+        }
+    }
+
+    /**
      * Keep the screen on (1) or release the hold (0) via FLAG_KEEP_SCREEN_ON.
      */
     public void setKeepAwake(final int enabled) {

@@ -147,6 +147,36 @@ public class WailsJSBridge {
     }
 
     /**
+     * Show the native save file dialog on Android (ACTION_CREATE_DOCUMENT).
+     * Called from JavaScript: wails.saveFile(filename, mimeType, contentBase64)
+     * The saved file path is returned via a custom JS event
+     * 'android:saveFileResult' with detail = path or {cancelled: true}.
+     */
+    @JavascriptInterface
+    public void saveFile(final String filename, final String mimeType, final String contentBase64) {
+        if (DEBUG) Log.d(TAG, "saveFile called: " + filename);
+
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mainHandler.post(() -> {
+            android.content.Context ctx = webView.getContext();
+            while (ctx != null) {
+                if (ctx instanceof MainActivity) {
+                    if (DEBUG) Log.d(TAG, "saveFile: launching save dialog");
+                    byte[] data = android.util.Base64.decode(contentBase64, android.util.Base64.DEFAULT);
+                    ((MainActivity) ctx).launchSaveFile(filename, mimeType, data);
+                    return;
+                }
+                if (ctx instanceof android.content.ContextWrapper) {
+                    ctx = ((android.content.ContextWrapper) ctx).getBaseContext();
+                } else {
+                    break;
+                }
+            }
+            Log.e(TAG, "saveFile: cannot find MainActivity");
+        });
+    }
+
+    /**
      * Send a callback response to JavaScript
      */
     private void sendCallback(String callbackId, String result, String error) {

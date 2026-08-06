@@ -4,7 +4,7 @@ import {
   getFilteredRowModel, getPaginationRowModel, flexRender,
   type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
-import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, SelectFolder } from '../bindings'
+import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, GetTransactionsCSVContent, SelectFolder, IsMobile } from '../bindings'
 import { useSnackbar } from 'notistack'
 import { fmtDate, fmtTime, filterTxns, getDateRange, type DatePreset } from '../lib/reports'
 import type { Transaction } from '../bindings'
@@ -13,6 +13,7 @@ import {
   Download,
 } from 'lucide-react'
 import DateRangePicker from '../components/ui/DateRangePicker'
+import { saveFileWithDialog } from '../lib/saveFile'
 
 function formatID(num: number): string {
   if (!num) return '-'
@@ -101,11 +102,19 @@ export default function ReceiptsPage() {
   // Export CSV
   const handleExportCSV = async () => {
     try {
-      const dir = await SelectFolder('Select folder to save CSV')
-      if (!dir) return
       setExporting(true)
-      const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
-      enqueueSnackbar(`CSV exported to ${path}`, { variant: 'success' })
+      const isMobile = await IsMobile()
+      if (isMobile) {
+        const csvContent = await GetTransactionsCSVContent(range.start, range.end)
+        const filename = `pos_report_${range.start}_to_${range.end}.csv`
+        const path = await saveFileWithDialog('Save CSV Report', filename, 'text/csv', btoa(csvContent))
+        if (path) enqueueSnackbar(`CSV exported as ${filename}`, { variant: 'success' })
+      } else {
+        const dir = await SelectFolder('Select folder to save CSV')
+        if (!dir) { setExporting(false); return }
+        const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
+        enqueueSnackbar(`CSV exported as ${path.split(/[/\\]/).pop()}`, { variant: 'success' })
+      }
     } catch (err) {
       if (String(err).includes('cancel')) return
       enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
-import { GetTransactions, ExportTransactionsCSVToDir, GetSettings, SelectFolder, type Transaction } from '../../bindings'
+import { GetTransactions, ExportTransactionsCSVToDir, GetTransactionsCSVContent, GetSettings, SelectFolder, IsMobile, type Transaction } from '../../bindings'
 import { type DatePreset, getDateRange, filterTxns, sumTxns, fmtDate, fmtTime } from '../../lib/reports'
 import { useSnackbar } from 'notistack'
 import { Loader2, Download, Receipt, Clock, Search, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react'
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, flexRender, createColumnHelper, type SortingState } from '@tanstack/react-table'
 import DateRangePicker from '../ui/DateRangePicker'
+import { saveFileWithDialog } from '../../lib/saveFile'
 
 const col = createColumnHelper<Transaction>()
 
@@ -50,11 +51,19 @@ export default function TransactionsTab() {
 
   const handleExportCSV = async () => {
     try {
-      const dir = await SelectFolder('Select folder to save CSV')
-      if (!dir) return
       setExporting(true)
-      const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
-      enqueueSnackbar(`CSV exported to ${path}`, { variant: 'success' })
+      const isMobile = await IsMobile()
+      if (isMobile) {
+        const csvContent = await GetTransactionsCSVContent(range.start, range.end)
+        const filename = `pos_report_${range.start}_to_${range.end}.csv`
+        const path = await saveFileWithDialog('Save CSV Report', filename, 'text/csv', btoa(csvContent))
+        if (path) enqueueSnackbar(`CSV exported as ${filename}`, { variant: 'success' })
+      } else {
+        const dir = await SelectFolder('Select folder to save CSV')
+        if (!dir) { setExporting(false); return }
+        const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
+        enqueueSnackbar(`CSV exported as ${path.split(/[/\\]/).pop()}`, { variant: 'success' })
+      }
     } catch (err) {
       if (String(err).includes('cancel')) return
       enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })

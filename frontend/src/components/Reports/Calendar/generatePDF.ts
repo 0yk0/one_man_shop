@@ -1,5 +1,5 @@
 import { type DayData, type ProductStat, formatFullDay } from '../../../lib/reports'
-import { SaveFile } from '../../../bindings'
+import { saveFileWithDialog } from '../../../lib/saveFile'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -220,8 +220,9 @@ export async function generateDailyReportPDF(
 
   drawFooter(doc, shopName, pageWidth, yPos)
 
-  // Save via Go backend
+  // Save via native save dialog (Android SAF or desktop dialog)
   const pdfBase64 = doc.output('datauristring').split(',')[1]
-  const path = await SaveFile('Save PDF Report', `daily-report-${selectedDay.date}.pdf`, pdfBase64)
+  const filename = `daily-report-${selectedDay.date}.pdf`
+  const path = await saveFileWithDialog('Save PDF Report', filename, 'application/pdf', pdfBase64)
   return path
 }

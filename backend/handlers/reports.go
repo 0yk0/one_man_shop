@@ -90,8 +90,12 @@ func (a *AppHandler) ExportTransactionsCSVToDir(startDate, endDate, dir string) 
 	return a.exportTransactionsCSV(startDate, endDate, dir)
 }
 
-func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (string, error) {
-	// Parse dates as UTC
+// GetTransactionsCSVContent generates CSV content and returns it as a string (for mobile browser download)
+func (a *AppHandler) GetTransactionsCSVContent(startDate, endDate string) (string, error) {
+	return a.generateTransactionsCSV(startDate, endDate)
+}
+
+func (a *AppHandler) generateTransactionsCSV(startDate, endDate string) (string, error) {
 	start, err := time.Parse("2006-01-02", startDate)
 	if err != nil {
 		return "", fmt.Errorf("invalid start date: %w", err)
@@ -112,8 +116,6 @@ func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (stri
 	csv := "Date,Time,Items,Subtotal,Tax,Total,Payment Method\n"
 	for _, r := range records {
 		created := r.GetString("created")
-		// PocketBase stores as "2026-08-01 03:08:21.315Z" (space, not T)
-		// Replace space with T for RFC3339 parsing
 		created = strings.Replace(created, " ", "T", 1)
 		t, err := time.Parse(time.RFC3339, created)
 		if err != nil {
@@ -146,17 +148,25 @@ func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (stri
 			r.GetFloat("subtotal"), r.GetFloat("tax_total"), r.GetFloat("total"), r.GetString("payment_method"),
 		)
 	}
+	return csv, nil
+}
 
-		filename := fmt.Sprintf("pos_report_%s_to_%s.csv", startDate, endDate)
-		var filePath string
-		if dir != "" {
-			filePath = filepath.Join(dir, filename)
-		} else {
-			filePath = filepath.Join(os.TempDir(), filename)
-		}
-
-		if err := os.WriteFile(filePath, []byte(csv), 0644); err != nil {
-			return "", fmt.Errorf("failed to write CSV: %w", err)
-		}
-		return filePath, nil
+func (a *AppHandler) exportTransactionsCSV(startDate, endDate, dir string) (string, error) {
+	csv, err := a.generateTransactionsCSV(startDate, endDate)
+	if err != nil {
+		return "", err
 	}
+
+	filename := fmt.Sprintf("pos_report_%s_to_%s.csv", startDate, endDate)
+	var filePath string
+	if dir != "" {
+		filePath = filepath.Join(dir, filename)
+	} else {
+		filePath = filepath.Join(os.TempDir(), filename)
+	}
+
+	if err := os.WriteFile(filePath, []byte(csv), 0644); err != nil {
+		return "", fmt.Errorf("failed to write CSV: %w", err)
+	}
+	return filePath, nil
+}

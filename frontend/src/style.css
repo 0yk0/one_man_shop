@@ -185,3 +185,22 @@ button, a, [role="button"] {
 .tap-scale:active {
   transform: scale(0.95);
 }
+
+/* ── Mobile toast positioning ───────────────────────── */
+
+/* Mobile: toasts below status bar/notch with safe area */
+@media (max-width: 767px) {
+  .notistack-Snackbar {
+    top: calc(env(safe-area-inset-top, 12px) + 8px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    max-width: none !important;
+  }
+}
+
+/* Desktop: keep toasts compact */
+@media (min-width: 768px) {
+  .notistack-Snackbar {
+    max-width: 360px;
+  }
+}

@@ -277,7 +277,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
           <div className="form-control w-full">
             <label className="label"><span className="label-text">UPI VPA</span></label>
             <input type="text" className="input input-bordered w-full" value={form.upi_vpa} onChange={e => update('upi_vpa', e.target.value)} />
-            <label className="label"><span className="label-text-alt text-base-content/60">Your UPI Virtual Payment Address (e.g., shop@upi)</span></label>
+            <label className="label"><span className="label-text-alt text-base-content/60 text-wrap">Your UPI Virtual Payment Address (e.g., shop@upi)</span></label>
           </div>
 
           <div className="form-control w-full">
@@ -302,7 +302,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               </div>
             )}
             <label className="label">
-              <span className="label-text-alt text-base-content/60">
+              <span className="label-text-alt text-base-content/60 text-wrap">
                 {isMobile 
                   ? 'On Android, data is stored in the app\'s external storage and persists across updates.'
                   : 'Your products, transactions, and settings are stored in this directory.'}
@@ -325,7 +325,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             <div className="form-control w-full">
               <label className="label"><span className="label-text">Default Tax Rate (%)</span></label>
               <input type="number" min="0" max="100" step="0.5" className="input input-bordered w-full" value={form.default_tax_rate} onChange={e => update('default_tax_rate', parseFloat(e.target.value) || 0)} />
-              <label className="label"><span className="label-text-alt text-base-content/60">Per-product tax rates can be set individually</span></label>
+              <label className="label"><span className="label-text-alt text-base-content/60 text-wrap">Per-product tax rates can be set individually</span></label>
             </div>
           )}
 
@@ -348,7 +348,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
                   <input type="text" className="input input-bordered flex-1" value={form.backup_folder} onChange={e => update('backup_folder', e.target.value)} placeholder="/path/to/backup/folder" />
                   <button className="btn btn-outline">Browse</button>
                 </div>
-                <label className="label"><span className="label-text-alt text-base-content/60">Point this to your OneDrive/Dropbox folder</span></label>
+                <label className="label"><span className="label-text-alt text-base-content/60 text-wrap">Point this to your OneDrive/Dropbox folder</span></label>
               </div>
               <div className="form-control w-full max-w-xs">
                 <label className="label"><span className="label-text">Retention (days)</span></label>
@@ -366,7 +366,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             <select className="select select-bordered w-full" value={form.theme} onChange={e => update('theme', e.target.value)}>
               {DAISYUI_THEMES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <label className="label"><span className="label-text-alt text-base-content/60">Preview applies live. Click Save to keep it.</span></label>
+            <label className="label"><span className="label-text-alt text-base-content/60 text-wrap">Preview applies live. Click Save to keep it.</span></label>
           </div>
 
           <div className="bg-base-200 rounded-lg p-4 space-y-2">
@@ -538,10 +538,14 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             </div>
           )}
 
-          <div className="card-actions justify-end mt-6 sticky bottom-0 bg-base-100 py-3 -mx-6 px-6 z-10 md:static md:bg-transparent md:py-0 md:mx-0 md:px-0">
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              Save Settings
+          <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-[calc(var(--app-nav-h,72px)+12px)] bg-base-100 z-10 sm:static sm:bg-transparent sm:mx-0 sm:px-0 sm:pb-0 sm:pt-0">
+            <button
+              className="btn btn-primary btn-block min-h-[48px] gap-2"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              {saving ? 'Saving...' : 'Save Settings'}
             </button>
           </div>
         </div>

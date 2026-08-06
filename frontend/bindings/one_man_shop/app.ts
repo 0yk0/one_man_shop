@@ -20,8 +20,8 @@ export function CloseCustomerDisplay(): $CancellablePromise<void> {
     return $Call.ByID(2672389447);
 }
 
-export function ConfirmPayment(): $CancellablePromise<void> {
-    return $Call.ByID(295967811);
+export function ConfirmPayment(receiptNumber: number): $CancellablePromise<void> {
+    return $Call.ByID(295967811, receiptNumber);
 }
 
 export function CreateProduct(p: models$0.Product): $CancellablePromise<models$0.Product> {
@@ -75,6 +75,10 @@ export function GetTransactions(limit: number, offset: number): $CancellableProm
     return $Call.ByID(96738246, limit, offset);
 }
 
+export function GetTransactionsCSVContent(startDate: string, endDate: string): $CancellablePromise<string> {
+    return $Call.ByID(1675994455, startDate, endDate);
+}
+
 export function GetUPIString(amount: number): $CancellablePromise<string> {
     return $Call.ByID(2226102084, amount);
 }
@@ -103,6 +107,14 @@ export function PrintReceipt(t: models$0.Transaction): $CancellablePromise<void>
 }
 
 /**
+ * SaveAndShareFile saves a base64-encoded file and opens the Android share sheet.
+ * On desktop, falls back to SaveFile.
+ */
+export function SaveAndShareFile(title: string, defaultName: string, mimeType: string, contentBase64: string): $CancellablePromise<string> {
+    return $Call.ByID(154683514, title, defaultName, mimeType, contentBase64);
+}
+
+/**
  * SaveDataDir saves the selected data directory to config after validating it's writable
  */
 export function SaveDataDir(path: string): $CancellablePromise<void> {
@@ -114,6 +126,15 @@ export function SaveDataDir(path: string): $CancellablePromise<void> {
  */
 export function SaveFile(title: string, defaultName: string, contentBase64: string): $CancellablePromise<string> {
     return $Call.ByID(1396636678, title, defaultName, contentBase64);
+}
+
+/**
+ * SaveFileDialog opens the Android save file dialog (ACTION_CREATE_DOCUMENT).
+ * The user picks a location and filename. The result comes via the
+ * 'android:saveFileResult' Wails event. On desktop, falls back to SaveFile.
+ */
+export function SaveFileDialog(title: string, defaultName: string, mimeType: string, contentBase64: string): $CancellablePromise<string> {
+    return $Call.ByID(1166008166, title, defaultName, mimeType, contentBase64);
 }
 
 export function SaveSettings(s: models$0.Settings): $CancellablePromise<void> {

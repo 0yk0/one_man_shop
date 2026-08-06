@@ -57,9 +57,14 @@ public class MainActivity extends AppCompatActivity {
     private static final String WAILS_HOST = "wails.localhost";
     private static final int FILE_PICKER_REQUEST = 7001;
     private static final int FOLDER_PICKER_REQUEST = 7004;
+    private static final int SAVE_FILE_REQUEST = 7005;
 
     private WebView webView;
     private WailsBridge bridge;
+
+    // Pending save file content (held while user picks location)
+    private byte[] pendingSaveContent;
+    private String pendingSaveFilename;
     // Battery: system-event receivers are registered only while the activity is
     // in the foreground (onStart) and torn down in onStop, so background battery/
     // network/screen broadcasts don't wake the app.
@@ -461,6 +466,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Launch the system save file dialog using ACTION_CREATE_DOCUMENT.
+     * The user picks a location and confirms the filename.
+     * Content is written to the chosen URI after confirmation.
+     */
+    public void launchSaveFile(String filename, String mimeType, byte[] content) {
+        pendingSaveContent = content;
+        pendingSaveFilename = filename;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, filename);
+        try {
+            startActivityForResult(intent, SAVE_FILE_REQUEST);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to launch save file dialog", e);
+            pendingSaveContent = null;
+            pendingSaveFilename = null;
+            emitSaveFileResult(null);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -468,6 +495,38 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PHOTO_CAPTURE_REQUEST || requestCode == VIDEO_CAPTURE_REQUEST) {
             handleCaptureResult(resultCode, data);
+            return;
+        }
+        // Handle save file result
+        if (requestCode == SAVE_FILE_REQUEST) {
+            if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+                Log.d(TAG, "Save file cancelled");
+                pendingSaveContent = null;
+                pendingSaveFilename = null;
+                emitSaveFileResult(null);
+                return;
+            }
+            final Uri uri = data.getData();
+            final byte[] content = pendingSaveContent;
+            pendingSaveContent = null;
+            pendingSaveFilename = null;
+            new Thread(() -> {
+                try {
+                    java.io.OutputStream os = getContentResolver().openOutputStream(uri);
+                    if (os == null) {
+                        emitSaveFileResult(null);
+                        return;
+                    }
+                    os.write(content);
+                    os.close();
+                    String path = uri.toString();
+                    Log.i(TAG, "Save file success: " + path + " (" + content.length + " bytes)");
+                    emitSaveFileResult(path);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to write file to URI", e);
+                    emitSaveFileResult(null);
+                }
+            }).start();
             return;
         }
         // Handle folder picker result
@@ -681,6 +740,25 @@ public class MainActivity extends AppCompatActivity {
                 webView.evaluateJavascript(js, value -> {
                     Log.d(TAG, "emitFolderPickerResult: JS result=" + value);
                 });
+            }
+        });
+    }
+
+    /**
+     * Emit a save file result via a global JavaScript callback.
+     */
+    private void emitSaveFileResult(@Nullable String path) {
+        Log.d(TAG, "emitSaveFileResult: path=" + path);
+        final String js;
+        if (path != null) {
+            String escaped = path.replace("\\", "\\\\").replace("'", "\\'");
+            js = "window._onSaveFileResult && window._onSaveFileResult('" + escaped + "')";
+        } else {
+            js = "window._onSaveFileResult && window._onSaveFileResult(null)";
+        }
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript(js, null);
             }
         });
     }
