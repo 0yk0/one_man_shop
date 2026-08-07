@@ -26,16 +26,13 @@ jobs:
             goarch: amd64
             ext: ".exe"
             artifact: one_man_shop_windows_amd64
-          - os: ubuntu-latest
+          - os: windows-latest
             goos: android
             goarch: arm64
             artifact: one_man_shop_android
 
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
-
-    env:
-      GOBIN: ${{ github.workspace }}/go/bin
 
     steps:
       - name: Checkout
@@ -71,22 +68,27 @@ jobs:
             ndk;26.3.11579264
       # ────────────────────────────────────────────────────────────────
 
+      - name: Cache Wails binary
+        id: cache-wails
+        uses: actions/cache@v5
+        with:
+          path: ~/go/bin/wails3
+          key: wails3-${{ runner.os }}-${{ runner.arch }}-v3.0.0-alpha2.120
+
       - name: Install Wails
+        if: steps.cache-wails.outputs.cache-hit != 'true'
         shell: bash
         env:
           GOPROXY: https://proxy.golang.org,direct
           GONOSUMCHECK: '*'
           GONOSUMDB: '*'
-        run: |
-          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          wails3 version
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
 
       - name: Remove .npmrc age gate
         shell: bash
         run: rm -f frontend/.npmrc
 
-      # ── Desktop build ──────────────────────────────────────────────
+      # ── Desktop build (unchanged from original) ────────────────────
       - name: Build
         if: matrix.goos != 'android'
         shell: bash
@@ -134,9 +136,9 @@ jobs:
           PRODUCTION: "true"
         run: |
           NDK_ROOT=$(ls -d "$ANDROID_HOME/ndk/"* 2>/dev/null | sort -V | tail -1)
-          TOOLCHAIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64"
-          export CC="$TOOLCHAIN/bin/aarch64-linux-android21-clang"
-          export CXX="$TOOLCHAIN/bin/aarch64-linux-android21-clang++"
+          TOOLCHAIN="$NDK_ROOT/toolchains/llvm/prebuilt/windows-x86_64"
+          export CC="$TOOLCHAIN/bin/aarch64-linux-android21-clang.cmd"
+          export CXX="$TOOLCHAIN/bin/aarch64-linux-android21-clang++.cmd"
           mkdir -p build/android/app/src/main/jniLibs/arm64-v8a
           go build -buildmode=c-shared \
             -overlay build/android/overlay.json \
