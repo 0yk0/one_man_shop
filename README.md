@@ -1,19 +1,47 @@
-# One Man Shop
+# One Man Shop — Free POS Software for Small Shops in India
 
-Offline POS for small shops. Free and open source.
-
-Built for a friend's small shop. Made open source for everyone.
+> **The only POS that costs nothing.** No subscriptions, no transaction fees, no hardware lock-in. Download and start selling in 2 minutes.
 
 ![One Man Shop POS](website/public/screenshots/screenshot-06.png)
 
+[![Download for Desktop](https://img.shields.io/badge/Download-Desktop-blue?style=for-the-badge)](https://github.com/0yk0/one_man_shop/releases/latest)
+[![Download for Android](https://img.shields.io/badge/Download-Android-green?style=for-the-badge)](https://github.com/0yk0/one_man_shop/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/0yk0/one_man_shop?style=for-the-badge&logo=github)](https://github.com/0yk0/one_man_shop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+---
+
+## Why One Man Shop?
+
+Most POS systems charge monthly fees, require internet, and lock you into their hardware. **One Man Shop is different:**
+
+- **100% Free** — No subscriptions, no hidden fees, no sign-up required
+- **Works Offline** — All data stays on your device. No internet needed.
+- **Runs on Your Phone** — Use any Android phone or tablet as a POS terminal
+- **UPI Native** — Built for India's UPI payments (GPay, PhonePe, Paytm)
+- **Open Source** — MIT licensed. Inspect the code, contribute, or self-host
+
+**Perfect for:** Street vendors, kirana stores, small cafes, food stalls, and any single-operator shop in India.
+
+---
+
 ## Features
 
-- **UPI QR Payments** — Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app.
-- **Customer Display** — Show your menu, live bill, and payment QR on a second screen for customers to see.
-- **Product Management** — Add up to 50 products with images, prices, and optional tax rates.
-- **Sales Reports** — Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV.
-- **Auto Backups** — Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose data.
+### For Shop Owners
+
+- **UPI QR Payments** — Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app. No internet required.
+- **Customer Display** — Show your menu, live bill, and payment QR on a second screen for customers to see. Perfect for cafes and food stalls.
+- **Product Management** — Add up to 50 products with images, prices, and optional tax rates. Easy inventory tracking for small shops.
+- **Sales Reports** — Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV for your CA.
+- **Auto Backups** — Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose your sales data.
+- **Thermal Printer Support** — Print receipts with 58mm or 80mm thermal printers. Auto-print option available.
+
+### For Tech-Savvy Users
+
 - **35 Themes** — Switch between 35 built-in themes instantly. Light, dark, and everything in between.
+- **Open Source** — MIT licensed. Inspect the code, contribute features, or fork for your own use case.
+- **Offline-First** — All data stored locally in SQLite. No cloud dependency. Your data stays with you.
+- **Cross-Platform** — Runs on Windows, macOS, and Android. Same codebase, same experience.
 
 ## Screenshots
 
@@ -24,6 +52,47 @@ Built for a friend's small shop. Made open source for everyone.
 | Products | Settings | Setup Wizard |
 |---|---|---|
 | ![Products](website/public/screenshots/screenshot-03.png) | ![Settings](website/public/screenshots/screenshot-12.png) | ![Setup](website/public/screenshots/screenshot-01.png) |
+
+---
+
+## How It Compares
+
+| Feature | One Man Shop | Square | Shopify POS | Lightspeed |
+|---------|--------------|--------|-------------|------------|
+| **Price** | **Free forever** | Free tier + 2.6% fees | $39/mo + fees | $69/mo + fees |
+| **Offline Mode** | **Yes** | Limited | No | No |
+| **UPI Support** | **Native** | No | No | No |
+| **Customer Display** | **Included** | Paid add-on | Paid add-on | Paid add-on |
+| **Data Ownership** | **Local SQLite** | Cloud only | Cloud only | Cloud only |
+| **Android App** | **Yes** | Yes | Yes | Yes |
+| **Open Source** | **Yes** | No | No | No |
+| **India-Focused** | **Yes** | No | No | No |
+
+**Bottom line:** If you're a small shop in India looking for a free, offline POS with UPI support, One Man Shop is your best option.
+
+## Use Cases
+
+### Street Vendors & Small Retailers
+- Accept UPI payments without expensive hardware
+- Track daily sales without maintaining a register
+- Print receipts for customers who need them
+
+### Cafes & Food Stalls
+- Show menu on customer display while taking orders
+- Generate UPI QR for each transaction
+- Track UPI vs cash payments separately
+
+### Kirana Stores
+- Manage up to 50 products with prices and tax
+- Export sales data as CSV for your CA
+- Auto-backup data to cloud storage
+
+### Service Businesses
+- Use as a simple billing tool
+- Track daily/weekly revenue
+- Generate reports for GST filing
+
+---
 
 ## Architecture
 
@@ -111,22 +180,34 @@ graph TB
 | Charts | Recharts |
 | Testing | Vitest + React Testing Library (frontend), `go test` (backend) |
 
-## Installation
+## Quick Start (2 Minutes)
 
-### Download
+### 1. Download
 
 Download the latest release from [GitHub Releases](https://github.com/0yk0/one_man_shop/releases/latest).
 
-- **macOS** — Unzip and drag to Applications. Works on Apple Silicon and Intel.
-- **Windows** — Download the `.exe` and run it.
-- **Android** — Download the `.apk` and install it on your tablet or phone. See [Running on Android](#running-on-android) for setup instructions.
+| Platform | Download | Instructions |
+|----------|----------|--------------|
+| **Windows** | `.exe` installer | Run the installer |
+| **macOS** | `.dmg` file | Unzip and drag to Applications |
+| **Android** | `.apk` file | Enable "Install from unknown sources" and install |
 
-### First Launch
+### 2. Setup Wizard
 
+On first launch, the setup wizard guides you through:
 1. Enter your shop name
 2. Set your UPI VPA (e.g. `yourname@upi`)
 3. Enter your merchant name
-4. Start adding products and selling
+4. Set an admin PIN (optional)
+
+### 3. Start Selling
+
+- Add products with images and prices
+- Generate UPI QR codes for customers
+- Print receipts with a thermal printer
+- View daily/weekly sales reports
+
+**That's it.** No account creation, no cloud sync, no monthly fees.
 
 ## Development
 
@@ -674,9 +755,13 @@ Yes. The app supports external displays via Android's `Presentation` API. Connec
 
 Contributions are welcome! Whether it's a bug report, feature request, or code contribution, we appreciate your help.
 
-- **[Contributing Guide](CONTRIBUTING.md)** — How to set up development, make changes, and submit PRs
-- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards we follow
-- **[Security Policy](SECURITY.md)** — How to report vulnerabilities
+### Ways to Contribute
+
+- **Report Bugs** — Open an issue with steps to reproduce
+- **Request Features** — Tell us what would make One Man Shop better for your shop
+- **Submit Code** — Fix bugs or add features (see below)
+- **Improve Docs** — Help us make the README and guides clearer
+- **Spread the Word** — Star the repo, share with shop owners, write a blog post
 
 ### Quick Start for Contributors
 
@@ -702,6 +787,10 @@ go test ./backend/... -v
 cd frontend && npm test
 ```
 
+- **[Contributing Guide](CONTRIBUTING.md)** — Full guide on setup, workflow, and PR process
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards we follow
+- **[Security Policy](SECURITY.md)** — How to report vulnerabilities
+
 ## Security
 
 For security vulnerabilities, please see our [Security Policy](SECURITY.md). **Do not** report security issues through public GitHub issues.
@@ -709,3 +798,18 @@ For security vulnerabilities, please see our [Security Policy](SECURITY.md). **D
 ## License
 
 [MIT](LICENSE)
+
+---
+
+## Support
+
+- **GitHub Issues** — Report bugs or request features
+- **Discussions** — Ask questions, share ideas, connect with other users
+- **Twitter** — Follow [@0yk0](https://twitter.com/0yk0) for updates
+
+---
+
+<p align="center">
+  <strong>Star this repo if One Man Shop helps your shop!</strong><br>
+  It helps other shop owners discover this free POS software.
+</p>

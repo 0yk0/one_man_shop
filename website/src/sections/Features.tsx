@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { QrCode, Monitor, Package, BarChart3, Cloud, Palette } from "lucide-react";
+import { QrCode, Monitor, Package, BarChart3, Cloud, Palette, Smartphone } from "lucide-react";
 
 const features = [
   { icon: QrCode, title: "UPI QR Payments", desc: "Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app." },
@@ -8,6 +8,7 @@ const features = [
   { icon: Package, title: "Product Management", desc: "Add up to 50 products with images, prices, and optional tax rates." },
   { icon: BarChart3, title: "Sales Reports", desc: "Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV." },
   { icon: Cloud, title: "Auto Backups", desc: "Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose data." },
+  { icon: Smartphone, title: "Android App", desc: "Run on any Android phone or tablet. Use as a portable POS terminal." },
   { icon: Palette, title: "35 Themes", desc: "Switch between 35 built-in themes instantly. Light, dark, and everything in between." },
 ];
 

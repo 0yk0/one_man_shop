@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Apple } from "lucide-react";
+import { Apple, Smartphone, Monitor } from "lucide-react";
 import { useDownloadUrl } from "../hooks/useDownloadUrl";
 
 export const DownloadCTA: React.FC = () => {
@@ -16,16 +16,22 @@ export const DownloadCTA: React.FC = () => {
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">Ready to simplify your shop?</h2>
         <p className="text-lg sm:text-xl text-gray-500 mb-10">Free download. No sign-up. No internet required.</p>
 
-        <a href={url} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-2xl inline-flex items-center justify-center gap-3 text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5 mb-4">
-          <Apple size={24} /> {label}
-        </a>
-        <p className="text-sm text-gray-400 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <a href={url} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-2xl inline-flex items-center justify-center gap-3 text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
+            <Monitor size={24} /> {label}
+          </a>
+          <a href="https://github.com/0yk0/one_man_shop/releases/latest" className="bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-8 rounded-2xl inline-flex items-center justify-center gap-3 text-lg border border-gray-200 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+            <Smartphone size={24} /> Get Android APK
+          </a>
+        </div>
+        
+        <p className="text-sm text-gray-400 mb-2">
           Also available for{" "}
           <a href={otherUrl} className="underline hover:text-gray-600">
             {otherLabel}
           </a>
         </p>
-        <p className="text-sm text-gray-400">Works on macOS 12+ and Windows 10+ · Open source · MIT License</p>
+        <p className="text-sm text-gray-400">Works on macOS 12+, Windows 10+, and Android 5.0+ · Open source · MIT License</p>
       </motion.div>
     </section>
   );

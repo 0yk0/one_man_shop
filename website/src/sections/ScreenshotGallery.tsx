@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const tabs = [
+  { id: "setup", label: "Setup Wizard", image: "/screenshots/screenshot-01.png" },
   { id: "pos", label: "POS Screen", image: "/screenshots/screenshot-06.png" },
   { id: "products", label: "Products", image: "/screenshots/screenshot-03.png" },
   { id: "reports", label: "Reports", image: "/screenshots/screenshot-10.png" },
@@ -52,7 +53,12 @@ export const ScreenshotGallery: React.FC = () => {
                 transition={{ duration: 0.3 }}
                 className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200 bg-white"
               >
-                <img src={tabs[activeTab].image} alt={tabs[activeTab].label} className="w-full h-auto block" />
+                <img 
+                  src={tabs[activeTab].image} 
+                  alt={tabs[activeTab].label} 
+                  className="w-full h-auto block"
+                  loading="lazy"
+                />
               </motion.div>
             </AnimatePresence>
           </div>

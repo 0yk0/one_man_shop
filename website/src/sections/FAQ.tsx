@@ -7,13 +7,16 @@ const faqs = [
   { q: "Does it work without internet?", a: "Yes. One Man Shop is completely offline. All data stays on your computer — nothing is ever sent to a server." },
   { q: "What payment methods are supported?", a: "UPI (via QR code) and Cash. Customers scan a QR code to pay with any UPI app — GPay, PhonePe, Paytm, or any other." },
   { q: "Can I use it on a second monitor?", a: "Yes. Open the Customer Display on a separate screen to show your menu, running bill, and UPI QR code to customers." },
-  { q: "What platforms are supported?", a: "macOS (Apple Silicon and Intel) and Windows 10 or later." },
+  { q: "What platforms are supported?", a: "macOS (Apple Silicon and Intel), Windows 10+, and Android 5.0+." },
+  { q: "Does it work on Android?", a: "Yes! One Man Shop runs natively on Android tablets and phones. Download the APK from GitHub Releases or build it yourself." },
+  { q: "Can I use an Android tablet as a POS?", a: "Absolutely. The app is designed for single-operator shops and works great on tablets. Use a Bluetooth thermal printer for receipts." },
   { q: "Can I add product images?", a: "Yes. Upload an image (up to 2 MB) for each product. Images show up on the POS screen and customer display." },
   { q: "Does it support tax?", a: "Yes. Enable tax in Settings and set a default rate. You can also override the tax rate for individual products." },
   { q: "Can I see sales reports?", a: "Yes. Built-in daily and weekly reports with charts showing revenue, UPI vs cash breakdown, and transaction counts. Export as CSV." },
   { q: "How do backups work?", a: "Automatic nightly backups to a folder you choose — OneDrive, Dropbox, or any local folder. You set how many days to keep." },
   { q: "How many products can I add?", a: "Up to 50 active products. Enough for a juice corner, tea stall, or small retail shop." },
   { q: "Can I customize the look?", a: "Yes. 35 built-in themes — switch instantly in Settings. Pick one that matches your shop's vibe." },
+  { q: "Is my data secure?", a: "Yes. All data stays on your device. Nothing is sent to any server. You have complete control over your data." },
 ];
 
 export const FAQ: React.FC = () => {

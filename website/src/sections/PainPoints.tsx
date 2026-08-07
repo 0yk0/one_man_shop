@@ -1,12 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Wifi, Monitor, CreditCard, BarChart3, Check } from "lucide-react";
+import { Wifi, Monitor, CreditCard, BarChart3, Smartphone, Check } from "lucide-react";
 
 const points = [
   { icon: Wifi, problem: "\"My POS needs internet and crashes during rush hour\"", solution: "Works completely offline. No WiFi? No problem." },
   { icon: Monitor, problem: "\"I can't see what my customer sees on their end\"", solution: "Customer Display shows your menu, bill, and QR on a second screen." },
   { icon: CreditCard, problem: "\"I pay monthly fees for a POS I barely use\"", solution: "100% free. No hidden charges, no monthly bills. Ever." },
   { icon: BarChart3, problem: "\"I have no idea how much I sold today\"", solution: "Built-in daily and weekly reports with charts. Export as CSV." },
+  { icon: Smartphone, problem: "\"I can't afford expensive POS hardware\"", solution: "Use any Android phone or tablet as your POS. No special hardware needed." },
 ];
 
 export const PainPoints: React.FC = () => {
