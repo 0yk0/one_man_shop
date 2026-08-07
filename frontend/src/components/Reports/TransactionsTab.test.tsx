@@ -106,7 +106,7 @@ describe('TransactionsTab', () => {
     render(<TransactionsTab />)
 
     await waitFor(() => {
-      expect(screen.getByText('Transactions:')).toBeInTheDocument()
+      expect(screen.getByText('Txns:')).toBeInTheDocument()
     })
 
     expect(screen.getByText('Total:')).toBeInTheDocument()
@@ -142,7 +142,7 @@ describe('TransactionsTab', () => {
     render(<TransactionsTab />)
 
     await waitFor(() => {
-      expect(screen.getByText('Transactions:')).toBeInTheDocument()
+      expect(screen.getByText('Txns:')).toBeInTheDocument()
     })
 
     expect(screen.queryByText('Tax:')).not.toBeInTheDocument()

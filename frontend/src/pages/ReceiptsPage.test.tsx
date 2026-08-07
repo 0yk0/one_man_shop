@@ -7,6 +7,8 @@ const mockGetSettings = vi.fn()
 const mockPrintReceipt = vi.fn()
 const mockExportTransactionsCSVToDir = vi.fn()
 const mockSelectFolder = vi.fn()
+const mockGetTransactionsCSVContent = vi.fn()
+const mockIsMobile = vi.fn().mockResolvedValue(false)
 
 vi.mock('../bindings', () => ({
   GetTransactions: (...args: any[]) => mockGetTransactions(...args),
@@ -14,6 +16,8 @@ vi.mock('../bindings', () => ({
   PrintReceipt: (...args: any[]) => mockPrintReceipt(...args),
   ExportTransactionsCSVToDir: (...args: any[]) => mockExportTransactionsCSVToDir(...args),
   SelectFolder: (...args: any[]) => mockSelectFolder(...args),
+  GetTransactionsCSVContent: (...args: any[]) => mockGetTransactionsCSVContent(...args),
+  IsMobile: (...args: any[]) => mockIsMobile(...args),
   Product: class Product { id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = '' },
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0; constructor(s: any = {}) { Object.assign(this, s || {}) } },
   Transaction: class Transaction { id = ''; receipt_number = 0; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''; constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new CartItem(i)) } },
@@ -57,14 +61,14 @@ describe('ReceiptsPage', () => {
     expect(document.querySelector('.animate-spin')).toBeInTheDocument()
   })
 
-  it('renders Receipts heading', async () => {
+  it('renders Receipts page content', async () => {
     mockGetTransactions.mockResolvedValue([])
     mockGetSettings.mockResolvedValue({ tax_enabled: false, printer_name: '' })
 
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Receipts')).toBeInTheDocument()
+      expect(screen.getByText('Export CSV')).toBeInTheDocument()
     })
   })
 
@@ -75,11 +79,10 @@ describe('ReceiptsPage', () => {
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Receipts')).toBeInTheDocument()
+      expect(screen.getByText('Export CSV')).toBeInTheDocument()
     })
 
     // Table should render with header but no rows
-    expect(screen.getByText('Receipts')).toBeInTheDocument()
     expect(screen.getByText('#')).toBeInTheDocument() // Receipt number column header
   })
 
@@ -115,14 +118,14 @@ describe('ReceiptsPage', () => {
     })
   })
 
-  it('shows Refresh button', async () => {
+  it('shows Export CSV button', async () => {
     mockGetTransactions.mockResolvedValue([])
     mockGetSettings.mockResolvedValue({ tax_enabled: false, printer_name: '' })
 
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Refresh')).toBeInTheDocument()
+      expect(screen.getByText('Export CSV')).toBeInTheDocument()
     })
   })
 
@@ -144,7 +147,7 @@ describe('ReceiptsPage', () => {
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Receipts')).toBeInTheDocument()
+      expect(screen.getByText('Export CSV')).toBeInTheDocument()
     })
 
     expect(screen.queryByText(/No printer configured/)).not.toBeInTheDocument()
@@ -157,11 +160,11 @@ describe('ReceiptsPage', () => {
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Receipts')).toBeInTheDocument()
+      expect(screen.getByText('Export CSV')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Prev')).toBeInTheDocument()
-    expect(screen.getByText('Next')).toBeInTheDocument()
+    expect(screen.getByText(/Prev/)).toBeInTheDocument()
+    expect(screen.getByText(/Next/)).toBeInTheDocument()
   })
 
   it('displays search input', async () => {
@@ -171,9 +174,7 @@ describe('ReceiptsPage', () => {
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Receipts')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Search by #, amount, item...')).toBeInTheDocument()
     })
-
-    expect(screen.getByPlaceholderText('Search by #, amount, item...')).toBeInTheDocument()
   })
 })
