@@ -10,7 +10,7 @@ function formatCount(n: number): string {
 }
 
 export const Hero: React.FC = () => {
-  const { url, label, otherUrl, otherLabel } = useDownloadUrl();
+  const { url, label, alts } = useDownloadUrl();
   const { stars, downloads, loading } = useGitHubStats();
 
   return (
@@ -78,14 +78,17 @@ export const Hero: React.FC = () => {
           className="flex flex-col sm:flex-row gap-4 justify-center mb-6"
         >
           <a href={url} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-7 rounded-xl flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:-translate-y-0.5">
-            <Download size={20} /> {label}
+            <Smartphone size={20} /> {label}
           </a>
         </motion.div>
         <p className="text-sm text-gray-400 mb-4">
           Also available for{" "}
-          <a href={otherUrl} className="underline hover:text-gray-600">
-            {otherLabel}
-          </a>
+          {alts.map((alt, i) => (
+            <span key={alt.label}>
+              <a href={alt.url} className="underline hover:text-gray-600">{alt.label}</a>
+              {i < alts.length - 1 && " and "}
+            </span>
+          ))}
         </p>
         <p className="text-sm text-gray-400 mb-16">
           No sign-up. No credit card. No internet required.

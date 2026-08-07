@@ -3,6 +3,7 @@ name: Release Build
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,6 +27,10 @@ jobs:
             goarch: amd64
             ext: ".exe"
             artifact: one_man_shop_windows_amd64
+          - os: ubuntu-latest
+            goos: android
+            goarch: arm64
+            artifact: one_man_shop_android
 
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
@@ -43,6 +48,26 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "24"
+
+      # ── Android-specific setup ──────────────────────────────────────
+      - name: Setup Java
+        if: matrix.goos == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        if: matrix.goos == 'android'
+        uses: android-actions/setup-android@v4
+        with:
+          accept-android-sdk-licenses: true
+          packages: >-
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            ndk;26.3.11579264
+      # ────────────────────────────────────────────────────────────────
 
       - name: Cache Wails binary
         id: cache-wails
@@ -64,12 +89,12 @@ jobs:
         shell: bash
         run: rm -f frontend/.npmrc
 
-      # Build binary (handles frontend, bindings, icons, compilation)
+      # ── Desktop build ──────────────────────────────────────────────
       - name: Build
+        if: matrix.goos != 'android'
         shell: bash
         run: wails3 task build
 
-      # macOS: package into .app bundle with code signing
       - name: Package macOS .app
         if: matrix.goos == 'darwin'
         shell: bash
@@ -88,6 +113,54 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: bin/
+      # ────────────────────────────────────────────────────────────────
+
+      # ── Android build ──────────────────────────────────────────────
+      - name: Build frontend
+        if: matrix.goos == 'android'
+        shell: bash
+        working-directory: frontend
+        run: npm ci && npm run build
+
+      - name: Generate Android overlay
+        if: matrix.goos == 'android'
+        shell: bash
+        run: wails3 task android:generate:android:overlay
+
+      - name: Compile Go shared library (arm64)
+        if: matrix.goos == 'android'
+        shell: bash
+        env:
+          CGO_ENABLED: "1"
+          GOOS: android
+          GOARCH: arm64
+          PRODUCTION: "true"
+        run: |
+          NDK_ROOT=$(ls -d "$ANDROID_HOME/ndk/"* 2>/dev/null | sort -V | tail -1)
+          TOOLCHAIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64"
+          export CC="$TOOLCHAIN/bin/aarch64-linux-android21-clang"
+          export CXX="$TOOLCHAIN/bin/aarch64-linux-android21-clang++"
+          mkdir -p build/android/app/src/main/jniLibs/arm64-v8a
+          go build -buildmode=c-shared \
+            -overlay build/android/overlay.json \
+            -tags production,android -trimpath -buildvcs=false -ldflags="-w -s" \
+            -o build/android/app/src/main/jniLibs/arm64-v8a/libwails.so
+
+      - name: Assemble release APK
+        if: matrix.goos == 'android'
+        shell: bash
+        working-directory: build/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload Android artifact
+        if: matrix.goos == 'android'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/android/app/build/outputs/apk/release/app-release.apk
+      # ────────────────────────────────────────────────────────────────
 
   release:
     needs: build

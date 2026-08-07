@@ -21,14 +21,26 @@ describe("useDownloadUrl", () => {
     });
   });
 
+  it("returns Android APK download for Android user", () => {
+    setUA("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36");
+    const { result } = renderHook(() => useDownloadUrl());
+
+    expect(result.current.url).toBe(`${BASE}/one_man_shop_android.zip`);
+    expect(result.current.label).toBe("Get Android APK");
+    expect(result.current.alts).toHaveLength(2);
+    expect(result.current.alts[0]).toEqual({ url: `${BASE}/one_man_shop_macos_arm64.zip`, label: "macOS" });
+    expect(result.current.alts[1]).toEqual({ url: `${BASE}/one_man_shop_windows_amd64.zip`, label: "Windows" });
+  });
+
   it("returns macOS arm64 download for macOS user", () => {
     setUA("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15");
     const { result } = renderHook(() => useDownloadUrl());
 
     expect(result.current.url).toBe(`${BASE}/one_man_shop_macos_arm64.zip`);
     expect(result.current.label).toBe("Download for macOS");
-    expect(result.current.otherUrl).toBe(`${BASE}/one_man_shop_windows_amd64.zip`);
-    expect(result.current.otherLabel).toBe("Windows");
+    expect(result.current.alts).toHaveLength(2);
+    expect(result.current.alts[0]).toEqual({ url: `${BASE}/one_man_shop_windows_amd64.zip`, label: "Windows" });
+    expect(result.current.alts[1]).toEqual({ url: `${BASE}/one_man_shop_android.zip`, label: "Android" });
   });
 
   it("returns Windows download for Windows user", () => {
@@ -37,8 +49,9 @@ describe("useDownloadUrl", () => {
 
     expect(result.current.url).toBe(`${BASE}/one_man_shop_windows_amd64.zip`);
     expect(result.current.label).toBe("Download for Windows");
-    expect(result.current.otherUrl).toBe(`${BASE}/one_man_shop_macos_arm64.zip`);
-    expect(result.current.otherLabel).toBe("macOS");
+    expect(result.current.alts).toHaveLength(2);
+    expect(result.current.alts[0]).toEqual({ url: `${BASE}/one_man_shop_macos_arm64.zip`, label: "macOS" });
+    expect(result.current.alts[1]).toEqual({ url: `${BASE}/one_man_shop_android.zip`, label: "Android" });
   });
 
   it("falls back to macOS for unknown OS", () => {
@@ -47,20 +60,24 @@ describe("useDownloadUrl", () => {
 
     expect(result.current.url).toBe(`${BASE}/one_man_shop_macos_arm64.zip`);
     expect(result.current.label).toBe("Download for macOS");
-    expect(result.current.otherLabel).toBe("Windows");
+    expect(result.current.alts[0].label).toBe("Windows");
   });
 
-  it("detects macOS from 'Macintosh' in user agent", () => {
-    setUA("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)");
+  it("detects Android from 'Android' in user agent", () => {
+    setUA("Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36");
     const { result } = renderHook(() => useDownloadUrl());
 
-    expect(result.current.url).toContain("macos_arm64");
+    expect(result.current.url).toContain("one_man_shop_android.zip");
+    expect(result.current.label).toBe("Get Android APK");
   });
 
-  it("detects Windows from 'Windows' in user agent", () => {
-    setUA("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+  it("detects Android tablet user agent", () => {
+    setUA("Mozilla/5.0 (Linux; Android 14; SM-T870) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     const { result } = renderHook(() => useDownloadUrl());
 
-    expect(result.current.url).toContain("windows_amd64");
+    expect(result.current.url).toBe(`${BASE}/one_man_shop_android.zip`);
+    expect(result.current.label).toBe("Get Android APK");
+    expect(result.current.alts[0].label).toBe("macOS");
+    expect(result.current.alts[1].label).toBe("Windows");
   });
 });

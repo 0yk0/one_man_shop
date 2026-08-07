@@ -6,7 +6,7 @@ import { useDownloadUrl } from "../hooks/useDownloadUrl";
 export const ExitIntent: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [hasShown, setHasShown] = useState(false);
-  const { url, otherUrl, otherLabel } = useDownloadUrl();
+  const { url, label, alts } = useDownloadUrl();
 
   const handleMouseLeave = useCallback(
     (e: MouseEvent) => {
@@ -99,24 +99,19 @@ export const ExitIntent: React.FC = () => {
                   className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                 >
                   <Monitor size={18} />
-                  Download for Desktop
+                  {label}
                 </a>
-                <a
-                  href="https://github.com/0yk0/one_man_shop/releases/latest"
-                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
-                >
-                  <Smartphone size={18} />
-                  Download for Android
-                </a>
+                {alts.map((alt) => (
+                  <a
+                    key={alt.label}
+                    href={alt.url}
+                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  >
+                    <Smartphone size={18} />
+                    Get {alt.label}
+                  </a>
+                ))}
               </div>
-
-              {/* Secondary link */}
-              <p className="text-sm text-gray-400 mt-4">
-                Also available for{" "}
-                <a href={otherUrl} className="underline hover:text-gray-600">
-                  {otherLabel}
-                </a>
-              </p>
             </div>
 
             {/* Trust badges */}

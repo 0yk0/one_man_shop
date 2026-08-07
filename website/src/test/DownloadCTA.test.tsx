@@ -8,8 +8,10 @@ vi.mock("../hooks/useDownloadUrl", () => ({
   useDownloadUrl: vi.fn(() => ({
     url: `${BASE}/one_man_shop_windows_amd64.zip`,
     label: "Download for Windows",
-    otherUrl: `${BASE}/one_man_shop_macos_arm64.zip`,
-    otherLabel: "macOS",
+    alts: [
+      { url: `${BASE}/one_man_shop_macos_arm64.zip`, label: "macOS" },
+      { url: `${BASE}/one_man_shop_android.zip`, label: "Android" },
+    ],
   })),
 }));
 
@@ -36,16 +38,19 @@ describe("DownloadCTA", () => {
     expect(link).not.toHaveAttribute("target");
   });
 
-  it("renders 'Also available for' link to other OS", () => {
+  it("renders 'Also available for' with both alternatives", () => {
     render(<DownloadCTA />);
-    const otherLink = screen.getByText("macOS");
-    expect(otherLink).toBeInTheDocument();
-    expect(otherLink).toHaveAttribute("href", `${BASE}/one_man_shop_macos_arm64.zip`);
+    const macLink = screen.getByText("macOS");
+    const androidLink = screen.getByText("Android");
+    expect(macLink).toBeInTheDocument();
+    expect(androidLink).toBeInTheDocument();
+    expect(macLink).toHaveAttribute("href", `${BASE}/one_man_shop_macos_arm64.zip`);
+    expect(androidLink).toHaveAttribute("href", `${BASE}/one_man_shop_android.zip`);
   });
 
   it("renders platform compatibility text", () => {
     render(<DownloadCTA />);
-    expect(screen.getByText(/macOS 12\+ and Windows 10\+/)).toBeInTheDocument();
+    expect(screen.getByText(/macOS 12\+.*Windows 10\+.*Android 5\.0\+/)).toBeInTheDocument();
   });
 
   it("has the download section id", () => {

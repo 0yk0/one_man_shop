@@ -8,8 +8,10 @@ vi.mock("../hooks/useDownloadUrl", () => ({
   useDownloadUrl: vi.fn(() => ({
     url: `${BASE}/one_man_shop_macos_arm64.zip`,
     label: "Download for macOS",
-    otherUrl: `${BASE}/one_man_shop_windows_amd64.zip`,
-    otherLabel: "Windows",
+    alts: [
+      { url: `${BASE}/one_man_shop_windows_amd64.zip`, label: "Windows" },
+      { url: `${BASE}/one_man_shop_android.zip`, label: "Android" },
+    ],
   })),
 }));
 
@@ -21,7 +23,7 @@ describe("Hero", () => {
 
   it("renders the tagline", () => {
     render(<Hero />);
-    expect(screen.getByText("Just Scan to Pay.")).toBeInTheDocument();
+    expect(screen.getByText("The only POS that costs nothing.")).toBeInTheDocument();
   });
 
   it("renders the download button with correct label", () => {
@@ -41,11 +43,14 @@ describe("Hero", () => {
     expect(link).not.toHaveAttribute("target");
   });
 
-  it("renders 'Also available for' link to other OS", () => {
+  it("renders 'Also available for' with both alternatives", () => {
     render(<Hero />);
-    const otherLink = screen.getByText("Windows");
-    expect(otherLink).toBeInTheDocument();
-    expect(otherLink).toHaveAttribute("href", `${BASE}/one_man_shop_windows_amd64.zip`);
+    const winLink = screen.getByText("Windows");
+    const androidLink = screen.getByText("Android");
+    expect(winLink).toBeInTheDocument();
+    expect(androidLink).toBeInTheDocument();
+    expect(winLink).toHaveAttribute("href", `${BASE}/one_man_shop_windows_amd64.zip`);
+    expect(androidLink).toHaveAttribute("href", `${BASE}/one_man_shop_android.zip`);
   });
 
   it("renders the app icon image", () => {
