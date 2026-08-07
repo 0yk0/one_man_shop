@@ -16,13 +16,27 @@ var App *pocketbase.PocketBase
 func Init(dataDir string) *pocketbase.PocketBase {
 	// Ensure data directory exists
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
+		log.Printf("WARNING: Failed to create data directory %q: %v", dataDir, err)
+		// Try fallback directory
+		fallback := filepath.Join(os.TempDir(), "one_man_shop_data")
+		log.Printf("Trying fallback data directory: %s", fallback)
+		if err := os.MkdirAll(fallback, 0755); err != nil {
+			log.Fatalf("FATAL: Failed to create fallback data directory %q: %v", fallback, err)
+		}
+		dataDir = fallback
 	}
 
 	// Use data subdirectory for PocketBase
 	pbDataDir := filepath.Join(dataDir, "pb_data")
 	if err := os.MkdirAll(pbDataDir, 0755); err != nil {
-		log.Fatalf("Failed to create PocketBase data directory: %v", err)
+		log.Printf("WARNING: Failed to create PocketBase data directory %q: %v", pbDataDir, err)
+		// Try fallback
+		fallback := filepath.Join(os.TempDir(), "one_man_shop_data", "pb_data")
+		log.Printf("Trying fallback PocketBase directory: %s", fallback)
+		if err := os.MkdirAll(fallback, 0755); err != nil {
+			log.Fatalf("FATAL: Failed to create fallback PocketBase directory %q: %v", fallback, err)
+		}
+		pbDataDir = fallback
 	}
 
 	App = pocketbase.NewWithConfig(pocketbase.Config{

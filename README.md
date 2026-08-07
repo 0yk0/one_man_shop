@@ -1,19 +1,47 @@
-# One Man Shop
+# One Man Shop — Free POS Software for Small Shops in India
 
-Offline POS for small shops. Free and open source.
-
-Built for a friend's small shop. Made open source for everyone.
+> **The only POS that costs nothing.** No subscriptions, no transaction fees, no hardware lock-in. Download and start selling in 2 minutes.
 
 ![One Man Shop POS](website/public/screenshots/screenshot-06.png)
 
+[![Download for Desktop](https://img.shields.io/badge/Download-Desktop-blue?style=for-the-badge)](https://github.com/0yk0/one_man_shop/releases/latest)
+[![Download for Android](https://img.shields.io/badge/Download-Android-green?style=for-the-badge)](https://github.com/0yk0/one_man_shop/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/0yk0/one_man_shop?style=for-the-badge&logo=github)](https://github.com/0yk0/one_man_shop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+---
+
+## Why One Man Shop?
+
+Most POS systems charge monthly fees, require internet, and lock you into their hardware. **One Man Shop is different:**
+
+- **100% Free** — No subscriptions, no hidden fees, no sign-up required
+- **Works Offline** — All data stays on your device. No internet needed.
+- **Runs on Your Phone** — Use any Android phone or tablet as a POS terminal
+- **UPI Native** — Built for India's UPI payments (GPay, PhonePe, Paytm)
+- **Open Source** — MIT licensed. Inspect the code, contribute, or self-host
+
+**Perfect for:** Street vendors, kirana stores, small cafes, food stalls, and any single-operator shop in India.
+
+---
+
 ## Features
 
-- **UPI QR Payments** — Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app.
-- **Customer Display** — Show your menu, live bill, and payment QR on a second screen for customers to see.
-- **Product Management** — Add up to 50 products with images, prices, and optional tax rates.
-- **Sales Reports** — Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV.
-- **Auto Backups** — Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose data.
+### For Shop Owners
+
+- **UPI QR Payments** — Generate a QR code in one tap. Customers pay with GPay, PhonePe, Paytm, or any UPI app. No internet required.
+- **Customer Display** — Show your menu, live bill, and payment QR on a second screen for customers to see. Perfect for cafes and food stalls.
+- **Product Management** — Add up to 50 products with images, prices, and optional tax rates. Easy inventory tracking for small shops.
+- **Sales Reports** — Daily and weekly reports with revenue charts and UPI vs cash breakdown. Export as CSV for your CA.
+- **Auto Backups** — Nightly backups to OneDrive, Dropbox, or any folder you choose. Never lose your sales data.
+- **Thermal Printer Support** — Print receipts with 58mm or 80mm thermal printers. Auto-print option available.
+
+### For Tech-Savvy Users
+
 - **35 Themes** — Switch between 35 built-in themes instantly. Light, dark, and everything in between.
+- **Open Source** — MIT licensed. Inspect the code, contribute features, or fork for your own use case.
+- **Offline-First** — All data stored locally in SQLite. No cloud dependency. Your data stays with you.
+- **Cross-Platform** — Runs on Windows, macOS, and Android. Same codebase, same experience.
 
 ## Screenshots
 
@@ -24,6 +52,47 @@ Built for a friend's small shop. Made open source for everyone.
 | Products | Settings | Setup Wizard |
 |---|---|---|
 | ![Products](website/public/screenshots/screenshot-03.png) | ![Settings](website/public/screenshots/screenshot-12.png) | ![Setup](website/public/screenshots/screenshot-01.png) |
+
+---
+
+## How It Compares
+
+| Feature | One Man Shop | Square | Shopify POS | Lightspeed |
+|---------|--------------|--------|-------------|------------|
+| **Price** | **Free forever** | Free tier + 2.6% fees | $39/mo + fees | $69/mo + fees |
+| **Offline Mode** | **Yes** | Limited | No | No |
+| **UPI Support** | **Native** | No | No | No |
+| **Customer Display** | **Included** | Paid add-on | Paid add-on | Paid add-on |
+| **Data Ownership** | **Local SQLite** | Cloud only | Cloud only | Cloud only |
+| **Android App** | **Yes** | Yes | Yes | Yes |
+| **Open Source** | **Yes** | No | No | No |
+| **India-Focused** | **Yes** | No | No | No |
+
+**Bottom line:** If you're a small shop in India looking for a free, offline POS with UPI support, One Man Shop is your best option.
+
+## Use Cases
+
+### Street Vendors & Small Retailers
+- Accept UPI payments without expensive hardware
+- Track daily sales without maintaining a register
+- Print receipts for customers who need them
+
+### Cafes & Food Stalls
+- Show menu on customer display while taking orders
+- Generate UPI QR for each transaction
+- Track UPI vs cash payments separately
+
+### Kirana Stores
+- Manage up to 50 products with prices and tax
+- Export sales data as CSV for your CA
+- Auto-backup data to cloud storage
+
+### Service Businesses
+- Use as a simple billing tool
+- Track daily/weekly revenue
+- Generate reports for GST filing
+
+---
 
 ## Architecture
 
@@ -49,6 +118,28 @@ graph TB
         end
     end
 
+    subgraph AndroidApp["Android App (Wails v3)"]
+        subgraph WebView["Android WebView"]
+            AndroidFE["React + TypeScript<br/>(same frontend)"]
+        end
+
+        subgraph Bridge["Native Bridge (JNI)"]
+            WailsBridge["WailsBridge.java"]
+        end
+
+        subgraph GoBackend["Go Backend (libwails.so)"]
+            AndroidAppStruct["App Struct<br/>(app.go)"]
+            AndroidHandlers["Handlers<br/>CRUD · Reports · Backups"]
+        end
+
+        subgraph AndroidSys["Android System"]
+            Presentation["Customer Display<br/>(External Screen)"]
+            Notif["Notifications"]
+            Bio["Biometric Auth"]
+            Camera["Camera"]
+        end
+    end
+
     subgraph External["External"]
         FS["Filesystem<br/>Backups"]
         UPI["UPI Apps<br/>GPay · PhonePe"]
@@ -61,6 +152,12 @@ graph TB
     AppStruct --> DisplayMgr
     DisplayMgr -->|"WebSocket :9246"| CustDisp
     CustDisp -.->|"QR Code Scan"| UPI
+
+    AndroidFE -->|"Wails Bindings<br/>(IPC)"| WailsBridge
+    WailsBridge -->|"JNI"| AndroidAppStruct
+    AndroidAppStruct --> AndroidHandlers
+    AndroidHandlers --> PB
+    WailsBridge --> AndroidSys
 ```
 
 ### Data Flow
@@ -74,6 +171,7 @@ graph TB
 | Layer | Technology |
 |---|---|
 | Desktop framework | [Wails v3](https://wails.io/) (alpha) |
+| Android framework | [Wails v3 Mobile](https://wails.io/docs/guides/mobile) (experimental) — Android WebView + JNI bridge |
 | Backend | Go |
 | Frontend | React 18, TypeScript, Vite |
 | Database | [PocketBase](https://pocketbase.io/) (embedded SQLite) |
@@ -82,21 +180,34 @@ graph TB
 | Charts | Recharts |
 | Testing | Vitest + React Testing Library (frontend), `go test` (backend) |
 
-## Installation
+## Quick Start (2 Minutes)
 
-### Download
+### 1. Download
 
 Download the latest release from [GitHub Releases](https://github.com/0yk0/one_man_shop/releases/latest).
 
-- **macOS** — Unzip and drag to Applications. Works on Apple Silicon and Intel.
-- **Windows** — Download the `.exe` and run it.
+| Platform | Download | Instructions |
+|----------|----------|--------------|
+| **Windows** | `.exe` installer | Run the installer |
+| **macOS** | `.dmg` file | Unzip and drag to Applications |
+| **Android** | `.apk` file | Enable "Install from unknown sources" and install |
 
-### First Launch
+### 2. Setup Wizard
 
+On first launch, the setup wizard guides you through:
 1. Enter your shop name
 2. Set your UPI VPA (e.g. `yourname@upi`)
 3. Enter your merchant name
-4. Start adding products and selling
+4. Set an admin PIN (optional)
+
+### 3. Start Selling
+
+- Add products with images and prices
+- Generate UPI QR codes for customers
+- Print receipts with a thermal printer
+- View daily/weekly sales reports
+
+**That's it.** No account creation, no cloud sync, no monthly fees.
 
 ## Development
 
@@ -143,6 +254,401 @@ task build:darwin
 
 # Windows
 task build:windows
+
+# Android (APK for device)
+task android:build
+task android:package        # Release APK
+
+# Android (all architectures)
+task android:compile:go:all-archs
+```
+
+## Running on Android
+
+One Man Shop runs natively on Android tablets and phones. The same Go backend and React frontend are compiled into a native Android app using the Wails v3 mobile bridge.
+
+### Prerequisites
+
+- [Go](https://go.dev/dl/) 1.25+
+- [Node.js](https://nodejs.org/) 18+
+- [Java JDK](https://adoptium.net/) 11+
+- [Android Studio](https://developer.android.com/studio) (recommended — includes SDK, emulator, and build tools)
+- Android SDK with:
+  - Platform Tools (`adb`)
+  - Build Tools
+  - Android Emulator (for testing without a physical device)
+- [Android NDK](https://developer.android.com/ndk) r26d or later
+
+### Environment Setup
+
+Add these to your shell profile (`~/.zshrc`, `~/.bashrc`, or `~/.bash_profile`):
+
+```bash
+# macOS
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+
+# Linux
+export ANDROID_HOME="$HOME/Android/Sdk"
+
+# NDK (adjust version to match your installed version)
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+
+# Add tools to PATH
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export PATH=$PATH:$ANDROID_HOME/emulator
+```
+
+After editing, reload your shell:
+
+```bash
+source ~/.zshrc   # or source ~/.bashrc
+```
+
+Verify the setup:
+
+```bash
+go version          # 1.25+
+java -version       # 11+
+adb --version       # Android Debug Bridge
+emulator -version   # Android Emulator
+```
+
+### Installing Android SDK
+
+**Option A — Android Studio (easiest)**
+
+1. Install [Android Studio](https://developer.android.com/studio)
+2. Open SDK Manager (`Tools → SDK Manager`)
+3. Install under **SDK Platforms**: Android API 35 (Android 15)
+4. Install under **SDK Tools**: Android SDK Build-Tools, Android SDK Platform-Tools, Android NDK (side by side)
+
+**Option B — Command Line Tools**
+
+1. Download [command-line tools](https://developer.android.com/studio#command-tools) from developer.android.com
+2. Unzip to `$ANDROID_HOME/cmdline-tools/latest/`
+3. Accept licenses and install packages:
+
+```bash
+yes | sdkmanager --licenses
+sdkmanager "platform-tools" "build-tools;35.0.0" "platforms;android-35" "ndk;29.0.14206865"
+```
+
+### Quick Start (Emulator)
+
+The fastest way to get running on Android:
+
+```bash
+# 1. Check all dependencies are installed
+task android:install:deps
+
+# 2. Build and run on emulator (auto-creates AVD if needed)
+task android:run
+```
+
+This will:
+- Compile Go code as a shared library (`libwails.so`) for the target architecture
+- Build the frontend and bundle assets
+- Build the Android APK via Gradle
+- Start an emulator (if not running) and deploy the app
+
+### Emulator Setup
+
+#### Creating AVDs
+
+Create virtual devices for testing different form factors:
+
+```bash
+# Create a tablet AVD (recommended for POS)
+avdmanager create avd -n POS_Tablet -k "system-images;android-35;google_apis;arm64-v8a" -d "pixel_tablet"
+
+# Create a phone AVD
+avdmanager create avd -n POS_Mobile -k "system-images;android-35;google_apis;arm64-v8a" -d "pixel_8"
+```
+
+Or create them via Android Studio: `Tools → Device Manager → Create Device`
+
+#### Managing Emulators
+
+```bash
+# List available AVDs
+emulator -list-avds
+
+# Start an emulator
+emulator -avd POS_Tablet &
+
+# Check running emulators
+adb devices
+```
+
+#### Deploy to Specific Emulator
+
+```bash
+# Deploy to tablet emulator (default)
+task android:run
+
+# Deploy to mobile emulator
+task android:run:mobile
+```
+
+### Build Commands
+
+| Command | Description |
+|---|---|
+| `task android:install:deps` | Check all Android dependencies are installed |
+| `task android:build` | Build APK for current architecture |
+| `task android:compile:go:all-archs` | Compile Go for arm64 + x86_64 |
+| `task android:assemble:apk` | Assemble debug APK |
+| `task android:assemble:apk:release` | Assemble release APK |
+| `task android:assemble:aab` | Assemble debug AAB (Android App Bundle) |
+| `task android:assemble:aab:release` | Assemble release AAB for Play Store |
+| `task android:package` | Full production build → release APK |
+| `task android:package:fat` | Production build for all architectures |
+| `task android:bundle` | Production AAB for Play Store submission |
+| `task android:run` | Build + deploy to tablet emulator |
+| `task android:run:mobile` | Build + deploy to mobile emulator |
+| `task android:run:device` | Build + deploy to connected physical device |
+| `task android:deploy-emulator` | Install release APK to emulator |
+| `task android:deploy-device` | Install release APK to physical device |
+| `task android:studio` | Open Android project in Android Studio |
+| `task android:logs` | Stream filtered logcat output |
+| `task android:clean` | Clean build artifacts |
+
+### Physical Device Setup
+
+#### USB Debugging
+
+1. On your Android device, go to **Settings → About Phone**
+2. Tap **Build Number** 7 times to enable Developer Options
+3. Go to **Settings → Developer Options**
+4. Enable **USB Debugging**
+5. Connect the device via USB and accept the debug prompt
+
+```bash
+# Verify device is connected
+adb devices
+```
+
+#### Wireless Debugging (Android 11+)
+
+```bash
+# Pair with device (one-time)
+adb pair <device-ip>:<pairing-port>
+
+# Connect
+adb connect <device-ip>:<connect-port>
+
+# Deploy
+task android:run:device
+```
+
+#### Deploy to Device
+
+```bash
+# Build and deploy in one step
+task android:run:device
+
+# Or build first, then deploy
+task android:build
+task android:deploy-device
+```
+
+### APK Signing
+
+Release builds require a signing key. Generate one and configure environment variables:
+
+```bash
+# Generate a keystore (one-time)
+keytool -genkey -v -keystore release.keystore \
+  -alias oms \
+  -keyalg RSA -keysize 2048 \
+  -validity 10000
+
+# Set environment variables (add to ~/.zshrc or ~/.bashrc)
+export ANDROID_KEYSTORE_FILE="/path/to/release.keystore"
+export ANDROID_KEYSTORE_PASSWORD="your-keystore-password"
+export ANDROID_KEY_ALIAS="oms"
+export ANDROID_KEY_PASSWORD="your-key-password"
+```
+
+Then build a signed release APK:
+
+```bash
+task android:assemble:apk:release
+```
+
+The signed APK will be in `build/android/app/build/outputs/apk/release/`.
+
+### Play Store Deployment
+
+Google Play requires an Android App Bundle (AAB), not an APK:
+
+```bash
+# Build release AAB
+task android:assemble:aab:release
+
+# Or use the all-architectures bundle command
+task android:bundle
+```
+
+The AAB file will be at `build/android/app/build/outputs/bundle/release/`.
+
+To upload:
+1. Go to [Google Play Console](https://play.google.com/console)
+2. Create a new app or select existing
+3. Go to **Production → Create new release**
+4. Upload the `.aab` file
+5. Fill in release notes and submit for review
+
+### Supported Android Versions
+
+| Property | Value |
+|---|---|
+| Minimum SDK | 21 (Android 5.0 Lollipop) |
+| Target SDK | 35 (Android 15) |
+| Compile SDK | 35 |
+| Supported ABIs | `arm64-v8a` (devices), `x86_64` (emulator) |
+
+### Android Features
+
+The Android build includes native features beyond the desktop version:
+
+- **Customer Display** — External screen support via Android `Presentation` API
+- **Biometric Authentication** — Fingerprint/face unlock for admin access
+- **Notifications** — Native Android notifications (API 33+)
+- **Haptic Feedback** — Vibration and haptic responses
+- **Camera Capture** — Scan barcodes and QR codes
+- **File/Folder Pickers** — Native Android Storage Access Framework
+- **Secure Storage** — Encrypted SharedPreferences for sensitive data
+- **Share** — Native Android share sheet
+- **Foreground Service** — Keeps the app alive when backgrounded
+- **Keep Awake** — Prevent screen sleep during transactions
+- **Torch/Flashlight** — Camera flash control
+- **Brightness Control** — Adjust screen brightness programmatically
+- **Orientation Lock** — Force portrait or landscape mode
+- **TTS (Text-to-Speech)** — Spoken feedback for accessibility
+
+### Architecture
+
+```mermaid
+graph TB
+    subgraph Android["Android App"]
+        subgraph WebView["Android WebView"]
+            ReactFE["React + TypeScript<br/>Vite + Tailwind + DaisyUI"]
+        end
+
+        subgraph Native["Native Bridge (JNI)"]
+            WailsBridge["WailsBridge.java"]
+            JSBridge["WailsJSBridge<br/>(window.wails)"]
+        end
+
+        subgraph GoBackend["Go Backend (libwails.so)"]
+            AppStruct["App Struct<br/>(app.go)"]
+            Handlers["Handlers<br/>CRUD · Reports · Backups"]
+        end
+
+        subgraph Data["Data Layer"]
+            PB["PocketBase<br/>(Embedded SQLite)"]
+        end
+
+        subgraph AndroidSys["Android System"]
+            Presentation["Customer Display<br/>(External Screen)"]
+            Notif["Notifications"]
+            Bio["Biometric Auth"]
+            Camera["Camera"]
+        end
+    end
+
+    ReactFE -->|"Wails Bindings<br/>(IPC)"| JSBridge
+    JSBridge -->|"JNI Calls"| WailsBridge
+    WailsBridge -->|"Native Library"| AppStruct
+    AppStruct --> Handlers
+    Handlers --> PB
+    WailsBridge --> AndroidSys
+```
+
+### Troubleshooting
+
+#### "NDK not found"
+
+```bash
+# Check installed NDK versions
+ls $ANDROID_HOME/ndk
+
+# Set the correct version
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865
+```
+
+#### "UnsatisfiedLinkError: dlopen failed"
+
+Architecture mismatch between Go library and device/emulator.
+
+```bash
+# For physical devices (most are arm64)
+task android:build ARCH=arm64
+
+# For emulators (x86_64)
+task android:build ARCH=x86_64
+
+# Or build for all architectures
+task android:compile:go:all-archs
+```
+
+#### Blank WebView
+
+1. Enable WebView debugging in Chrome: `chrome://inspect/#devices`
+2. Check logcat for errors:
+
+```bash
+task android:logs
+```
+
+3. Ensure assets are being served — look for `WailsPathHandler` in logs
+
+#### "cannot find package" or Go module errors
+
+```bash
+go clean -modcache
+go mod tidy
+go mod download
+```
+
+#### "CGO_ENABLED required"
+
+```bash
+export CGO_ENABLED=1
+```
+
+#### App crashes on launch
+
+Check logcat for the crash stack trace:
+
+```bash
+adb logcat | grep -E "(FATAL|AndroidRuntime|wails)"
+```
+
+Common causes:
+- Missing NDK or wrong architecture
+- Go compilation errors (check `task android:build` output)
+- WebView not available (very old Android versions)
+
+#### Emulator not starting
+
+```bash
+# Check if HAXM/Hypervisor is available
+emulator -avd POS_Tablet -verbose 2>&1 | head -50
+
+# Try without GPU acceleration
+emulator -avd POS_Tablet -no-accel
+```
+
+#### APK install fails
+
+```bash
+# Uninstall existing version first
+adb uninstall in.yk0.oms
+
+# Then install
+adb install build/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ## Testing
@@ -190,6 +696,8 @@ go test -race ./backend/... # With race detector
 one_man_shop/
 ├── main.go                 # Entry point, Wails bootstrap
 ├── app.go                  # App struct, routes Go methods to handlers
+├── app_android.go          # Android-specific data directory logic
+├── app_desktop.go          # Desktop-specific data directory logic
 ├── backend/
 │   ├── db/                 # PocketBase init, collection schemas
 │   ├── handlers/           # Business logic (CRUD, reports, backups)
@@ -204,8 +712,14 @@ one_man_shop/
 │       ├── hooks/          # useSettings hook
 │       ├── lib/            # Utilities (reports helpers, sounds)
 │       └── test/           # Vitest setup
-├── website/                # Landing page (Vite + framer-motion)
-└── build/                  # Build configs, icons, platform tasks
+├── build/
+│   ├── android/            # Android project (Gradle, Java, manifests)
+│   │   ├── app/src/main/java/com/wails/app/  # Java bridge code
+│   │   ├── Taskfile.yml    # Android build tasks
+│   │   └── build.gradle    # Root Gradle config
+│   ├── darwin/             # macOS build tasks
+│   └── windows/            # Windows build tasks
+└── website/                # Landing page (Vite + framer-motion)
 ```
 
 ## FAQ
@@ -225,13 +739,29 @@ Yes. Open the Customer Display on a separate screen.
 **How many products?**
 Up to 50 active products.
 
+**Does it work on Android?**
+Yes. One Man Shop runs on Android tablets and phones. Download the `.apk` from [GitHub Releases](https://github.com/0yk0/one_man_shop/releases/latest) or build it yourself — see [Running on Android](#running-on-android).
+
+**Which Android versions are supported?**
+Android 5.0 (Lollipop) and above. Tested on Android 10+ tablets and phones.
+
+**Can I use an Android tablet as a POS?**
+Yes. The app is designed for single-operator shops and works well on tablets. Use `task android:run` to deploy to a tablet emulator or connect a physical tablet via USB.
+
+**Can I use a second screen on Android?**
+Yes. The app supports external displays via Android's `Presentation` API. Connect a monitor via USB-C or Miracast to show the Customer Display on a separate screen.
+
 ## Contributing
 
 Contributions are welcome! Whether it's a bug report, feature request, or code contribution, we appreciate your help.
 
-- **[Contributing Guide](CONTRIBUTING.md)** — How to set up development, make changes, and submit PRs
-- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards we follow
-- **[Security Policy](SECURITY.md)** — How to report vulnerabilities
+### Ways to Contribute
+
+- **Report Bugs** — Open an issue with steps to reproduce
+- **Request Features** — Tell us what would make One Man Shop better for your shop
+- **Submit Code** — Fix bugs or add features (see below)
+- **Improve Docs** — Help us make the README and guides clearer
+- **Spread the Word** — Star the repo, share with shop owners, write a blog post
 
 ### Quick Start for Contributors
 
@@ -257,6 +787,10 @@ go test ./backend/... -v
 cd frontend && npm test
 ```
 
+- **[Contributing Guide](CONTRIBUTING.md)** — Full guide on setup, workflow, and PR process
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards we follow
+- **[Security Policy](SECURITY.md)** — How to report vulnerabilities
+
 ## Security
 
 For security vulnerabilities, please see our [Security Policy](SECURITY.md). **Do not** report security issues through public GitHub issues.
@@ -264,3 +798,18 @@ For security vulnerabilities, please see our [Security Policy](SECURITY.md). **D
 ## License
 
 [MIT](LICENSE)
+
+---
+
+## Support
+
+- **GitHub Issues** — Report bugs or request features
+- **Discussions** — Ask questions, share ideas, connect with other users
+- **Twitter** — Follow [@0yk0](https://twitter.com/0yk0) for updates
+
+---
+
+<p align="center">
+  <strong>Star this repo if One Man Shop helps your shop!</strong><br>
+  It helps other shop owners discover this free POS software.
+</p>

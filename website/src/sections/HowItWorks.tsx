@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Download, Package, QrCode } from "lucide-react";
 
 const steps = [
-  { icon: Download, number: "1", title: "Download & install", desc: "Free download for macOS or Windows. Takes less than a minute." },
+  { icon: Download, number: "1", title: "Download & install", desc: "Free download for macOS, Windows, or Android. Takes less than a minute." },
   { icon: Package, number: "2", title: "Add your products", desc: "Set up your product list with names, prices, and images." },
   { icon: QrCode, number: "3", title: "Start selling", desc: "Tap products, generate UPI QR, and complete sales instantly." },
 ];

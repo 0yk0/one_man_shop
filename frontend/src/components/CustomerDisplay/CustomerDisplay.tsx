@@ -7,7 +7,7 @@ type ViewType = 'menu' | 'bill' | 'thankyou'
 
 export default function CustomerDisplay() {
   useSyncDisplayState()
-  const { view, shop_name, products, cart_items, total, tax, payment_method, upi_string, theme } = useDisplayStore()
+  const { view, shop_name, products, cart_items, total, tax, payment_method, upi_string, receipt_number, theme } = useDisplayStore()
 
   // Apply theme
   useEffect(() => {
@@ -301,9 +301,16 @@ export default function CustomerDisplay() {
                   <CircleDollarSign size={28} className="mx-auto text-stone-400 mb-2" />
                   <p className="text-sm font-bold tracking-[0.2em] text-stone-400 uppercase mb-1">Amount Paid</p>
                   <p className="text-5xl font-black font-mono text-stone-800">₹{totalWithTax.toFixed(2)}</p>
-                  <p className="text-sm text-stone-400 mt-2 capitalize">{payment_method} Payment</p>
+                   <p className="text-sm text-stone-400 mt-2">{payment_method === 'upi' ? 'UPI' : 'Cash'} Payment</p>
                 </div>
               </div>
+            )}
+
+            {/* Receipt number */}
+            {receipt_number > 0 && (
+              <p key={`receipt-${thankYouKey.current}`} className="text-sm text-stone-400 mt-3 animate-[fadeSlideUp_0.6s_ease-out_0.75s_forwards] opacity-0">
+                Receipt #{String(receipt_number).padStart(6, '0')}
+              </p>
             )}
 
             {/* Visit again */}

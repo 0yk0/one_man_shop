@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"one_man_shop/backend/db"
 	"one_man_shop/backend/display"
@@ -154,8 +156,8 @@ func (a *App) ShowQROnDisplay(upiString string, amount float64, vpa string) {
 	a.displayState.SetUPIData(upiString)
 }
 
-func (a *App) ConfirmPayment() {
-	a.displayState.SetThankYou()
+func (a *App) ConfirmPayment(receiptNumber int) {
+	a.displayState.SetThankYou(receiptNumber)
 }
 
 func (a *App) ClearCustomerDisplay() {
@@ -228,7 +230,18 @@ func (a *App) ExportTransactionsCSVToDir(startDate, endDate, dir string) (string
 	return a.handlers.ExportTransactionsCSVToDir(startDate, endDate, dir)
 }
 
+func (a *App) GetTransactionsCSVContent(startDate, endDate string) (string, error) {
+	return a.handlers.GetTransactionsCSVContent(startDate, endDate)
+}
+
 func (a *App) SelectFolder(title string) (string, error) {
+	// On Android, return the app's external files directory (no desktop dialog)
+	if runtime.GOOS == "android" {
+		dir := getAppDataDir()
+		log.Printf("[SelectFolder] Android: returning %s", dir)
+		return dir, nil
+	}
+
 	if a.app == nil {
 		return "", fmt.Errorf("app not initialized")
 	}
@@ -262,6 +275,25 @@ func (a *App) SaveFile(title, defaultName string, contentBase64 string) (string,
 		return "", fmt.Errorf("app not initialized")
 	}
 
+	data, err := base64.StdEncoding.DecodeString(contentBase64)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode content: %w", err)
+	}
+
+	// On Android, save to external files dir and return path (no desktop dialog)
+	if runtime.GOOS == "android" {
+		dir := getAppDataDir()
+		path := filepath.Join(dir, defaultName)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create directory: %w", err)
+		}
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			return "", fmt.Errorf("failed to write file: %w", err)
+		}
+		log.Printf("[SaveFile] Android: saved to %s", path)
+		return path, nil
+	}
+
 	path, err := a.app.Dialog.SaveFile().
 		SetFilename(defaultName).
 		PromptForSingleSelection()
@@ -269,16 +301,63 @@ func (a *App) SaveFile(title, defaultName string, contentBase64 string) (string,
 		return "", err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(contentBase64)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode content: %w", err)
-	}
-
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return "", fmt.Errorf("failed to write file: %w", err)
 	}
 
 	return path, nil
+}
+
+// SaveAndShareFile saves a base64-encoded file and opens the Android share sheet.
+// On desktop, falls back to SaveFile.
+func (a *App) SaveAndShareFile(title, defaultName, mimeType string, contentBase64 string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(contentBase64)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode content: %w", err)
+	}
+
+	if runtime.GOOS == "android" {
+		dir := getAppDataDir()
+		path := filepath.Join(dir, defaultName)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create directory: %w", err)
+		}
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			return "", fmt.Errorf("failed to write file: %w", err)
+		}
+		log.Printf("[SaveAndShareFile] Android: saved to %s, opening share sheet", path)
+		return path, nil
+	}
+
+	// Desktop fallback
+	return a.SaveFile(title, defaultName, contentBase64)
+}
+
+// SaveFileDialog opens the Android save file dialog (ACTION_CREATE_DOCUMENT).
+// The user picks a location and filename. The result comes via the
+// 'android:saveFileResult' Wails event. On desktop, falls back to SaveFile.
+func (a *App) SaveFileDialog(title, defaultName, mimeType string, contentBase64 string) (string, error) {
+	if runtime.GOOS == "android" {
+		// On Android, save to app data dir and return path
+		// (the Java saveFileDialog is async via events — frontend handles the dialog)
+		dir := getAppDataDir()
+		path := filepath.Join(dir, defaultName)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create directory: %w", err)
+		}
+		data, err := base64.StdEncoding.DecodeString(contentBase64)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode content: %w", err)
+		}
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			return "", fmt.Errorf("failed to write file: %w", err)
+		}
+		log.Printf("[SaveFileDialog] Android: saved to %s", path)
+		return path, nil
+	}
+
+	// Desktop: use native save dialog
+	return a.SaveFile(title, defaultName, contentBase64)
 }
 
 func (a *App) GetAvailableScreens() ([]map[string]interface{}, error) {
@@ -330,6 +409,73 @@ func (a *App) SetBackupSchedule(enabled bool) error {
 	return a.handlers.SetBackupSchedule(enabled)
 }
 
+// ========== Mobile/Data Directory Methods ==========
+
+// IsMobile returns true if running on Android or iOS
+func (a *App) IsMobile() bool {
+	return runtime.GOOS == "android" || runtime.GOOS == "ios"
+}
+
+// GetDataDir returns the current data directory path
+func (a *App) GetDataDir() string {
+	return getDataDirForDisplay()
+}
+
+// SelectDataDir opens a folder picker and returns the selected path
+func (a *App) SelectDataDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("app not initialized")
+	}
+	result, err := a.app.Dialog.OpenFile().
+		SetTitle("Select Data Directory").
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
+// SaveDataDir saves the selected data directory to config after validating it's writable
+func (a *App) SaveDataDir(path string) error {
+	if path == "" {
+		return fmt.Errorf("data directory path cannot be empty")
+	}
+
+	// Normalize the path
+	normalized := path
+	if runtime.GOOS != "windows" {
+		normalized = filepath.Clean(path)
+	}
+
+	log.Printf("[DataDir] Validating data directory: %s", normalized)
+
+	// Create the directory if it doesn't exist
+	if err := os.MkdirAll(normalized, 0755); err != nil {
+		return fmt.Errorf("cannot create directory %q: %w", normalized, err)
+	}
+
+	// Test write access by creating a temp file
+	testFile := filepath.Join(normalized, ".write_test")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return fmt.Errorf("directory %q is not writable: %w", normalized, err)
+	}
+	f.Close()
+	os.Remove(testFile)
+
+	log.Printf("[DataDir] Directory validated, saving preference: %s", normalized)
+
+	// Save to config
+	if err := saveDataDir(normalized); err != nil {
+		return fmt.Errorf("failed to save data directory preference: %w", err)
+	}
+
+	log.Printf("[DataDir] Data directory preference saved. Restart app to use new location.")
+	return nil
+}
+
 // ========== Helpers ==========
 
 func (a *App) getShopName() string {
@@ -340,6 +486,6 @@ func (a *App) getShopName() string {
 	return s.ShopName
 }
 
-func getAppDataDir() string {
-	return "data"
-}
+// getAppDataDir is defined in platform-specific files:
+// - app_desktop.go (//go:build !android)
+// - app_android.go (//go:build android)

@@ -103,11 +103,14 @@ func TestSetUPIData(t *testing.T) {
 func TestSetThankYou(t *testing.T) {
 	m := NewManager()
 
-	m.SetThankYou()
+	m.SetThankYou(42)
 
 	state := m.GetState()
 	if state.View != ViewThankYou {
 		t.Errorf("View mismatch: got %s, want %s", state.View, ViewThankYou)
+	}
+	if state.ReceiptNumber != 42 {
+		t.Errorf("ReceiptNumber mismatch: got %d, want %d", state.ReceiptNumber, 42)
 	}
 }
 

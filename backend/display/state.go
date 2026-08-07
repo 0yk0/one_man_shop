@@ -41,6 +41,7 @@ type State struct {
 	Tax           float64     `json:"tax"`
 	PaymentMethod string      `json:"payment_method"`
 	UPIString     string      `json:"upi_string"`
+	ReceiptNumber int         `json:"receipt_number"`
 	Theme         string      `json:"theme"`
 }
 
@@ -86,6 +87,7 @@ func (m *Manager) SetMenu(shopName string, products []Product, theme string) {
 	m.state.Total = 0
 	m.state.Tax = 0
 	m.state.PaymentMethod = ""
+	m.state.ReceiptNumber = 0
 	m.state.mu.Unlock()
 	m.notify()
 	log.Printf("[Display] Menu: %s (%d products)", shopName, len(products))
@@ -124,12 +126,13 @@ func (m *Manager) SetUPIData(upiString string) {
 }
 
 // SetThankYou shows the thank you screen
-func (m *Manager) SetThankYou() {
+func (m *Manager) SetThankYou(receiptNumber int) {
 	m.state.mu.Lock()
 	m.state.View = ViewThankYou
+	m.state.ReceiptNumber = receiptNumber
 	m.state.mu.Unlock()
 	m.notify()
-	log.Printf("[Display] ThankYou")
+	log.Printf("[Display] ThankYou (receipt #%d)", receiptNumber)
 }
 
 // Clear resets the display to menu
@@ -140,6 +143,7 @@ func (m *Manager) Clear() {
 	m.state.Total = 0
 	m.state.Tax = 0
 	m.state.PaymentMethod = ""
+	m.state.ReceiptNumber = 0
 	m.state.mu.Unlock()
 	m.notify()
 	log.Printf("[Display] Cleared → menu")

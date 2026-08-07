@@ -142,11 +142,12 @@ describe('SummaryTab', () => {
   })
 
   it('renders with transaction data', async () => {
+    const today = new Date().toISOString().slice(0, 10)
     mockGetTransactions.mockResolvedValue([
       {
         id: '1', receipt_number: 1,
         items: [{ product_id: 'p1', name: 'Juice', qty: 2, price: 25, tax_rate: 0, subtotal: 50, tax_amount: 0 }],
-        subtotal: 50, tax_total: 0, total: 50, payment_method: 'upi', created: '2026-08-04T10:00:00Z',
+        subtotal: 50, tax_total: 0, total: 50, payment_method: 'upi', created: `${today}T10:00:00Z`,
       },
     ])
     mockGetSettings.mockResolvedValue({ tax_enabled: false })

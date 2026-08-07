@@ -10,6 +10,7 @@ interface DisplayState {
   tax: number
   payment_method: string
   upi_string: string
+  receipt_number: number
   theme: string
 }
 
@@ -23,6 +24,7 @@ export const useDisplayStore = create<DisplayState>(() => ({
   tax: 0,
   payment_method: '',
   upi_string: '',
+  receipt_number: 0,
   theme: 'light',
 }))
 

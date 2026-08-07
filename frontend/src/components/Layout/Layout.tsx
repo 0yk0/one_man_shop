@@ -18,7 +18,6 @@ export default function Layout({ onThemeChange }: Props) {
   })
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [pendingRoute, setPendingRoute] = useState<string | null>(null)
-
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(collapsed))
   }, [collapsed])
@@ -39,131 +38,154 @@ export default function Layout({ onThemeChange }: Props) {
     }
   }, [pendingRoute, navigate])
 
-  return (
-    <div className="flex h-screen bg-base-200">
-      {/* Sidebar */}
-      <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-base-100 shadow-lg flex flex-col transition-all duration-200`}>
-        <NavLink
-          to="/"
-          className={`${collapsed ? 'px-2 py-3' : 'px-4 py-4'} border-b border-base-300 flex items-center ${collapsed ? 'justify-center' : ''} hover:bg-base-300 transition-colors ${collapsed ? 'tooltip tooltip-right' : ''}`}
-          data-tip={collapsed ? (settings?.shop_name || 'One Man Shop') : undefined}
-        >
-          <h1 className="text-xl font-bold text-primary flex items-center gap-2">
-            <Store size={22} />
-            {!collapsed && (settings?.shop_name || 'One Man Shop')}
-          </h1>
-        </NavLink>
+  const navItems = [
+    { to: '/', icon: Monitor, label: 'POS', end: true },
+    { to: '/receipts', icon: ReceiptText, label: 'Receipts', end: false },
+    { route: '/products', icon: Package, label: 'Products' },
+    { route: '/reports', icon: BarChart3, label: 'Reports' },
+    { route: '/settings', icon: Settings, label: 'Settings' },
+  ]
 
-        <nav className="flex-1 p-2 space-y-1">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary text-primary-content'
-                : 'hover:bg-base-300 text-base-content'
-            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
-            data-tip={collapsed ? 'POS' : undefined}
-            title="POS"
-          >
-            <Monitor size={20} />
-            {!collapsed && <span>POS</span>}
-          </NavLink>
+  // Desktop sidebar
+  const renderDesktopSidebar = () => (
+    <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-base-100 shadow-lg flex flex-col transition-all duration-200 hidden md:flex`}>
+      <NavLink
+        to="/"
+        className={`${collapsed ? 'px-2 py-3' : 'px-4 py-4'} border-b border-base-300 flex items-center ${collapsed ? 'justify-center' : ''} hover:bg-base-300 transition-colors ${collapsed ? 'tooltip tooltip-right' : ''}`}
+        data-tip={collapsed ? (settings?.shop_name || 'One Man Shop') : undefined}
+      >
+        <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+          <Store size={22} />
+          {!collapsed && (settings?.shop_name || 'One Man Shop')}
+        </h1>
+      </NavLink>
 
-          <NavLink
-            to="/receipts"
-            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary text-primary-content'
-                : 'hover:bg-base-300 text-base-content'
-            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
-            data-tip={collapsed ? 'Receipts' : undefined}
-            title="Receipts"
-          >
-            <ReceiptText size={20} />
-            {!collapsed && <span>Receipts</span>}
-          </NavLink>
-
-          <button
-            onClick={() => handleProtectedClick('/products')}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-              location.pathname === '/products'
-                ? 'bg-primary text-primary-content'
-                : 'hover:bg-base-300 text-base-content'
-            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
-            data-tip={collapsed ? 'Products' : undefined}
-            title="Products"
-          >
-            <Package size={20} />
-            {!collapsed && <span>Products</span>}
-          </button>
-
-          <button
-            onClick={() => handleProtectedClick('/reports')}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-              location.pathname === '/reports'
-                ? 'bg-primary text-primary-content'
-                : 'hover:bg-base-300 text-base-content'
-            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
-            data-tip={collapsed ? 'Reports' : undefined}
-            title="Reports"
-          >
-            <BarChart3 size={20} />
-            {!collapsed && <span>Reports</span>}
-          </button>
-
-          <button
-            onClick={() => handleProtectedClick('/settings')}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-              location.pathname === '/settings'
-                ? 'bg-primary text-primary-content'
-                : 'hover:bg-base-300 text-base-content'
-            } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
-            data-tip={collapsed ? 'Settings' : undefined}
-            title="Settings"
-          >
-            <Settings size={20} />
-            {!collapsed && <span>Settings</span>}
-          </button>
-        </nav>
-
-        {!collapsed && (
-          <div className="p-4 border-t border-base-300">
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-base-content/40">
-                <p>v0.1.0</p>
-                <p className="mt-1">Made by <button onClick={() => Browser.OpenURL('https://linkedin.com/in/yatheeshkonduru')} className="hover:text-base-content transition-colors link link-hover">Yatheesh</button></p>
-              </div>
+      <nav className="flex-1 p-2 space-y-1">
+        {navItems.map(item => {
+          if (item.route) {
+            // Protected route
+            return (
               <button
-                className="btn btn-ghost btn-xs tooltip tooltip-right"
-                data-tip="Collapse sidebar"
-                aria-label="Collapse sidebar"
-                onClick={() => setCollapsed(true)}
+                key={item.route}
+                onClick={() => handleProtectedClick(item.route)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                  location.pathname === item.route
+                    ? 'bg-primary text-primary-content'
+                    : 'hover:bg-base-300 text-base-content'
+                } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+                data-tip={collapsed ? item.label : undefined}
+                title={item.label}
               >
-                <PanelLeftClose size={20} />
+                <item.icon size={20} />
+                {!collapsed && <span>{item.label}</span>}
               </button>
-            </div>
-          </div>
-        )}
-
-        {collapsed && (
-          <div className="p-2 border-t border-base-300">
-            <button
-              className="btn btn-ghost btn-xs w-full tooltip tooltip-right"
-              data-tip="Expand sidebar"
-              aria-label="Expand sidebar"
-              onClick={() => setCollapsed(false)}
+            )
+          }
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to!}
+              end={item.end}
+              className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-primary text-primary-content'
+                  : 'hover:bg-base-300 text-base-content'
+              } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+              data-tip={collapsed ? item.label : undefined}
+              title={item.label}
             >
-              <PanelLeftOpen size={20} />
+              <item.icon size={20} />
+              {!collapsed && <span>{item.label}</span>}
+            </NavLink>
+          )
+        })}
+      </nav>
+
+      {!collapsed && (
+        <div className="p-4 border-t border-base-300">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-base-content/40">
+              <p>v0.1.0</p>
+              <p className="mt-1">Made by <button onClick={() => Browser.OpenURL('https://linkedin.com/in/yatheeshkonduru')} className="hover:text-base-content transition-colors link link-hover">Yatheesh</button></p>
+            </div>
+            <button
+              className="btn btn-ghost btn-xs tooltip tooltip-right"
+              data-tip="Collapse sidebar"
+              aria-label="Collapse sidebar"
+              onClick={() => setCollapsed(true)}
+            >
+              <PanelLeftClose size={20} />
             </button>
           </div>
-        )}
-      </aside>
+        </div>
+      )}
+
+      {collapsed && (
+        <div className="p-2 border-t border-base-300">
+          <button
+            className="btn btn-ghost btn-xs w-full tooltip tooltip-right"
+            data-tip="Expand sidebar"
+            aria-label="Expand sidebar"
+            onClick={() => setCollapsed(false)}
+          >
+            <PanelLeftOpen size={20} />
+          </button>
+        </div>
+      )}
+    </aside>
+  )
+
+  // Mobile bottom tab bar
+  const renderBottomNav = () => (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-base-100 border-t border-base-300 z-50 safe-area-bottom">
+      <div className="flex items-center justify-around h-[var(--app-nav-h)]">
+        {navItems.map(item => {
+          if (item.route) {
+            return (
+              <button
+                key={item.route}
+                onClick={() => handleProtectedClick(item.route)}
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
+                  location.pathname === item.route
+                    ? 'text-primary bg-primary/10'
+                    : 'text-base-content/60 active:text-primary active:bg-primary/5'
+                }`}
+              >
+                <item.icon size={22} />
+                <span className="text-xs">{item.label}</span>
+              </button>
+            )
+          }
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to!}
+              end={item.end}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
+                isActive
+                  ? 'text-primary bg-primary/10'
+                  : 'text-base-content/60 active:text-primary active:bg-primary/5'
+              }`}
+            >
+              <item.icon size={22} />
+              <span className="text-xs">{item.label}</span>
+            </NavLink>
+          )
+        })}
+      </div>
+    </nav>
+  )
+
+  return (
+    <div className="flex h-screen bg-base-200" style={{ '--app-nav-h': '72px' } as React.CSSProperties}>
+      {renderDesktopSidebar()}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pb-[var(--app-nav-h)] md:pb-0 safe-area-top">
         <Outlet />
       </main>
+
+      {renderBottomNav()}
 
       {/* Admin PIN Modal */}
       <AdminPinModal

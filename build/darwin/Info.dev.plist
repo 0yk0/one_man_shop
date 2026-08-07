@@ -8,7 +8,7 @@
         <key>CFBundleExecutable</key>
             <string>one_man_shop</string>
         <key>CFBundleIdentifier</key>
-            <string>com.onemanshop.pos</string>
+            <string>in.yk0.oms</string>
         <key>CFBundleVersion</key>
             <string>0.1.0</string>
         <key>CFBundleGetInfoString</key>

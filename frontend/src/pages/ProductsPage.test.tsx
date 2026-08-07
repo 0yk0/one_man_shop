@@ -7,6 +7,7 @@ const mockCreateProduct = vi.fn()
 const mockUpdateProduct = vi.fn()
 const mockDeleteProduct = vi.fn()
 const mockGetSettings = vi.fn()
+const mockIsMobile = vi.fn().mockResolvedValue(false)
 
 vi.mock('../bindings', () => ({
   GetProducts: (...args: any[]) => mockGetProducts(...args),
@@ -14,6 +15,7 @@ vi.mock('../bindings', () => ({
   UpdateProduct: (...args: any[]) => mockUpdateProduct(...args),
   DeleteProduct: (...args: any[]) => mockDeleteProduct(...args),
   GetSettings: (...args: any[]) => mockGetSettings(...args),
+  IsMobile: (...args: any[]) => mockIsMobile(...args),
   Product: class Product { id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = ''; constructor(s: any = {}) { Object.assign(this, s || {}) } },
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0 },
   Transaction: class Transaction { id = ''; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = '' },
@@ -156,14 +158,14 @@ describe('ProductsPage', () => {
     expect(screen.queryByText('Tax Rate')).not.toBeInTheDocument()
   })
 
-  it('renders Products heading', async () => {
+  it('renders Products page content', async () => {
     mockGetProducts.mockResolvedValue([])
     mockGetSettings.mockResolvedValue({ tax_enabled: false })
 
     render(<ProductsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Products')).toBeInTheDocument()
+      expect(screen.getByText('Add Product')).toBeInTheDocument()
     })
   })
 })

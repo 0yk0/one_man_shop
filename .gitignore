@@ -1,13 +1,37 @@
 .task
 bin
 data/
+.DS_Store
+
+# Frontend
 frontend/dist
 frontend/node_modules
 frontend/coverage/
+
+# Website
+website/node_modules/
+website/dist/
+website/remotion-video/node_modules/
+website/remotion-video/out/
+
+# Large media files (deploy separately)
+website/public/product-video.mp4
+website/remotion-video/
+
+# Build artifacts
 build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+
 # Mobile generated (per-machine; overlays hold absolute paths)
 build/ios/xcode/overlay.json
 build/ios/xcode/gen/
 build/android/overlay.json
 build/android/gen/
-website/node_modules/
+
+# Android build artifacts
+build/android/.gradle/
+build/android/app/build/
+build/android/build/
+build/android/local.properties
+
+# Docs
+docs/

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Check } from 'lucide-react'
 import type { DatePreset } from '../../lib/reports'
 
 // ── Types ────────────────────────────────────────────────
@@ -28,6 +28,7 @@ const PRESETS: { label: string; value: DatePreset }[] = [
 ]
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+const WEEKDAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -36,7 +37,6 @@ const MONTH_NAMES = [
 // ── Helpers ──────────────────────────────────────────────
 
 function toStr(d: Date): string {
-  // Use local time instead of UTC
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -56,6 +56,55 @@ function formatDisplayDate(dateStr: string): string {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// Compute actual start/end dates for a preset
+function getPresetRange(preset: DatePreset): { start: string; end: string } {
+  const today = new Date()
+  const todayStr = toStr(today)
+
+  switch (preset) {
+    case 'today':
+      return { start: todayStr, end: todayStr }
+
+    case 'yesterday': {
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yStr = toStr(yesterday)
+      return { start: yStr, end: yStr }
+    }
+
+    case 'this_week': {
+      // Monday to Sunday
+      const day = today.getDay()
+      const diffToMonday = day === 0 ? -6 : 1 - day
+      const monday = new Date(today)
+      monday.setDate(today.getDate() + diffToMonday)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      return { start: toStr(monday), end: toStr(sunday) }
+    }
+
+    case 'last_week': {
+      const day = today.getDay()
+      const diffToLastMonday = day === 0 ? -13 : -(day + 6)
+      const lastMonday = new Date(today)
+      lastMonday.setDate(today.getDate() + diffToLastMonday)
+      const lastSunday = new Date(lastMonday)
+      lastSunday.setDate(lastMonday.getDate() + 6)
+      return { start: toStr(lastMonday), end: toStr(lastSunday) }
+    }
+
+    case 'this_month': {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1)
+      const last = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      return { start: toStr(first), end: toStr(last) }
+    }
+
+    case 'custom':
+    default:
+      return { start: '', end: '' }
+  }
+}
+
 // ── Single Calendar Month Component ─────────────────────
 
 interface CalendarMonthProps {
@@ -64,9 +113,10 @@ interface CalendarMonthProps {
   selectedStart: string
   selectedEnd: string
   onDateClick: (date: Date) => void
+  compact?: boolean
 }
 
-function CalendarMonth({ year, month, selectedStart, selectedEnd, onDateClick }: CalendarMonthProps) {
+function CalendarMonth({ year, month, selectedStart, selectedEnd, onDateClick, compact }: CalendarMonthProps) {
   const days = useMemo(() => {
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
@@ -77,17 +127,12 @@ function CalendarMonth({ year, month, selectedStart, selectedEnd, onDateClick }:
     const totalDays = lastDay.getDate()
     const result: { date: Date; isCurrentMonth: boolean }[] = []
 
-    // Previous month days
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
       result.push({ date: new Date(year, month, -i), isCurrentMonth: false })
     }
-
-    // Current month days
     for (let i = 1; i <= totalDays; i++) {
       result.push({ date: new Date(year, month, i), isCurrentMonth: true })
     }
-
-    // Next month days
     const remaining = 42 - result.length
     for (let i = 1; i <= remaining; i++) {
       result.push({ date: new Date(year, month + 1, i), isCurrentMonth: false })
@@ -106,19 +151,19 @@ function CalendarMonth({ year, month, selectedStart, selectedEnd, onDateClick }:
   const isEndDate = (date: Date) => toStr(date) === selectedEnd
   const isToday = (date: Date) => toStr(date) === toStr(new Date())
 
+  const weekdays = compact ? WEEKDAYS_SHORT : WEEKDAYS
+
   return (
-    <div className="w-64">
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-0 mb-2">
-        {WEEKDAYS.map(day => (
-          <div key={day} className="text-center text-xs text-base-content/50 py-1 font-medium">
+    <div className="w-full">
+      <div className="grid grid-cols-7 gap-0 mb-1">
+        {weekdays.map(day => (
+          <div key={day} className={`text-center text-base-content/50 py-1 font-medium ${compact ? 'text-[10px]' : 'text-xs'}`}>
             {day}
           </div>
         ))}
       </div>
 
-      {/* Days grid */}
-      <div className="grid grid-cols-7 gap-0">
+      <div className="grid grid-cols-7 gap-[1px]">
         {days.map(({ date, isCurrentMonth }, idx) => {
           const isStart = isStartDate(date)
           const isEnd = isEndDate(date)
@@ -131,12 +176,12 @@ function CalendarMonth({ year, month, selectedStart, selectedEnd, onDateClick }:
               key={idx}
               type="button"
               className={`
-                relative h-9 text-sm
+                relative min-h-[48px] text-sm tap-scale
                 ${!isCurrentMonth ? 'text-base-content/30' : 'text-base-content'}
                 ${selected ? 'bg-primary text-primary-content font-medium rounded-full' : ''}
-                ${inRange ? 'bg-primary/10' : ''}
+                ${inRange && !selected ? 'bg-primary/10' : ''}
                 ${today && !selected ? 'font-bold' : ''}
-                ${!selected && !inRange ? 'hover:bg-base-200 rounded-full' : ''}
+                ${!selected && !inRange ? 'hover:bg-base-200 rounded-full active:bg-base-300' : ''}
                 ${inRange && !selected ? (isStart || isEnd) ? '' : 'rounded-none' : ''}
                 ${isStart && selectedEnd ? 'rounded-r-none' : ''}
                 ${isEnd && selectedStart ? 'rounded-l-none' : ''}
@@ -163,16 +208,24 @@ export default function DateRangePicker({ value, onChange, defaultPreset = 'toda
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Calendar view state - show current month and next month
   const [viewDate, setViewDate] = useState(() => {
     const d = parseDate(customStart) || new Date()
     return new Date(d.getFullYear(), d.getMonth(), 1)
   })
 
   const [selecting, setSelecting] = useState<'start' | 'end'>('start')
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
 
-  // Close calendar when clicking outside
   useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Close calendar when clicking outside (desktop only)
+  useEffect(() => {
+    if (isMobile) return
     function handleClickOutside(e: MouseEvent) {
       if (
         containerRef.current && !containerRef.current.contains(e.target as Node) &&
@@ -183,7 +236,7 @@ export default function DateRangePicker({ value, onChange, defaultPreset = 'toda
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [isMobile])
 
   const handlePresetChange = useCallback((newPreset: DatePreset) => {
     if (newPreset === 'custom') {
@@ -202,16 +255,12 @@ export default function DateRangePicker({ value, onChange, defaultPreset = 'toda
     const dateStr = toStr(date)
 
     if (selecting === 'start') {
-      // When selecting start date, always clear end date and move to end selection
       onChange({ preset: 'custom', customStart: dateStr, customEnd: '' })
       setSelecting('end')
     } else {
-      // When selecting end date
       if (dateStr < customStart) {
-        // If clicked date is before start, swap them
         onChange({ preset: 'custom', customStart: dateStr, customEnd: customStart })
       } else {
-        // Otherwise, set as end date
         onChange({ preset: 'custom', customStart, customEnd: dateStr })
       }
       setSelecting('start')
@@ -230,7 +279,6 @@ export default function DateRangePicker({ value, onChange, defaultPreset = 'toda
 
   const toggleCalendar = useCallback(() => {
     if (!showCalendar) {
-      // When opening, always start with selecting a new start date
       setSelecting('start')
     }
     setShowCalendar(prev => !prev)
@@ -244,137 +292,246 @@ export default function DateRangePicker({ value, onChange, defaultPreset = 'toda
   const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1
   const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear
 
+  // Swipe handling for month navigation
+  const touchStartX = useRef(0)
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }, [])
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goToNextMonth()
+      else goToPrevMonth()
+    }
+  }, [viewDate])
+
+  // Compute the effective date range to highlight on the calendar
+  // For presets, compute from the preset. For custom, use the manual values.
+  const effectiveRange = useMemo(() => {
+    if (preset === 'custom') {
+      return { start: customStart, end: customEnd }
+    }
+    return getPresetRange(preset)
+  }, [preset, customStart, customEnd])
+
+  const rangeLabel = effectiveRange.start && effectiveRange.end
+    ? `${formatDisplayDate(effectiveRange.start)} – ${formatDisplayDate(effectiveRange.end)}`
+    : effectiveRange.start
+    ? `${formatDisplayDate(effectiveRange.start)} – Select end`
+    : 'Select dates'
+
+  // ── Preset pills (carousel on mobile, sidebar on desktop) ──
+
+  const renderPresets = (mobile: boolean) => {
+    if (mobile) {
+      return (
+        <div className="sticky top-0 z-10 bg-base-100 pt-3 pb-2 border-b border-base-300">
+          <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide carousel-fade-edge px-4 pb-1">
+            {PRESETS.map(p => (
+              <button
+                key={p.value}
+                type="button"
+                className={`
+                  shrink-0 snap-start rounded-full px-5 py-2.5 text-sm whitespace-nowrap transition-colors min-h-[40px]
+                  ${preset === p.value
+                    ? 'bg-primary text-primary-content shadow-sm font-medium'
+                    : 'bg-base-200 text-base-content active:bg-base-300'
+                  }
+                `}
+                onClick={() => handlePresetChange(p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="w-40 border-r border-base-300 p-3 flex flex-col gap-1">
+        {PRESETS.map(p => (
+          <button
+            key={p.value}
+            type="button"
+            className={`
+              text-left px-3 py-2 text-sm rounded-lg transition-colors
+              ${preset === p.value
+                ? 'bg-primary/10 text-primary font-medium border border-primary/20'
+                : 'text-base-content hover:bg-base-200 border border-transparent'
+              }
+            `}
+            onClick={() => handlePresetChange(p.value)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Calendar content (shared between desktop and mobile) ──
+
+  const renderCalendar = (mobile: boolean) => (
+    <div className={mobile ? 'p-4' : 'flex-1 p-4'}>
+      {/* Step indicator (mobile only, custom mode) */}
+      {mobile && preset === 'custom' && (
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${selecting === 'start' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-base-200 text-base-content/50'}`}>
+            <span className={`w-2 h-2 rounded-full ${selecting === 'start' ? 'bg-green-500' : 'bg-base-content/30'}`}></span>
+            Start
+          </div>
+          <div className={`w-6 h-[1px] ${selecting === 'end' ? 'bg-orange-400' : 'bg-base-content/20'}`}></div>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${selecting === 'end' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-base-200 text-base-content/50'}`}>
+            <span className={`w-2 h-2 rounded-full ${selecting === 'end' ? 'bg-orange-500' : 'bg-base-content/30'}`}></span>
+            End
+          </div>
+        </div>
+      )}
+
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button type="button" className="btn btn-ghost btn-sm btn-square min-h-[44px] min-w-[44px]" onClick={goToPrevMonth}>
+          <ChevronLeft size={20} />
+        </button>
+        <div className={`${mobile ? 'flex gap-6' : 'flex gap-16'}`}>
+          <span className={`font-semibold text-base-content ${mobile ? 'text-base' : 'text-sm'}`}>
+            {MONTH_NAMES[currentMonth]} {currentYear}
+          </span>
+          {!mobile && (
+            <span className="text-sm font-semibold text-base-content">
+              {MONTH_NAMES[nextMonth]} {nextYear}
+            </span>
+          )}
+        </div>
+        <button type="button" className="btn btn-ghost btn-sm btn-square min-h-[44px] min-w-[44px]" onClick={goToNextMonth}>
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      {/* Calendars with swipe support */}
+      <div onTouchStart={mobile ? handleTouchStart : undefined} onTouchEnd={mobile ? handleTouchEnd : undefined}>
+        {mobile ? (
+          <CalendarMonth
+            year={currentYear}
+            month={currentMonth}
+            selectedStart={effectiveRange.start}
+            selectedEnd={effectiveRange.end}
+            onDateClick={handleDateClick}
+          />
+        ) : (
+          <div className="flex gap-6">
+            <CalendarMonth
+              year={currentYear}
+              month={currentMonth}
+              selectedStart={effectiveRange.start}
+              selectedEnd={effectiveRange.end}
+              onDateClick={handleDateClick}
+            />
+            <CalendarMonth
+              year={nextYear}
+              month={nextMonth}
+              selectedStart={effectiveRange.start}
+              selectedEnd={effectiveRange.end}
+              onDateClick={handleDateClick}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className={`mt-4 pt-4 border-t border-base-300 ${mobile ? 'space-y-3' : 'flex items-center justify-between'}`}>
+        {/* Date range display */}
+        <div className={`bg-base-200 rounded-xl px-4 py-2.5 ${mobile ? '' : 'flex items-center gap-2'}`}>
+          <span className={`text-sm ${effectiveRange.start ? 'text-base-content' : 'text-base-content/40'}`}>
+            {effectiveRange.start ? formatDisplayDate(effectiveRange.start) : 'Start'}
+          </span>
+          <span className="text-base-content/40">→</span>
+          <span className={`text-sm ${effectiveRange.end ? 'text-base-content' : 'text-base-content/40'}`}>
+            {effectiveRange.end ? formatDisplayDate(effectiveRange.end) : 'End'}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div className={`flex items-center gap-2 ${mobile ? '' : ''}`}>
+          <button type="button" className={`btn btn-ghost min-h-[48px] ${mobile ? 'flex-1' : 'px-4'}`} onClick={handleCancel}>
+            Cancel
+          </button>
+          <button type="button" className={`btn btn-primary min-h-[48px] gap-2 ${mobile ? 'flex-1' : 'px-6'}`} onClick={handleApply}>
+            <Check size={16} />
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="relative">
+    <div className={`relative ${isMobile ? 'w-full' : ''}`} ref={containerRef}>
       {/* Trigger Button */}
       <button
         ref={buttonRef}
         type="button"
-        className={`btn btn-sm gap-2 ${preset === 'custom' ? 'btn-primary' : 'btn-outline'}`}
+        className={`btn btn-sm gap-2 ${isMobile ? 'w-full justify-start' : ''} ${preset === 'custom' ? 'btn-primary' : 'btn-outline'}`}
         onClick={toggleCalendar}
       >
         <CalendarIcon size={14} />
         {preset === 'custom' && customStart && customEnd
           ? `${formatDisplayDate(customStart)} – ${formatDisplayDate(customEnd)}`
+          : effectiveRange.start && effectiveRange.end
+          ? `${formatDisplayDate(effectiveRange.start)} – ${formatDisplayDate(effectiveRange.end)}`
           : PRESETS.find(p => p.value === preset)?.label || 'Select dates'
         }
       </button>
 
-      {/* Calendar Dropdown */}
-      {showCalendar && (
+      {/* Desktop: Dropdown */}
+      {showCalendar && !isMobile && (
         <div
-          ref={containerRef}
           className="absolute z-50 mt-2 left-0 bg-base-100 border border-base-300 rounded-xl shadow-xl overflow-hidden"
           style={{ width: '680px' }}
         >
           <div className="flex">
-            {/* Left Sidebar - Presets */}
-            <div className="w-40 border-r border-base-300 p-3 flex flex-col gap-1">
-              {PRESETS.map(p => (
-                <button
-                  key={p.value}
-                  type="button"
-                  className={`
-                    text-left px-3 py-2 text-sm rounded-lg transition-colors
-                    ${preset === p.value
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-base-content hover:bg-base-200'
-                    }
-                  `}
-                  onClick={() => handlePresetChange(p.value)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Right Side - Calendars */}
-            <div className="flex-1 p-4">
-              {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm btn-square"
-                  onClick={goToPrevMonth}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <div className="flex gap-16">
-                  <span className="text-sm font-semibold text-base-content">
-                    {MONTH_NAMES[currentMonth]} {currentYear}
-                  </span>
-                  <span className="text-sm font-semibold text-base-content">
-                    {MONTH_NAMES[nextMonth]} {nextYear}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm btn-square"
-                  onClick={goToNextMonth}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              {/* Dual Calendars */}
-              <div className="flex gap-6">
-                <CalendarMonth
-                  year={currentYear}
-                  month={currentMonth}
-                  selectedStart={customStart}
-                  selectedEnd={customEnd}
-                  onDateClick={handleDateClick}
-                />
-                <CalendarMonth
-                  year={nextYear}
-                  month={nextMonth}
-                  selectedStart={customStart}
-                  selectedEnd={customEnd}
-                  onDateClick={handleDateClick}
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-base-200 rounded-lg px-3 py-2">
-                    <input
-                      type="text"
-                      className="bg-transparent text-sm w-28 outline-none text-base-content"
-                      value={customStart ? formatDisplayDate(customStart) : ''}
-                      placeholder="Start date"
-                      readOnly
-                    />
-                    <span className="text-base-content/40">–</span>
-                    <input
-                      type="text"
-                      className="bg-transparent text-sm w-28 outline-none text-base-content"
-                      value={customEnd ? formatDisplayDate(customEnd) : ''}
-                      placeholder="End date"
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={handleApply}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            </div>
+            {renderPresets(false)}
+            {renderCalendar(false)}
           </div>
         </div>
+      )}
+
+      {/* Mobile: Bottom Sheet */}
+      {showCalendar && isMobile && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-50 sheet-backdrop"
+            onClick={handleCancel}
+          />
+          {/* Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-base-100 sheet-container max-h-[85vh] flex flex-col safe-area-bottom">
+            {/* Handle */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1 bg-base-content/20 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-lg">Select Dates</h2>
+                <p className="text-xs text-base-content/50 mt-0.5">{rangeLabel}</p>
+              </div>
+              <button className="btn btn-ghost btn-circle min-h-[44px] min-w-[44px]" onClick={handleCancel}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Presets carousel (sticky) */}
+            {renderPresets(true)}
+
+            {/* Scrollable calendar area */}
+            <div className="flex-1 overflow-auto">
+              {renderCalendar(true)}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

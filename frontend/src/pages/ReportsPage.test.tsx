@@ -21,9 +21,11 @@ describe('ReportsPage', () => {
     vi.clearAllMocks()
   })
 
-  it('renders Reports heading', () => {
+  it('renders Reports page tabs', () => {
     render(<ReportsPage />)
-    expect(screen.getByText('Reports')).toBeInTheDocument()
+    expect(screen.getByText('Summary')).toBeInTheDocument()
+    expect(screen.getByText('Transactions')).toBeInTheDocument()
+    expect(screen.getByText('Calendar')).toBeInTheDocument()
   })
 
   it('renders Summary, Transactions, and Calendar tabs', () => {

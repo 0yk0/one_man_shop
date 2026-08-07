@@ -1,0 +1,15 @@
+# robots.txt for One Man Shop website
+# https://onemanshop.dev
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://onemanshop.dev/sitemap.xml
+
+# Disallow admin/private paths (if any)
+Disallow: /api/
+Disallow: /admin/
+
+# Crawl-delay for polite bots
+Crawl-delay: 1

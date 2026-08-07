@@ -55,10 +55,10 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('POS')).toBeInTheDocument()
-    expect(screen.getByText('Products')).toBeInTheDocument()
-    expect(screen.getByText('Reports')).toBeInTheDocument()
-    expect(screen.getByText('Settings')).toBeInTheDocument()
+    expect(screen.getAllByText('POS').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Products').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Reports').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Settings').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders shop name', () => {
@@ -95,7 +95,7 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText('Products'))
+    fireEvent.click(screen.getAllByText('Products')[0])
 
     expect(screen.getByText('Enter Admin PIN')).toBeInTheDocument()
   })
@@ -109,7 +109,7 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText('Reports'))
+    fireEvent.click(screen.getAllByText('Reports')[0])
 
     expect(screen.getByText('Enter Admin PIN')).toBeInTheDocument()
   })
@@ -123,7 +123,7 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText('Settings'))
+    fireEvent.click(screen.getAllByText('Settings')[0])
 
     expect(screen.getByText('Enter Admin PIN')).toBeInTheDocument()
   })
@@ -137,7 +137,7 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText('POS'))
+    fireEvent.click(screen.getAllByText('POS')[0])
 
     expect(screen.queryByText('Enter Admin PIN')).not.toBeInTheDocument()
   })

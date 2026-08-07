@@ -4,15 +4,16 @@ import {
   getFilteredRowModel, getPaginationRowModel, flexRender,
   type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
-import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, SelectFolder } from '../bindings'
+import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, GetTransactionsCSVContent, SelectFolder, IsMobile } from '../bindings'
 import { useSnackbar } from 'notistack'
 import { fmtDate, fmtTime, filterTxns, getDateRange, type DatePreset } from '../lib/reports'
 import type { Transaction } from '../bindings'
 import {
-  ReceiptText, Search, Loader2, Printer, ChevronDown, ChevronUp,
-  ChevronLeft, ChevronRight, RefreshCw, Download,
+  Search, Loader2, Printer, ChevronDown, ChevronUp,
+  Download,
 } from 'lucide-react'
 import DateRangePicker from '../components/ui/DateRangePicker'
+import { saveFileWithDialog } from '../lib/saveFile'
 
 function formatID(num: number): string {
   if (!num) return '-'
@@ -24,7 +25,15 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(true)
   const [taxEnabled, setTaxEnabled] = useState(false)
   const [printerAvailable, setPrinterAvailable] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth < 768)
   const { enqueueSnackbar } = useSnackbar()
+
+  useEffect(() => {
+    const check = () => setIsSmallScreen(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Filters
   const [preset, setPreset] = useState<DatePreset>('today')
@@ -93,11 +102,19 @@ export default function ReceiptsPage() {
   // Export CSV
   const handleExportCSV = async () => {
     try {
-      const dir = await SelectFolder('Select folder to save CSV')
-      if (!dir) return
       setExporting(true)
-      const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
-      enqueueSnackbar(`CSV exported to ${path}`, { variant: 'success' })
+      const isMobile = await IsMobile()
+      if (isMobile) {
+        const csvContent = await GetTransactionsCSVContent(range.start, range.end)
+        const filename = `pos_report_${range.start}_to_${range.end}.csv`
+        const path = await saveFileWithDialog('Save CSV Report', filename, 'text/csv', btoa(csvContent))
+        if (path) enqueueSnackbar(`CSV exported as ${filename}`, { variant: 'success' })
+      } else {
+        const dir = await SelectFolder('Select folder to save CSV')
+        if (!dir) { setExporting(false); return }
+        const path = await ExportTransactionsCSVToDir(range.start, range.end, dir)
+        enqueueSnackbar(`CSV exported as ${path.split(/[/\\]/).pop()}`, { variant: 'success' })
+      }
     } catch (err) {
       if (String(err).includes('cancel')) return
       enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })
@@ -251,30 +268,15 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <ReceiptText size={28} /> Receipts
-        </h1>
-        <div className="flex items-center gap-2">
-          <button className="btn btn-outline btn-sm gap-1" onClick={handleExportCSV} disabled={exporting}>
-            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
-          </button>
-          <button className="btn btn-ghost btn-sm gap-1" onClick={loadData}>
-            <RefreshCw size={14} /> Refresh
-          </button>
-        </div>
-      </div>
-
+    <div className="p-4 md:p-6">
       {/* Filter Section */}
-      <div className="bg-base-100 border border-base-300 rounded-xl p-4 mb-4">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="bg-base-100 border border-base-300 rounded-xl p-4">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
           <DateRangePicker
             value={{ preset, customStart, customEnd }}
             onChange={(v) => { setPreset(v.preset); setCustomStart(v.customStart); setCustomEnd(v.customEnd); }}
           />
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
               <input
@@ -283,9 +285,13 @@ export default function ReceiptsPage() {
                 className="input input-bordered w-full pl-9"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                inputMode="search"
               />
             </div>
           </div>
+          <button className="btn btn-outline btn-sm gap-1 w-full sm:w-auto" onClick={handleExportCSV} disabled={exporting}>
+            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
+          </button>
         </div>
       </div>
 
@@ -296,90 +302,159 @@ export default function ReceiptsPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Table / Mobile Cards */}
       <div className="card bg-base-100 shadow-md">
         {/* Pagination - above table */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-base-300">
-          <span className="text-sm text-base-content/60">
-            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-            -{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filtered.length)}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-base-300">
+          <span className="text-xs text-base-content/60">
+            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+            –{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filtered.length)}
             {' '}of {filtered.length}
           </span>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
             <button
-              className="btn btn-sm btn-outline"
+              className="btn btn-ghost btn-sm min-h-[40px] px-3"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <ChevronLeft size={14} /> Prev
+              ‹ Prev
             </button>
+            <span className="text-xs text-base-content/60 px-2 tabular-nums font-mono">
+              {table.getState().pagination.pageIndex + 1}/{table.getPageCount()}
+            </span>
             <button
-              className="btn btn-sm btn-outline"
+              className="btn btn-ghost btn-sm min-h-[40px] px-3"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next <ChevronRight size={14} />
+              Next ›
             </button>
           </div>
         </div>
 
-        <div className="card-body p-0">
-          <div className="overflow-x-auto">
-            <table className="table table-sm w-full">
-              <thead>
-                {table.getHeaderGroups().map(hg => (
-                  <tr key={hg.id}>
-                    {hg.headers.map(h => (
-                      <th
-                        key={h.id}
-                        className={h.column.getCanSort() ? 'cursor-pointer select-none' : ''}
-                        onClick={h.column.getToggleSortingHandler()}
-                        style={{ width: h.column.getSize() }}
-                      >
-                        <div className="flex items-center gap-1">
-                          {flexRender(h.column.columnDef.header, h.getContext())}
-                          {{ asc: ' ↑', desc: ' ↓' }[h.column.getIsSorted() as string] ?? ''}
+        {isSmallScreen ? (
+          /* Mobile Card View */
+          <div className="p-2 space-y-2">
+            {table.getRowModel().rows.map(row => {
+              const txn = row.original
+              const count = txn.items?.reduce((sum, i) => sum + i.qty, 0) || 0
+              const method = txn.payment_method
+              const isExpanded = expandedRows.has(txn.id)
+              return (
+                <div
+                  key={row.id}
+                  className="border border-base-300 rounded-lg p-3 active:bg-base-200 transition-colors"
+                >
+                  <button
+                    className="w-full text-left"
+                    onClick={() => toggleRow(txn.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <span className="font-mono text-sm font-medium">{formatID(txn.receipt_number)}</span>
+                      <span className="text-sm font-mono font-medium">₹{txn.total.toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-base-content/60 mt-1">
+                      {fmtDate(txn.created)} • {fmtTime(txn.created)}
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-base-content/60">{count} items</span>
+                      <span className={`badge badge-sm ${method === 'upi' ? 'badge-primary' : 'badge-secondary'}`}>
+                        {method === 'upi' ? 'UPI' : 'Cash'}
+                      </span>
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-base-300 space-y-1">
+                      <p className="text-xs font-medium text-base-content/50 mb-2">Items</p>
+                      {txn.items?.map((item, j) => (
+                        <div key={j} className="flex justify-between text-sm">
+                          <span>{item.name} × {item.qty}</span>
+                          <span className="font-mono">₹{item.subtotal.toFixed(2)}</span>
                         </div>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map(row => (
-                  <>
-                    <tr
-                      key={row.id}
-                      className="hover cursor-pointer"
-                      onClick={() => toggleRow(row.original.id)}
-                    >
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id} style={{ width: cell.column.getSize() }}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+                      ))}
+                      {printerAvailable && (
+                        <button
+                          className="btn btn-outline btn-xs gap-1 mt-2 w-full"
+                          onClick={(e) => { e.stopPropagation(); handlePrint(txn) }}
+                          disabled={printing === txn.id}
+                        >
+                          {printing === txn.id
+                            ? <Loader2 size={12} className="animate-spin" />
+                            : <Printer size={12} />
+                          } Print Receipt
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+            {table.getRowModel().rows.length === 0 && (
+              <div className="text-center py-8 text-base-content/40 text-sm">
+                No receipts found
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Desktop Table View */
+          <div className="card-body p-0">
+            <div className="overflow-x-auto">
+              <table className="table table-sm w-full">
+                <thead>
+                  {table.getHeaderGroups().map(hg => (
+                    <tr key={hg.id}>
+                      {hg.headers.map(h => (
+                        <th
+                          key={h.id}
+                          className={h.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+                          onClick={h.column.getToggleSortingHandler()}
+                          style={{ width: h.column.getSize() }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {flexRender(h.column.columnDef.header, h.getContext())}
+                            {{ asc: ' ↑', desc: ' ↓' }[h.column.getIsSorted() as string] ?? ''}
+                          </div>
+                        </th>
                       ))}
                     </tr>
-                    {expandedRows.has(row.original.id) && (
-                      <tr key={`${row.id}-expanded`}>
-                        <td colSpan={columns.length} className="bg-base-200/50 py-3 px-6">
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-base-content/50 mb-2">Items</p>
-                            {row.original.items?.map((item, j) => (
-                              <div key={j} className="flex justify-between text-sm">
-                                <span>{item.name} × {item.qty}</span>
-                                <span className="font-mono">₹{item.subtotal.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map(row => (
+                    <>
+                      <tr
+                        key={row.id}
+                        className="hover cursor-pointer"
+                        onClick={() => toggleRow(row.original.id)}
+                      >
+                        {row.getVisibleCells().map(cell => (
+                          <td key={cell.id} style={{ width: cell.column.getSize() }}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
                       </tr>
-                    )}
-                  </>
-                ))}
-              </tbody>
-            </table>
+                      {expandedRows.has(row.original.id) && (
+                        <tr key={`${row.id}-expanded`}>
+                          <td colSpan={columns.length} className="bg-base-200/50 py-3 px-6">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-base-content/50 mb-2">Items</p>
+                              {row.original.items?.map((item, j) => (
+                                <div key={j} className="flex justify-between text-sm">
+                                  <span>{item.name} × {item.qty}</span>
+                                  <span className="font-mono">₹{item.subtotal.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

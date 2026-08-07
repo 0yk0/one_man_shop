@@ -56,44 +56,47 @@ export default function SummaryTab() {
       <div className={`grid gap-4 ${taxEnabled ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
         <div className="stat bg-base-100 rounded-box shadow">
           <div className="stat-title flex items-center gap-1"><IndianRupee size={14} />Today's Revenue</div>
-          <div className="stat-value text-primary text-2xl">₹{todayStats.total.toFixed(0)}</div>
+          <div className="stat-value text-primary text-xl sm:text-2xl">₹{todayStats.total.toFixed(0)}</div>
           <div className="stat-desc">{todayTxns.length} transactions</div>
         </div>
         {taxEnabled && (
           <div className="stat bg-base-100 rounded-box shadow">
             <div className="stat-title flex items-center gap-1"><IndianRupee size={14} />Today's Tax</div>
-            <div className="stat-value text-secondary text-2xl">₹{todayStats.tax.toFixed(0)}</div>
+            <div className="stat-value text-secondary text-xl sm:text-2xl">₹{todayStats.tax.toFixed(0)}</div>
             <div className="stat-desc">collected</div>
           </div>
         )}
         <div className="stat bg-base-100 rounded-box shadow">
           <div className="stat-title flex items-center gap-1"><ArrowUpRight size={14} className="text-success" />UPI Today</div>
-          <div className="stat-value text-2xl">₹{todayUpiAmount.toFixed(0)}</div>
+          <div className="stat-value text-xl sm:text-2xl">₹{todayUpiAmount.toFixed(0)}</div>
           <div className="stat-desc">{todayStats.upi} payments</div>
         </div>
         <div className="stat bg-base-100 rounded-box shadow">
           <div className="stat-title flex items-center gap-1"><ArrowDownRight size={14} className="text-accent" />Cash Today</div>
-          <div className="stat-value text-2xl">₹{todayCashAmount.toFixed(0)}</div>
+          <div className="stat-value text-xl sm:text-2xl">₹{todayCashAmount.toFixed(0)}</div>
           <div className="stat-desc">{todayStats.cash} payments</div>
         </div>
       </div>
 
       <div className="card bg-base-100 shadow-md">
         <div className="card-body">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="card-title flex items-center gap-2"><BarChart3 size={18} />Weekly Revenue</h2>
-            <div className="flex items-center gap-2">
-              <button className="btn btn-ghost btn-xs" onClick={() => setWeekOffset(w => w - 1)}><ChevronLeft size={16} /></button>
-              <span className="text-sm font-medium">{shortDate(weekStart)} — {shortDate(weekEnd)}</span>
-              <button className="btn btn-ghost btn-xs" onClick={() => setWeekOffset(w => w + 1)} disabled={weekOffset >= 0}><ChevronRight size={16} /></button>
-            </div>
+          {/* Title */}
+          <h2 className="card-title flex items-center gap-2 mb-1"><BarChart3 size={18} />Weekly Revenue</h2>
+
+          {/* Week nav — centered */}
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <button className="btn btn-ghost btn-sm btn-square min-h-[44px] min-w-[44px]" onClick={() => setWeekOffset(w => w - 1)}><ChevronLeft size={20} /></button>
+            <span className="text-sm font-medium min-w-0 text-center">{shortDate(weekStart)} — {shortDate(weekEnd)}</span>
+            <button className="btn btn-ghost btn-sm btn-square min-h-[44px] min-w-[44px]" onClick={() => setWeekOffset(w => w + 1)} disabled={weekOffset >= 0}><ChevronRight size={20} /></button>
           </div>
-          <div className="flex gap-6 mb-2 text-sm">
-            <span>Total: <strong>₹{weekStats.total.toFixed(0)}</strong></span>
-            {taxEnabled && <span>Tax: <strong>₹{weekStats.tax.toFixed(0)}</strong></span>}
-            <span>Transactions: <strong>{weekTxns.length}</strong></span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#16a34a]"></span>UPI: <strong>₹{weekUpiRevenue.toFixed(0)}</strong></span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#0284c7]"></span>Cash: <strong>₹{weekCashRevenue.toFixed(0)}</strong></span>
+
+          {/* Stats row — centered, compact on mobile */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mb-2 text-xs sm:text-sm text-base-content/60">
+            <span>Total: <strong className="text-base-content font-mono tabular-nums">₹{weekStats.total.toFixed(0)}</strong></span>
+            {taxEnabled && <span>Tax: <strong className="font-mono tabular-nums">₹{weekStats.tax.toFixed(0)}</strong></span>}
+            <span>Txns: <strong className="text-base-content">{weekTxns.length}</strong></span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#16a34a]"></span>UPI: <strong className="font-mono tabular-nums">₹{weekUpiRevenue.toFixed(0)}</strong></span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#0284c7]"></span>Cash: <strong className="font-mono tabular-nums">₹{weekCashRevenue.toFixed(0)}</strong></span>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={weekData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>

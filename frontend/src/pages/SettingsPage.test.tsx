@@ -7,6 +7,10 @@ const mockSaveSettings = vi.fn()
 const mockIsSetupComplete = vi.fn()
 const mockGetAvailableScreens = vi.fn()
 const mockGetAvailablePrinters = vi.fn()
+const mockGetDataDir = vi.fn().mockResolvedValue('/test/data')
+const mockSelectDataDir = vi.fn().mockResolvedValue('')
+const mockSaveDataDir = vi.fn().mockResolvedValue(undefined)
+const mockIsMobile = vi.fn().mockResolvedValue(false)
 
 vi.mock('../bindings', () => ({
   GetSettings: (...args: any[]) => mockGetSettings(...args),
@@ -14,6 +18,10 @@ vi.mock('../bindings', () => ({
   IsSetupComplete: (...args: any[]) => mockIsSetupComplete(...args),
   GetAvailableScreens: (...args: any[]) => mockGetAvailableScreens(...args),
   GetAvailablePrinters: (...args: any[]) => mockGetAvailablePrinters(...args),
+  GetDataDir: (...args: any[]) => mockGetDataDir(...args),
+  SelectDataDir: (...args: any[]) => mockSelectDataDir(...args),
+  SaveDataDir: (...args: any[]) => mockSaveDataDir(...args),
+  IsMobile: (...args: any[]) => mockIsMobile(...args),
   Product: class Product { id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = '' },
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0 },
   Transaction: class Transaction { id = ''; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = '' },
