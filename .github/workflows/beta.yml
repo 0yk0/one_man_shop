@@ -34,6 +34,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
 
+    env:
+      GOBIN: ${{ github.workspace }}/go/bin
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -68,27 +71,16 @@ jobs:
             ndk;26.3.11579264
       # ────────────────────────────────────────────────────────────────
 
-      - name: Cache Wails binary
-        id: cache-wails
-        uses: actions/cache@v5
-        with:
-          path: ~/go/bin/wails3
-          key: wails3-${{ runner.os }}-${{ runner.arch }}-v3.0.0-alpha2.120
-
       - name: Install Wails
-        if: steps.cache-wails.outputs.cache-hit != 'true'
         shell: bash
         env:
           GOPROXY: https://proxy.golang.org,direct
           GONOSUMCHECK: '*'
           GONOSUMDB: '*'
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
-
-      - name: Ensure wails3 in PATH
-        shell: bash
         run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.120
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          which wails3 && wails3 version || echo "wails3 not found"
+          wails3 version
 
       - name: Remove .npmrc age gate
         shell: bash
