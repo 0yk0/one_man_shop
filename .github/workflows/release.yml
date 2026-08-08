@@ -149,7 +149,7 @@ jobs:
       - name: Decode signing keystore
         if: matrix.goos == 'android'
         shell: bash
-        working-directory: build/android
+        working-directory: build/android/app
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_FILE }}
         run: python3 -c "import base64,os; open('release.keystore','wb').write(base64.b64decode(os.environ['KEYSTORE_B64']))"
