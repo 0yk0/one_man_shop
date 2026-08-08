@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
 import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile } from '../bindings'
-import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen } from 'lucide-react'
+import { getAndroidPrinters, isPrinterConnected, testPrint, openBluetoothSettings, type AndroidPrinter } from '../lib/print'
+import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -36,6 +37,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     display_screen_name: '',
     display_screen_width: 0,
     display_screen_height: 0,
+    auto_open_display: false,
     printer_name: '',
     auto_print: true,
     paper_width: 80,
@@ -44,6 +46,10 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   const [formInitialized, setFormInitialized] = useState(false)
   const [screens, setScreens] = useState<{ index: number; name: string; width: number; height: number }[]>([])
   const [printers, setPrinters] = useState<{ name: string; is_default: boolean }[]>([])
+  const [androidPrinters, setAndroidPrinters] = useState<AndroidPrinter[]>([])
+  const [printerConnected, setPrinterConnected] = useState(false)
+  const [refreshingPrinters, setRefreshingPrinters] = useState(false)
+  const [testingPrint, setTestingPrint] = useState(false)
   const [currentPin, setCurrentPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -62,9 +68,32 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
 
   // Load available printers on mount
   useEffect(() => {
-    GetAvailablePrinters()
-      .then(p => setPrinters(p ?? []))
-      .catch(() => setPrinters([]))
+    const loadPrinters = async () => {
+      const mobile = await IsMobile().catch(() => false)
+      if (mobile) {
+        // Android: load from Java printer bridge
+        try {
+          const androidList = await getAndroidPrinters()
+          setAndroidPrinters(androidList)
+          // Convert to common format for the dropdown
+          setPrinters(androidList.map(p => ({
+            name: p.id,
+            is_default: false,
+          })))
+        } catch {
+          setAndroidPrinters([])
+          setPrinters([])
+        }
+        // Check connection status
+        isPrinterConnected().then(setPrinterConnected).catch(() => setPrinterConnected(false))
+      } else {
+        // Desktop: load from Go
+        GetAvailablePrinters()
+          .then(p => setPrinters(p ?? []))
+          .catch(() => setPrinters([]))
+      }
+    }
+    loadPrinters()
   }, [])
 
   // Load data dir and platform on mount
@@ -90,6 +119,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
         display_screen_name: settings.display_screen_name || '',
         display_screen_width: settings.display_screen_width || 0,
         display_screen_height: settings.display_screen_height || 0,
+        auto_open_display: settings.auto_open_display ?? false,
         printer_name: settings.printer_name || '',
         auto_print: settings.auto_print ?? true,
         paper_width: settings.paper_width || 80,
@@ -137,6 +167,38 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     }
   }
 
+  // Refresh Android printer list
+  const handleRefreshPrinters = useCallback(async () => {
+    setRefreshingPrinters(true)
+    try {
+      const androidList = await getAndroidPrinters()
+      setAndroidPrinters(androidList)
+      setPrinters(androidList.map(p => ({
+        name: p.id,
+        is_default: false,
+      })))
+      const connected = await isPrinterConnected()
+      setPrinterConnected(connected)
+    } catch {
+      // ignore
+    } finally {
+      setRefreshingPrinters(false)
+    }
+  }, [])
+
+  // Test print on Android
+  const handleTestPrint = useCallback(async () => {
+    setTestingPrint(true)
+    try {
+      await testPrint()
+      enqueueSnackbar('Test print sent', { variant: 'success' })
+    } catch (err) {
+      enqueueSnackbar('Test print failed: ' + String(err), { variant: 'error' })
+    } finally {
+      setTestingPrint(false)
+    }
+  }, [enqueueSnackbar])
+
   const handleSave = async () => {
     if (!settings) return
     setSaving(true)
@@ -155,6 +217,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      auto_open_display: form.auto_open_display,
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
@@ -228,6 +291,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      auto_open_display: form.auto_open_display,
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
@@ -392,6 +456,11 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
           <div className="form-control w-full">
             <label className="label">
               <span className="label-text">Printer</span>
+              {isMobile && (
+                <span className={`badge badge-sm ${printerConnected ? 'badge-success' : 'badge-error'}`}>
+                  {printerConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              )}
             </label>
             <select
               className="select select-bordered w-full"
@@ -399,18 +468,58 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               onChange={e => update('printer_name', e.target.value)}
             >
               <option value="">No Printer (disabled)</option>
-              {printers.map(p => (
-                <option key={p.name} value={p.name}>
-                  {p.name} {p.is_default ? '(Default)' : ''}
-                </option>
-              ))}
+              {isMobile ? (
+                // Android: show printers with connection type label
+                androidPrinters.map(p => (
+                  <option key={p.id} value={p.id}>
+                    [{p.type === 'bluetooth' ? 'BT' : 'USB'}] {p.name}
+                  </option>
+                ))
+              ) : (
+                // Desktop: show system printers
+                printers.map(p => (
+                  <option key={p.name} value={p.name}>
+                    {p.name} {p.is_default ? '(Default)' : ''}
+                  </option>
+                ))
+              )}
             </select>
             <label className="label">
               <span className="label-text-alt text-base-content/60 text-wrap">
-                Select a printer for receipts. Supports thermal (58mm/80mm) and regular printers.
+                {isMobile
+                  ? 'Select a Bluetooth or USB thermal printer. Use "Pair New Printer" to add a new Bluetooth printer.'
+                  : 'Select a printer for receipts. Supports thermal (58mm/80mm) and regular printers.'}
               </span>
             </label>
           </div>
+
+          {isMobile && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="btn btn-sm btn-outline gap-1"
+                onClick={handleRefreshPrinters}
+                disabled={refreshingPrinters}
+              >
+                {refreshingPrinters ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                Refresh
+              </button>
+              <button
+                className="btn btn-sm btn-outline gap-1"
+                onClick={handleTestPrint}
+                disabled={testingPrint || !printerConnected}
+              >
+                {testingPrint ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
+                Test Print
+              </button>
+              <button
+                className="btn btn-sm btn-outline gap-1"
+                onClick={openBluetoothSettings}
+              >
+                <Bluetooth size={14} />
+                Pair New Printer
+              </button>
+            </div>
+          )}
 
           <div className="form-control">
             <label className="label cursor-pointer justify-start gap-4">
@@ -472,6 +581,18 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               <span className="label-text-alt text-base-content/60 text-wrap">
                 Select which screen the customer display opens on.
                 Use the "Customer Display" button on the POS screen to open it.
+              </span>
+            </label>
+          </div>
+
+          <div className="form-control">
+            <label className="label cursor-pointer justify-start gap-4">
+              <input type="checkbox" className="toggle toggle-primary" checked={form.auto_open_display} onChange={e => update('auto_open_display', e.target.checked)} />
+              <span className="label-text">Auto-open display at startup</span>
+            </label>
+            <label className="label">
+              <span className="label-text-alt text-base-content/60 text-wrap">
+                Automatically open the customer display on a secondary screen when the app starts.
               </span>
             </label>
           </div>

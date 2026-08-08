@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  GetProducts, GetSettings, GetUPIString, CreateTransaction, PrintReceipt,
+  GetProducts, GetSettings, GetUPIString, CreateTransaction,
   OpenCustomerDisplay, CloseCustomerDisplay, UpdateCustomerDisplay,
   ShowQROnDisplay, ClearCustomerDisplay, SendProductsToDisplay,
-  SendPaymentMethodToDisplay, ConfirmPayment
+  SendPaymentMethodToDisplay, ConfirmPayment, GetAvailableScreens, IsMobile
 } from '../bindings'
+import { printReceipt } from '../lib/print'
 import { models } from '../bindings'
 import { useSnackbar } from 'notistack'
 import { QRCodeSVG } from 'qrcode.react'
@@ -35,6 +36,7 @@ export default function POSScreen() {
   const processingRef = useRef(false)
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayOpen, setDisplayOpen] = useState(false)
+  const [hasAdditionalDisplay, setHasAdditionalDisplay] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
   const [tappedId, setTappedId] = useState<string | null>(null)
@@ -51,9 +53,28 @@ export default function POSScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const [prods, sett] = await Promise.all([GetProducts(), GetSettings()])
+      const [prods, sett, screens] = await Promise.all([GetProducts(), GetSettings(), GetAvailableScreens()])
       setProducts(prods)
       setSettings(sett)
+
+      // Check for additional displays
+      let hasExternal = screens.length > 1
+      if (!hasExternal) {
+        // Android: also check via Java bridge for external displays
+        const mobile = await IsMobile().catch(() => false)
+        if (mobile) {
+          try {
+            const extJson = await (window as any)._displayBridge?.getExternalDisplays()
+            if (extJson) {
+              const ext = JSON.parse(extJson)
+              hasExternal = ext.length > 0
+            }
+          } catch {
+            // DisplayBridge not available
+          }
+        }
+      }
+      setHasAdditionalDisplay(hasExternal)
     } catch (err) {
       console.error('Failed to load data:', err)
     } finally {
@@ -67,6 +88,27 @@ export default function POSScreen() {
   useEffect(() => {
     return () => { if (clearTimerRef.current) clearTimeout(clearTimerRef.current) }
   }, [])
+
+  // Auto-open customer display on secondary screen at startup
+  useEffect(() => {
+    if (loading || !hasAdditionalDisplay || !settings?.auto_open_display || displayOpen) return
+    const autoOpen = async () => {
+      try {
+        const mobile = await IsMobile().catch(() => false)
+        if (mobile) {
+          await (window as any)._displayBridge?.openDisplay()
+        } else {
+          const screenIdx = settings?.display_screen || 0
+          await OpenCustomerDisplay(screenIdx)
+        }
+        setDisplayOpen(true)
+        SendProductsToDisplay()
+      } catch (err) {
+        console.error('Auto-open display failed:', err)
+      }
+    }
+    autoOpen()
+  }, [loading, hasAdditionalDisplay, settings, displayOpen])
 
   const filteredProducts = search
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -116,8 +158,13 @@ export default function POSScreen() {
   // ========== Display ==========
   const toggleDisplay = async () => {
     try {
+      const mobile = await IsMobile().catch(() => false)
       if (displayOpen) {
-        CloseCustomerDisplay()
+        if (mobile) {
+          await (window as any)._displayBridge?.closeDisplay()
+        } else {
+          CloseCustomerDisplay()
+        }
         setDisplayOpen(false)
         setCart([])
         setShowPayment(false)
@@ -126,8 +173,12 @@ export default function POSScreen() {
         setPaymentMethod('upi')
         enqueueSnackbar('Customer display closed', { variant: 'info' })
       } else {
-        const screenIdx = settings?.display_screen || 0
-        await OpenCustomerDisplay(screenIdx)
+        if (mobile) {
+          await (window as any)._displayBridge?.openDisplay()
+        } else {
+          const screenIdx = settings?.display_screen || 0
+          await OpenCustomerDisplay(screenIdx)
+        }
         setDisplayOpen(true)
         enqueueSnackbar('Customer display opened', { variant: 'success' })
         SendProductsToDisplay()
@@ -136,6 +187,26 @@ export default function POSScreen() {
       enqueueSnackbar('Failed to open display: ' + String(err), { variant: 'error' })
     }
   }
+
+  // Listen for display dismiss (external display unplugged on Android)
+  useEffect(() => {
+    const handleDismiss = () => {
+      if (displayOpen) {
+        setDisplayOpen(false)
+        setCart([])
+        setShowPayment(false)
+        setCompleted(false)
+        setUpiString('')
+        setPaymentMethod('upi')
+        enqueueSnackbar('Customer display disconnected', { variant: 'info' })
+      }
+    }
+    ;(window as any)._displayBridge = (window as any)._displayBridge || {}
+    ;(window as any)._displayBridge.onDismiss = handleDismiss
+    return () => {
+      delete (window as any)._displayBridge?.onDismiss
+    }
+  }, [displayOpen, enqueueSnackbar])
 
   // ========== Cart operations ==========
   const addToCart = (product: Product) => {
@@ -293,7 +364,7 @@ export default function POSScreen() {
     }
     setPrinting(true)
     try {
-      await PrintReceipt(transaction)
+      await printReceipt(transaction)
       enqueueSnackbar('Receipt printed', { variant: 'success' })
     } catch (err) {
       console.error('Print failed:', err)
@@ -337,12 +408,14 @@ export default function POSScreen() {
                 </button>
               )}
             </div>
-            <button
-              className={`btn btn-sm gap-1 min-h-[44px] px-3 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
-              onClick={toggleDisplay}
-            >
-              {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
-            </button>
+            {hasAdditionalDisplay && (
+              <button
+                className={`btn btn-sm gap-1 min-h-[44px] px-3 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
+                onClick={toggleDisplay}
+              >
+                {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -709,26 +782,30 @@ export default function POSScreen() {
             </div>
           )}
           <div className="flex items-center gap-2 shrink-0">
-            {displayOpen && (
-              <button
-                className="btn btn-sm btn-ghost gap-1"
-                onClick={() => {
-                  ClearCustomerDisplay()
-                  SendProductsToDisplay()
-                  enqueueSnackbar('Display refreshed', { variant: 'info' })
-                }}
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </button>
+            {hasAdditionalDisplay && (
+              <>
+                {displayOpen && (
+                  <button
+                    className="btn btn-sm btn-ghost gap-1"
+                    onClick={() => {
+                      ClearCustomerDisplay()
+                      SendProductsToDisplay()
+                      enqueueSnackbar('Display refreshed', { variant: 'info' })
+                    }}
+                  >
+                    <RefreshCw size={16} />
+                    Refresh
+                  </button>
+                )}
+                <button
+                  className={`btn btn-sm gap-1 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
+                  onClick={toggleDisplay}
+                >
+                  {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
+                  {displayOpen ? 'Close Display' : 'Open Display'}
+                </button>
+              </>
             )}
-            <button
-              className={`btn btn-sm gap-1 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
-              onClick={toggleDisplay}
-            >
-              {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
-              {displayOpen ? 'Close Display' : 'Open Display'}
-            </button>
           </div>
         </div>
 

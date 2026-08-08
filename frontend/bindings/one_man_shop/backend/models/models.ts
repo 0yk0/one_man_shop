@@ -92,6 +92,11 @@ export interface Settings {
     "display_screen_height": number;
 
     /**
+     * auto-open display on secondary screen at startup
+     */
+    "auto_open_display": boolean;
+
+    /**
      * selected printer name for receipts
      */
     "printer_name": string;

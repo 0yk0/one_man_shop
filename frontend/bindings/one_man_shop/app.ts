@@ -12,6 +12,14 @@ import * as application$0 from "../github.com/wailsapp/wails/v3/pkg/application/
 // @ts-ignore: Unused imports
 import * as models$0 from "./backend/models/models.js";
 
+/**
+ * BuildEscposBytes builds ESC/POS bytes for a transaction and returns them as base64.
+ * Used by the Android frontend to send directly to Bluetooth/USB thermal printers.
+ */
+export function BuildEscposBytes(t: models$0.Transaction): $CancellablePromise<string> {
+    return $Call.ByID(4154653169, t);
+}
+
 export function ClearCustomerDisplay(): $CancellablePromise<void> {
     return $Call.ByID(1174768400);
 }

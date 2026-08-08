@@ -152,6 +152,7 @@ func createSettingsCollection() {
 		&core.TextField{Name: "display_screen_name", Max: 100},
 		&core.NumberField{Name: "display_screen_width", Min: types.Pointer(0.0), OnlyInt: true},
 		&core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.BoolField{Name: "auto_open_display"},
 		&core.TextField{Name: "printer_name", Max: 200},
 		&core.BoolField{Name: "auto_print"},
 		&core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true},
@@ -191,6 +192,9 @@ func migrateSettingsCollection(col *core.Collection) {
 	}
 	if !existingFields["display_screen_height"] {
 		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "display_screen_height", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+	if !existingFields["auto_open_display"] {
+		fieldsToAdd = append(fieldsToAdd, &core.BoolField{Name: "auto_open_display"})
 	}
 	if !existingFields["printer_name"] {
 		fieldsToAdd = append(fieldsToAdd, &core.TextField{Name: "printer_name", Max: 200})
@@ -285,6 +289,7 @@ func ensureDefaultSettings() {
 		record.Set("display_screen_name", "")
 		record.Set("display_screen_width", 0)
 		record.Set("display_screen_height", 0)
+		record.Set("auto_open_display", false)
 		record.Set("printer_name", "")
 		record.Set("auto_print", true)
 		record.Set("paper_width", 80)

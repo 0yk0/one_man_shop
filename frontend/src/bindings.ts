@@ -19,7 +19,7 @@ export class Settings {
   tax_enabled = false; default_tax_rate = 0; backup_enabled = false
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0
-  printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
+  auto_open_display = false; printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class ReportSummary {
@@ -60,6 +60,7 @@ export const ExportTransactionsCSVToDir = (startDate: string, endDate: string, d
 export const GetAvailableScreens = (): Promise<any[]> => Call.ByID(1652254419)
 export const GetAvailablePrinters = (): Promise<any[]> => Call.ByID(1404596867)
 export const PrintReceipt = (t: Transaction): Promise<void> => Call.ByID(1053202724, t)
+export const BuildEscposBytes = (t: Transaction): Promise<string> => Call.ByID(4154653169, t)
 export const IsMobile = (): Promise<boolean> => Call.ByID(2116264863)
 export const GetDataDir = (): Promise<string> => Call.ByID(2835599606)
 export const SelectDataDir = (): Promise<string> => Call.ByID(1820684820)
