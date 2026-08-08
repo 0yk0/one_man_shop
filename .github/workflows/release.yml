@@ -147,7 +147,7 @@ jobs:
             -o build/android/app/src/main/jniLibs/arm64-v8a/libwails.so
 
       - name: Decode signing keystore
-        if: matrix.goos == 'android' && secrets.ANDROID_KEYSTORE_FILE != ''
+        if: matrix.goos == 'android'
         shell: bash
         working-directory: build/android
         run: echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 -d > release.keystore
