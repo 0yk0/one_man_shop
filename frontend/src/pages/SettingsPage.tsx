@@ -37,6 +37,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     display_screen_name: '',
     display_screen_width: 0,
     display_screen_height: 0,
+    auto_open_display: false,
     printer_name: '',
     auto_print: true,
     paper_width: 80,
@@ -118,6 +119,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
         display_screen_name: settings.display_screen_name || '',
         display_screen_width: settings.display_screen_width || 0,
         display_screen_height: settings.display_screen_height || 0,
+        auto_open_display: settings.auto_open_display ?? false,
         printer_name: settings.printer_name || '',
         auto_print: settings.auto_print ?? true,
         paper_width: settings.paper_width || 80,
@@ -215,6 +217,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      auto_open_display: form.auto_open_display,
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
@@ -288,6 +291,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       display_screen_name: form.display_screen_name,
       display_screen_width: form.display_screen_width,
       display_screen_height: form.display_screen_height,
+      auto_open_display: form.auto_open_display,
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
@@ -577,6 +581,18 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               <span className="label-text-alt text-base-content/60 text-wrap">
                 Select which screen the customer display opens on.
                 Use the "Customer Display" button on the POS screen to open it.
+              </span>
+            </label>
+          </div>
+
+          <div className="form-control">
+            <label className="label cursor-pointer justify-start gap-4">
+              <input type="checkbox" className="toggle toggle-primary" checked={form.auto_open_display} onChange={e => update('auto_open_display', e.target.checked)} />
+              <span className="label-text">Auto-open display at startup</span>
+            </label>
+            <label className="label">
+              <span className="label-text-alt text-base-content/60 text-wrap">
+                Automatically open the customer display on a secondary screen when the app starts.
               </span>
             </label>
           </div>

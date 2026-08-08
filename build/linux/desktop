@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=One Man Shop
+Comment=Offline POS System for Small Shops
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/one_man_shop %u
+Terminal=false
+Type=Application
+Icon=one_man_shop
+Categories=Utility;
+StartupWMClass=one_man_shop
+
+ 

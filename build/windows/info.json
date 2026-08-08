@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.2.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.2.0",
+			"CompanyName": "One Man Shop",
+			"FileDescription": "Offline POS System for Small Shops",
+			"LegalCopyright": "(c) 2026, One Man Shop",
+			"ProductName": "One Man Shop",
+			"Comments": "Offline POS System for Small Shops"
+		}
+	}
+}

@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private WailsBridge bridge;
     private PrinterBridge printerBridge;
+    private DisplayBridge displayBridge;
 
     // Pending save file content (held while user picks location)
     private byte[] pendingSaveContent;
@@ -108,6 +109,10 @@ public class MainActivity extends AppCompatActivity {
         printerBridge = new PrinterBridge(this);
         webView.addJavascriptInterface(printerBridge, "_printerBridge");
         printerBridge.autoReconnect();
+
+        // Initialize display bridge for customer display on external screens
+        displayBridge = new DisplayBridge(this);
+        webView.addJavascriptInterface(displayBridge, "_displayBridge");
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -1036,6 +1041,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (displayBridge != null) {
+            displayBridge.destroy();
+        }
         if (printerBridge != null) {
             printerBridge.destroy();
         }

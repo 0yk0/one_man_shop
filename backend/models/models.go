@@ -72,6 +72,7 @@ type Settings struct {
 	DisplayScreenName   string `json:"display_screen_name"`   // screen name for identification
 	DisplayScreenWidth  int    `json:"display_screen_width"`  // screen width for identification
 	DisplayScreenHeight int    `json:"display_screen_height"` // screen height for identification
+	AutoOpenDisplay     bool   `json:"auto_open_display"`     // auto-open display on secondary screen at startup
 	PrinterName         string `json:"printer_name"`          // selected printer name for receipts
 	AutoPrint           bool   `json:"auto_print"`            // auto-print after payment
 	PaperWidth          int    `json:"paper_width"`           // 58 or 80 (mm) for thermal paper

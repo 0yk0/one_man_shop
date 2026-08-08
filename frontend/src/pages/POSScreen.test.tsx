@@ -15,6 +15,8 @@ const mockClearCustomerDisplay = vi.fn()
 const mockSendProductsToDisplay = vi.fn()
 const mockSendPaymentMethodToDisplay = vi.fn()
 const mockConfirmPayment = vi.fn()
+const mockGetAvailableScreens = vi.fn().mockResolvedValue([])
+const mockIsMobile = vi.fn().mockResolvedValue(false)
 
 vi.mock('../bindings', () => ({
   GetProducts: (...args: any[]) => mockGetProducts(...args),
@@ -30,11 +32,23 @@ vi.mock('../bindings', () => ({
   SendProductsToDisplay: (...args: any[]) => mockSendProductsToDisplay(...args),
   SendPaymentMethodToDisplay: (...args: any[]) => mockSendPaymentMethodToDisplay(...args),
   ConfirmPayment: (...args: any[]) => mockConfirmPayment(...args),
+  GetAvailableScreens: (...args: any[]) => mockGetAvailableScreens(...args),
+  IsMobile: (...args: any[]) => mockIsMobile(...args),
   Product: class Product { id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = ''; constructor(s: any = {}) { Object.assign(this, s || {}) } },
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0; constructor(s: any = {}) { Object.assign(this, s || {}) } },
   Transaction: class Transaction { id = ''; receipt_number = 0; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''; constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new (require('../bindings').CartItem)(i)) } },
-  Settings: class Settings { id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; admin_pin = ''; theme = 'light'; tax_enabled = false; default_tax_rate = 0; backup_enabled = false; backup_folder = ''; backup_retention_days = 30; display_screen = 0; display_screen_name = ''; display_screen_width = 0; display_screen_height = 0; printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0; constructor(s: any = {}) { Object.assign(this, s || {}) } },
+  Settings: class Settings { id = ''; shop_name = ''; upi_vpa = ''; merchant_name = ''; admin_pin = ''; theme = 'light'; tax_enabled = false; default_tax_rate = 0; backup_enabled = false; backup_folder = ''; backup_retention_days = 30; display_screen = 0; display_screen_name = ''; display_screen_width = 0; display_screen_height = 0; auto_open_display = false; printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0; constructor(s: any = {}) { Object.assign(this, s || {}) } },
   models: { Transaction: class Transaction { id = ''; receipt_number = 0; items: any[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''; constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new (require('../bindings').CartItem)(i)) } } },
+}))
+
+vi.mock('../lib/print', () => ({
+  printReceipt: vi.fn().mockResolvedValue(undefined),
+  isPrinterConnected: vi.fn().mockResolvedValue(false),
+  getAndroidPrinters: vi.fn().mockResolvedValue([]),
+  connectAndroidPrinter: vi.fn().mockResolvedValue(undefined),
+  testPrint: vi.fn().mockResolvedValue(undefined),
+  openBluetoothSettings: vi.fn(),
+  disconnectPrinter: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('notistack', () => ({
@@ -187,6 +201,10 @@ describe('POSScreen', () => {
   it('shows open display button', async () => {
     mockGetProducts.mockResolvedValue([])
     mockGetSettings.mockResolvedValue({ printer_name: '', display_screen: 0, upi_vpa: 'test@upi' })
+    mockGetAvailableScreens.mockResolvedValue([
+      { index: 0, name: 'Primary', width: 1920, height: 1080 },
+      { index: 1, name: 'External', width: 1920, height: 1080 },
+    ])
 
     render(<POSScreen />)
 

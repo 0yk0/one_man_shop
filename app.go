@@ -39,14 +39,21 @@ func NewApp() *App {
 
 	dm := display.NewManager()
 
-	// Start WebSocket server for customer display
+	// Start HTTP + WebSocket server for customer display
+	// Serves both the WebSocket endpoint (/ws) and the embedded frontend assets
+	// so the Android Presentation WebView can load the customer display page.
 	go func() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 			dm.WSHub().HandleWS(w, r, dm.GetState)
 		})
+		// Serve embedded frontend assets (needed for Android Presentation WebView)
+		fileServer := http.FileServer(http.FS(assets))
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fileServer.ServeHTTP(w, r)
+		})
 		addr := fmt.Sprintf("127.0.0.1:%d", wsPort)
-		log.Printf("[WS] Starting display WebSocket server on %s", addr)
+		log.Printf("[WS] Starting display server on %s", addr)
 		if err := http.ListenAndServe(addr, mux); err != nil {
 			log.Printf("[WS] Server error: %v", err)
 		}

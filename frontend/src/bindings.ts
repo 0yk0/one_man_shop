@@ -19,7 +19,7 @@ export class Settings {
   tax_enabled = false; default_tax_rate = 0; backup_enabled = false
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0
-  printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
+  auto_open_display = false; printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class ReportSummary {
