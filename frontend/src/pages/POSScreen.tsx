@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  GetProducts, GetSettings, GetUPIString, CreateTransaction, PrintReceipt,
+  GetProducts, GetSettings, GetUPIString, CreateTransaction,
   OpenCustomerDisplay, CloseCustomerDisplay, UpdateCustomerDisplay,
   ShowQROnDisplay, ClearCustomerDisplay, SendProductsToDisplay,
-  SendPaymentMethodToDisplay, ConfirmPayment
+  SendPaymentMethodToDisplay, ConfirmPayment, GetAvailableScreens
 } from '../bindings'
+import { printReceipt } from '../lib/print'
 import { models } from '../bindings'
 import { useSnackbar } from 'notistack'
 import { QRCodeSVG } from 'qrcode.react'
@@ -35,6 +36,7 @@ export default function POSScreen() {
   const processingRef = useRef(false)
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayOpen, setDisplayOpen] = useState(false)
+  const [hasAdditionalDisplay, setHasAdditionalDisplay] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
   const [tappedId, setTappedId] = useState<string | null>(null)
@@ -51,9 +53,10 @@ export default function POSScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const [prods, sett] = await Promise.all([GetProducts(), GetSettings()])
+      const [prods, sett, screens] = await Promise.all([GetProducts(), GetSettings(), GetAvailableScreens()])
       setProducts(prods)
       setSettings(sett)
+      setHasAdditionalDisplay(screens.length > 1)
     } catch (err) {
       console.error('Failed to load data:', err)
     } finally {
@@ -293,7 +296,7 @@ export default function POSScreen() {
     }
     setPrinting(true)
     try {
-      await PrintReceipt(transaction)
+      await printReceipt(transaction)
       enqueueSnackbar('Receipt printed', { variant: 'success' })
     } catch (err) {
       console.error('Print failed:', err)
@@ -337,12 +340,14 @@ export default function POSScreen() {
                 </button>
               )}
             </div>
-            <button
-              className={`btn btn-sm gap-1 min-h-[44px] px-3 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
-              onClick={toggleDisplay}
-            >
-              {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
-            </button>
+            {hasAdditionalDisplay && (
+              <button
+                className={`btn btn-sm gap-1 min-h-[44px] px-3 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
+                onClick={toggleDisplay}
+              >
+                {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -709,26 +714,30 @@ export default function POSScreen() {
             </div>
           )}
           <div className="flex items-center gap-2 shrink-0">
-            {displayOpen && (
-              <button
-                className="btn btn-sm btn-ghost gap-1"
-                onClick={() => {
-                  ClearCustomerDisplay()
-                  SendProductsToDisplay()
-                  enqueueSnackbar('Display refreshed', { variant: 'info' })
-                }}
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </button>
+            {hasAdditionalDisplay && (
+              <>
+                {displayOpen && (
+                  <button
+                    className="btn btn-sm btn-ghost gap-1"
+                    onClick={() => {
+                      ClearCustomerDisplay()
+                      SendProductsToDisplay()
+                      enqueueSnackbar('Display refreshed', { variant: 'info' })
+                    }}
+                  >
+                    <RefreshCw size={16} />
+                    Refresh
+                  </button>
+                )}
+                <button
+                  className={`btn btn-sm gap-1 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
+                  onClick={toggleDisplay}
+                >
+                  {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
+                  {displayOpen ? 'Close Display' : 'Open Display'}
+                </button>
+              </>
             )}
-            <button
-              className={`btn btn-sm gap-1 ${displayOpen ? 'btn-success' : 'btn-outline'}`}
-              onClick={toggleDisplay}
-            >
-              {displayOpen ? <MonitorOff size={16} /> : <Monitor size={16} />}
-              {displayOpen ? 'Close Display' : 'Open Display'}
-            </button>
           </div>
         </div>
 

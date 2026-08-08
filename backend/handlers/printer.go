@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net"
@@ -240,6 +241,13 @@ func (h *AppHandler) PrintReceipt(t models.Transaction, settings models.Settings
 	default:
 		return fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 	}
+}
+
+// BuildEscposBytes builds ESC/POS bytes for a transaction and returns them as a base64 string.
+// Used by the Android frontend to send directly to Bluetooth/USB thermal printers via Java.
+func (h *AppHandler) BuildEscposBytes(t models.Transaction, s models.Settings) (string, error) {
+	escpos := buildEscposBytes(t, s)
+	return base64.StdEncoding.EncodeToString(escpos), nil
 }
 
 // printToVirtualPrinter sends ESC/POS bytes to the emulator TCP server

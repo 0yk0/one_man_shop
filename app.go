@@ -399,6 +399,16 @@ func (a *App) PrintReceipt(t models.Transaction) error {
 	return a.handlers.PrintReceipt(t, s)
 }
 
+// BuildEscposBytes builds ESC/POS bytes for a transaction and returns them as base64.
+// Used by the Android frontend to send directly to Bluetooth/USB thermal printers.
+func (a *App) BuildEscposBytes(t models.Transaction) (string, error) {
+	s, err := a.handlers.GetSettings()
+	if err != nil {
+		return "", fmt.Errorf("failed to get settings: %w", err)
+	}
+	return a.handlers.BuildEscposBytes(t, s)
+}
+
 // ========== Backup ==========
 
 func (a *App) TriggerBackup() error {

@@ -4,7 +4,8 @@ import {
   getFilteredRowModel, getPaginationRowModel, flexRender,
   type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
-import { GetTransactions, GetSettings, PrintReceipt, ExportTransactionsCSVToDir, GetTransactionsCSVContent, SelectFolder, IsMobile } from '../bindings'
+import { GetTransactions, GetSettings, ExportTransactionsCSVToDir, GetTransactionsCSVContent, SelectFolder, IsMobile } from '../bindings'
+import { printReceipt } from '../lib/print'
 import { useSnackbar } from 'notistack'
 import { fmtDate, fmtTime, filterTxns, getDateRange, type DatePreset } from '../lib/reports'
 import type { Transaction } from '../bindings'
@@ -90,7 +91,7 @@ export default function ReceiptsPage() {
   const handlePrint = async (txn: Transaction) => {
     setPrinting(txn.id)
     try {
-      await PrintReceipt(txn)
+      await printReceipt(txn)
       enqueueSnackbar(`Receipt #${String(txn.receipt_number).padStart(6, '0')} printed`, { variant: 'success' })
     } catch (err) {
       enqueueSnackbar('Print failed: ' + String(err), { variant: 'error' })

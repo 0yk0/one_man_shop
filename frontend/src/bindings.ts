@@ -60,6 +60,7 @@ export const ExportTransactionsCSVToDir = (startDate: string, endDate: string, d
 export const GetAvailableScreens = (): Promise<any[]> => Call.ByID(1652254419)
 export const GetAvailablePrinters = (): Promise<any[]> => Call.ByID(1404596867)
 export const PrintReceipt = (t: Transaction): Promise<void> => Call.ByID(1053202724, t)
+export const BuildEscposBytes = (t: Transaction): Promise<string> => Call.ByID(4154653169, t)
 export const IsMobile = (): Promise<boolean> => Call.ByID(2116264863)
 export const GetDataDir = (): Promise<string> => Call.ByID(2835599606)
 export const SelectDataDir = (): Promise<string> => Call.ByID(1820684820)

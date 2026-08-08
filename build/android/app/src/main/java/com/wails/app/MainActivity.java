@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private WailsBridge bridge;
+    private PrinterBridge printerBridge;
 
     // Pending save file content (held while user picks location)
     private byte[] pendingSaveContent;
@@ -102,6 +103,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Load the application
         loadApplication();
+
+        // Initialize printer bridge for Bluetooth/USB thermal printer support
+        printerBridge = new PrinterBridge(this);
+        webView.addJavascriptInterface(printerBridge, "_printerBridge");
+        printerBridge.autoReconnect();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -1030,6 +1036,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (printerBridge != null) {
+            printerBridge.destroy();
+        }
         unregisterSystemEventReceivers();
         if (bridge != null) {
             bridge.shutdown();
