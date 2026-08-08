@@ -147,16 +147,18 @@ jobs:
 
       - name: Decode signing keystore
         if: matrix.goos == 'android'
-        shell: bash
+        shell: pwsh
         working-directory: build/android
-        run: echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 -d > release.keystore
+        run: [System.Convert]::FromBase64String($env:KEYSTORE_B64) | Set-Content -Path release.keystore -AsByteStream
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_FILE }}
 
       - name: Assemble release APK
         if: matrix.goos == 'android'
         shell: bash
         working-directory: build/android
         env:
-          ANDROID_KEYSTORE_FILE: build/android/release.keystore
+          ANDROID_KEYSTORE_FILE: release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
