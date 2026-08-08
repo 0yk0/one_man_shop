@@ -150,9 +150,11 @@ jobs:
         if: matrix.goos == 'android'
         shell: pwsh
         working-directory: build/android
-        run: [System.Convert]::FromBase64String($env:KEYSTORE_B64) | Set-Content -Path release.keystore -AsByteStream
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_FILE }}
+        run: |
+          $bytes = [System.Convert]::FromBase64String($env:KEYSTORE_B64)
+          [System.IO.File]::WriteAllBytes("$PWD/release.keystore", $bytes)
 
       - name: Assemble release APK
         if: matrix.goos == 'android'
