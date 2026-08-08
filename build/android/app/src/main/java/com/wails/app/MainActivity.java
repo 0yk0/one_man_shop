@@ -22,6 +22,8 @@ import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.Log;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 
 import androidx.core.content.ContextCompat;
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_PICKER_REQUEST = 7001;
     private static final int FOLDER_PICKER_REQUEST = 7004;
     private static final int SAVE_FILE_REQUEST = 7005;
+    private static final int FILE_CHOOSER_REQUEST = 7006;
 
     private WebView webView;
     private WailsBridge bridge;
@@ -75,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
 
     // The Go-side dialog ID of the in-flight file picker (-1 when idle)
     private int pendingFilePickerCallbackID = -1;
+    // WebChromeClient file chooser callback (for <input type="file">)
+    private ValueCallback<Uri[]> fileChooserCallback;
+    // Last camera output URI for the file chooser (gallery+camera)
+    private Uri fileChooserCameraUri;
     private static final int PHOTO_CAPTURE_REQUEST = 7002;
     private static final int VIDEO_CAPTURE_REQUEST = 7003;
     private static final int CAMERA_PERMISSION_REQUEST = 7010;
@@ -216,6 +223,43 @@ public class MainActivity extends AppCompatActivity {
 
         // Add JavaScript interface for Go communication
         webView.addJavascriptInterface(new WailsJSBridge(bridge, webView), "wails");
+
+        // Handle <input type="file"> clicks from the web frontend.
+        // Without this, the file chooser in ProductForm silently does nothing on Android.
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView webView,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams) {
+                // Cancel any in-flight picker
+                if (fileChooserCallback != null) {
+                    fileChooserCallback.onReceiveValue(null);
+                }
+                fileChooserCallback = filePathCallback;
+
+                // Gallery: pick an existing image
+                Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                galleryIntent.setType("image/*");
+                galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                // Camera: capture a new photo
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                File dir = new File(getCacheDir(), "captures");
+                if (!dir.exists()) dir.mkdirs();
+                File photoFile = new File(dir, "product_" + System.currentTimeMillis() + ".jpg");
+                Uri photoUri = FileProvider.getUriForFile(MainActivity.this,
+                        getPackageName() + ".fileprovider", photoFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                cameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                fileChooserCameraUri = photoUri;
+
+                // Show chooser with both gallery and camera options
+                Intent chooser = Intent.createChooser(galleryIntent, "Select Product Image");
+                chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cameraIntent});
+                startActivityForResult(chooser, FILE_CHOOSER_REQUEST);
+                return true;
+            }
+        });
     }
 
     private void loadApplication() {
@@ -506,6 +550,33 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PHOTO_CAPTURE_REQUEST || requestCode == VIDEO_CAPTURE_REQUEST) {
             handleCaptureResult(resultCode, data);
+            return;
+        }
+        // Handle <input type="file"> chooser result (gallery or camera)
+        if (requestCode == FILE_CHOOSER_REQUEST) {
+            Uri[] results = null;
+            if (resultCode == RESULT_OK) {
+                Uri imageUri = null;
+                // Gallery pick: data URI contains the selected image
+                if (data != null && data.getDataString() != null) {
+                    imageUri = Uri.parse(data.getDataString());
+                }
+                // Camera pick: photo was written to fileChooserCameraUri
+                if (imageUri == null && fileChooserCameraUri != null) {
+                    imageUri = fileChooserCameraUri;
+                }
+                if (imageUri != null) {
+                    // Pass the original URI to the WebView so JavaScript gets a
+                    // proper File object with correct MIME type.
+                    // Compression happens in JavaScript (ProductForm).
+                    results = new Uri[]{imageUri};
+                }
+            }
+            fileChooserCameraUri = null;
+            if (fileChooserCallback != null) {
+                fileChooserCallback.onReceiveValue(results);
+                fileChooserCallback = null;
+            }
             return;
         }
         // Handle save file result
@@ -1058,6 +1129,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        // If a file chooser is open, cancel it cleanly to avoid leaking the callback
+        if (fileChooserCallback != null) {
+            fileChooserCallback.onReceiveValue(null);
+            fileChooserCallback = null;
+            fileChooserCameraUri = null;
+        }
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {

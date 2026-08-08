@@ -36,18 +36,42 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be less than 2MB')
-      return
-    }
-
     const reader = new FileReader()
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string
-      setImageData(dataUrl)
-      setImagePreview(dataUrl)
+      // Compress large images (>500KB) down to max 800px using canvas
+      if (file.size > 500 * 1024) {
+        compressImage(dataUrl, 800, 0.8).then(compressed => {
+          setImageData(compressed)
+          setImagePreview(compressed)
+        })
+      } else {
+        setImageData(dataUrl)
+        setImagePreview(dataUrl)
+      }
     }
     reader.readAsDataURL(file)
+  }
+
+  /** Resize and compress an image data URL using an offscreen canvas. */
+  const compressImage = (dataUrl: string, maxDim: number, quality: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        let w = img.width
+        let h = img.height
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim }
+          else { w = Math.round(w * maxDim / h); h = maxDim }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.src = dataUrl
+    })
   }
 
   const removeImage = () => {
