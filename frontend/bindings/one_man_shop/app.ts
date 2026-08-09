@@ -32,12 +32,20 @@ export function ConfirmPayment(receiptNumber: number): $CancellablePromise<void>
     return $Call.ByID(295967811, receiptNumber);
 }
 
+export function CreateCustomer(c: models$0.Customer): $CancellablePromise<models$0.Customer> {
+    return $Call.ByID(2004659577, c);
+}
+
 export function CreateProduct(p: models$0.Product): $CancellablePromise<models$0.Product> {
     return $Call.ByID(668623628, p);
 }
 
 export function CreateTransaction(t: models$0.Transaction): $CancellablePromise<models$0.Transaction> {
     return $Call.ByID(1755283203, t);
+}
+
+export function DeleteCustomer(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3872832418, id);
 }
 
 export function DeleteProduct(id: string): $CancellablePromise<void> {
@@ -58,6 +66,18 @@ export function GetAvailablePrinters(): $CancellablePromise<({ [_ in string]?: a
 
 export function GetAvailableScreens(): $CancellablePromise<({ [_ in string]?: any } | null)[] | null> {
     return $Call.ByID(1652254419);
+}
+
+export function GetCustomerByID(id: string): $CancellablePromise<models$0.Customer | null> {
+    return $Call.ByID(2794169867, id);
+}
+
+export function GetCustomers(): $CancellablePromise<models$0.Customer[] | null> {
+    return $Call.ByID(2080178952);
+}
+
+export function GetCustomersCSVContent(): $CancellablePromise<string> {
+    return $Call.ByID(3990766965);
 }
 
 export function GetDailyReport(date: string): $CancellablePromise<models$0.ReportSummary> {
@@ -81,6 +101,10 @@ export function GetSettings(): $CancellablePromise<models$0.Settings> {
 
 export function GetTransactions(limit: number, offset: number): $CancellablePromise<models$0.Transaction[] | null> {
     return $Call.ByID(96738246, limit, offset);
+}
+
+export function GetTransactionsByCustomerID(customerID: string): $CancellablePromise<models$0.Transaction[] | null> {
+    return $Call.ByID(1855675302, customerID);
 }
 
 export function GetTransactionsCSVContent(startDate: string, endDate: string): $CancellablePromise<string> {
@@ -149,6 +173,10 @@ export function SaveSettings(s: models$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(1949631069, s);
 }
 
+export function SearchCustomers(phonePrefix: string): $CancellablePromise<models$0.Customer[] | null> {
+    return $Call.ByID(1681508442, phonePrefix);
+}
+
 /**
  * SelectDataDir opens a folder picker and returns the selected path
  */
@@ -194,6 +222,10 @@ export function Startup(): $CancellablePromise<void> {
 
 export function TriggerBackup(): $CancellablePromise<void> {
     return $Call.ByID(16516297);
+}
+
+export function UpdateCustomer(c: models$0.Customer): $CancellablePromise<void> {
+    return $Call.ByID(2080027308, c);
 }
 
 export function UpdateCustomerDisplay(cartItems: models$0.CartItem[] | null, total: number, taxTotal: number): $CancellablePromise<void> {

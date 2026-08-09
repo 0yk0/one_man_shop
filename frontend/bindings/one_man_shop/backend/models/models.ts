@@ -23,6 +23,16 @@ export interface CartItem {
 }
 
 /**
+ * Customer represents a customer record
+ */
+export interface Customer {
+    "id": string;
+    "name": string;
+    "phone": string;
+    "created": string;
+}
+
+/**
  * Product represents a POS product (max 50 items)
  */
 export interface Product {
@@ -133,8 +143,19 @@ export interface Transaction {
     "total": number;
 
     /**
-     * "upi" or "cash"
+     * "upi" or "cash"`
      */
     "payment_method": string;
+    "customer_id": string;
+
+    /**
+     * Input only — not persisted (resolved to customer_id)
+     */
+    "customer_name": string;
+
+    /**
+     * Input only — not persisted (resolved to customer_id)
+     */
+    "customer_phone": string;
     "created": string;
 }

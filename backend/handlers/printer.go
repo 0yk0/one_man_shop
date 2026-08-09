@@ -301,6 +301,12 @@ func buildReceiptText(t models.Transaction, s models.Settings) string {
 		b.WriteString("\n")
 	}
 
+	// Customer name (if available)
+	if t.CustomerName != "" {
+		b.WriteString(centerText(t.CustomerName, width))
+		b.WriteString("\n")
+	}
+
 	// Date/time (from transaction, not current time)
 	b.WriteString(centerText(formatReceiptTime(t.Created), width))
 	b.WriteString("\n")
@@ -443,6 +449,12 @@ func buildEscposBytes(t models.Transaction, s models.Settings) []byte {
 	// Receipt ID (if available)
 	if t.ReceiptNumber > 0 {
 		buf = append(buf, []byte(formatReceiptID(t.ReceiptNumber))...)
+		buf = append(buf, 0x0A)
+	}
+
+	// Customer name (if available)
+	if t.CustomerName != "" {
+		buf = append(buf, []byte(t.CustomerName)...)
 		buf = append(buf, 0x0A)
 	}
 

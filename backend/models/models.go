@@ -32,16 +32,27 @@ type Cart struct {
 	Total    float64    `json:"total"`    // subtotal + tax_total
 }
 
+// Customer represents a customer record
+type Customer struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Phone   string `json:"phone"`
+	Created string `json:"created"`
+}
+
 // Transaction represents a completed sale
 type Transaction struct {
-	ID            string       `json:"id"`
-	ReceiptNumber int          `json:"receipt_number"` // Rolling receipt number (e.g., 42 → "#000042")
-	Items         []CartItem   `json:"items"`
-	Subtotal      float64      `json:"subtotal"`
-	TaxTotal      float64      `json:"tax_total"`
-	Total         float64      `json:"total"`
-	PaymentMethod string       `json:"payment_method"` // "upi" or "cash"
-	Created       string       `json:"created"`
+	ID             string       `json:"id"`
+	ReceiptNumber  int          `json:"receipt_number"` // Rolling receipt number (e.g., 42 → "#000042")
+	Items          []CartItem   `json:"items"`
+	Subtotal       float64      `json:"subtotal"`
+	TaxTotal       float64      `json:"tax_total"`
+	Total          float64      `json:"total"`
+	PaymentMethod  string       `json:"payment_method"` // "upi" or "cash"`
+	CustomerID     string       `json:"customer_id"`
+	CustomerName   string       `json:"customer_name"`  // Input only — not persisted (resolved to customer_id)
+	CustomerPhone  string       `json:"customer_phone"` // Input only — not persisted (resolved to customer_id)
+	Created        string       `json:"created"`
 }
 
 // TransactionItem is stored as JSON in transactions collection

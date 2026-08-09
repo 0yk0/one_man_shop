@@ -174,7 +174,7 @@ describe('ReceiptsPage', () => {
     render(<ReceiptsPage />)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search by #, amount, item...')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Search by #, amount, item, customer...')).toBeInTheDocument()
     })
   })
 })

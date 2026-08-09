@@ -35,6 +35,9 @@ export class Transaction {
   tax_total = 0
   total = 0
   payment_method = ''
+  customer_id = ''
+  customer_name = ''
+  customer_phone = ''
   created = ''
   constructor(s: any = {}) {
     Object.assign(this, s || {})
@@ -80,8 +83,18 @@ export class ReportSummary {
   }
 }
 
+export class Customer {
+  id = ''
+  name = ''
+  phone = ''
+  created = ''
+  constructor(s: any = {}) {
+    Object.assign(this, s || {})
+  }
+}
+
 // Models namespace
-export const models = { Product, CartItem, Transaction, Settings, ReportSummary }
+export const models = { Product, CartItem, Transaction, Settings, ReportSummary, Customer }
 export type models = typeof models
 
 // Mock service method wrappers
@@ -112,3 +125,10 @@ export const ExportTransactionsCSVToDir = vi.fn().mockResolvedValue('/tmp/test.c
 export const GetAvailableScreens = vi.fn().mockResolvedValue([])
 export const GetAvailablePrinters = vi.fn().mockResolvedValue([])
 export const PrintReceipt = vi.fn().mockResolvedValue(undefined)
+export const BuildEscposBytes = vi.fn().mockResolvedValue('')
+export const IsMobile = vi.fn().mockResolvedValue(false)
+export const GetDataDir = vi.fn().mockResolvedValue('/tmp/test')
+export const SelectDataDir = vi.fn().mockResolvedValue('/tmp/test')
+export const SaveDataDir = vi.fn().mockResolvedValue(undefined)
+export const GetTransactionsCSVContent = vi.fn().mockResolvedValue('')
+export const SearchCustomers = vi.fn().mockResolvedValue([])

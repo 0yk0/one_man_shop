@@ -9,6 +9,8 @@ import ProductsPage from './pages/ProductsPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import ReceiptsPage from './pages/ReceiptsPage'
+import CustomersPage from './pages/CustomersPage'
+import CustomerDetailPage from './pages/CustomerDetailPage'
 import { IsSetupComplete, SaveSettings, GetSettings } from './bindings'
 
 function App() {
@@ -100,6 +102,8 @@ function App() {
           <Route path="products" element={<ProductsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="receipts" element={<ReceiptsPage />} />
+          <Route path="customers" element={<CustomersPage />} />
+          <Route path="customers/:id" element={<CustomerDetailPage />} />
           <Route path="settings" element={<SettingsPage currentTheme={theme} onThemeChange={handleThemeChange} />} />
         </Route>
       </Routes>
