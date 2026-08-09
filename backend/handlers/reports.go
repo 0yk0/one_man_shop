@@ -113,7 +113,7 @@ func (a *AppHandler) generateTransactionsCSV(startDate, endDate string) (string,
 		return "", fmt.Errorf("failed to fetch transactions: %w", err)
 	}
 
-	csv := "Date,Time,Items,Subtotal,Tax,Total,Payment Method\n"
+	csv := "Date,Time,Customer Name,Customer Phone,Items,Subtotal,Tax,Total,Payment Method\n"
 	for _, r := range records {
 		created := r.GetString("created")
 		created = strings.Replace(created, " ", "T", 1)
@@ -143,8 +143,21 @@ func (a *AppHandler) generateTransactionsCSV(startDate, endDate string) (string,
 		}
 		itemNames = strings.ReplaceAll(itemNames, "\"", "\"\"")
 
-		csv += fmt.Sprintf("%s,%s,\"%s\",%.2f,%.2f,%.2f,%s\n",
-			t.Format("2006-01-02"), t.Format("15:04:05"), itemNames,
+		// Look up customer info
+		customerName := ""
+		customerPhone := ""
+		customerID := r.GetString("customer_id")
+		if customerID != "" {
+			if cust, custErr := a.GetCustomerByID(customerID); custErr == nil && cust != nil {
+				customerName = strings.ReplaceAll(cust.Name, "\"", "\"\"")
+				customerPhone = cust.Phone
+			}
+		}
+
+		csv += fmt.Sprintf("%s,%s,\"%s\",\"%s\",\"%s\",%.2f,%.2f,%.2f,%s\n",
+			t.Format("2006-01-02"), t.Format("15:04:05"),
+			customerName, customerPhone,
+			itemNames,
 			r.GetFloat("subtotal"), r.GetFloat("tax_total"), r.GetFloat("total"), r.GetString("payment_method"),
 		)
 	}

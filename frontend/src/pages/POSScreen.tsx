@@ -3,7 +3,8 @@ import {
   GetProducts, GetSettings, GetUPIString, CreateTransaction,
   OpenCustomerDisplay, CloseCustomerDisplay, UpdateCustomerDisplay,
   ShowQROnDisplay, ClearCustomerDisplay, SendProductsToDisplay,
-  SendPaymentMethodToDisplay, ConfirmPayment, GetAvailableScreens, IsMobile
+  SendPaymentMethodToDisplay, ConfirmPayment, GetAvailableScreens, IsMobile,
+  SearchCustomers
 } from '../bindings'
 import { printReceipt } from '../lib/print'
 import { models } from '../bindings'
@@ -19,6 +20,7 @@ type Product = import("../bindings").Product
 type CartItem = import("../bindings").CartItem
 type Settings = import("../bindings").Settings
 type Transaction = import("../bindings").Transaction
+type Customer = import("../bindings").Customer
 
 export default function POSScreen() {
   const [products, setProducts] = useState<Product[]>([])
@@ -34,7 +36,6 @@ export default function POSScreen() {
   const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null)
   const { enqueueSnackbar } = useSnackbar()
   const processingRef = useRef(false)
-  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayOpen, setDisplayOpen] = useState(false)
   const [hasAdditionalDisplay, setHasAdditionalDisplay] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -43,6 +44,12 @@ export default function POSScreen() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth < 768)
   const [cartSheetOpen, setCartSheetOpen] = useState(false)
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [searchingCustomers, setSearchingCustomers] = useState(false)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const check = () => setIsSmallScreen(window.innerWidth < 768)
@@ -83,11 +90,6 @@ export default function POSScreen() {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => { if (clearTimerRef.current) clearTimeout(clearTimerRef.current) }
-  }, [])
 
   // Auto-open customer display on secondary screen at startup
   useEffect(() => {
@@ -154,6 +156,44 @@ export default function POSScreen() {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [search, showPayment, completed, filteredProducts, isSmallScreen])
+
+  // ========== Customer phone autocomplete ==========
+  // Debounced search for customer suggestions
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, '')
+    if (digits.length < 6) {
+      setCustomerSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setSearchingCustomers(true)
+      try {
+        console.log('[CustomerSearch] Searching for:', digits)
+        const results = await SearchCustomers(digits)
+        console.log('[CustomerSearch] Results:', results)
+        setCustomerSuggestions(results || [])
+        setShowSuggestions((results || []).length > 0)
+      } catch {
+        setCustomerSuggestions([])
+        setShowSuggestions(false)
+      } finally {
+        setSearchingCustomers(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [customerPhone])
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   // ========== Display ==========
   const toggleDisplay = async () => {
@@ -274,6 +314,10 @@ export default function POSScreen() {
     setUpiString('')
     setPaymentMethod('upi')
     setLastTransaction(null)
+    setCustomerName('')
+    setCustomerPhone('')
+    setCustomerSuggestions([])
+    setShowSuggestions(false)
     if (displayOpen) {
       ClearCustomerDisplay()
     }
@@ -317,6 +361,8 @@ export default function POSScreen() {
       transaction.tax_total = taxTotal
       transaction.total = total
       transaction.payment_method = paymentMethod
+      transaction.customer_name = customerName
+      transaction.customer_phone = customerPhone
       transaction.id = ''
       transaction.created = ''
 
@@ -335,18 +381,7 @@ export default function POSScreen() {
       if (settings?.auto_print && settings?.printer_name) {
         handlePrintReceipt(savedTransaction)
       }
-
-      clearTimerRef.current = setTimeout(() => {
-        setCompleted(false)
-        setCart([])
-        setShowPayment(false)
-        setPaymentMethod('upi')
-        setLastTransaction(null)
-        setCartSheetOpen(false)
-        if (displayOpen) {
-          SendProductsToDisplay()
-        }
-      }, 5000)
+      // No auto-reset — screen stays until user taps Done
     } catch (err) {
       console.error('Payment failed:', err)
       enqueueSnackbar('Failed to record transaction: ' + String(err), { variant: 'error' })
@@ -676,12 +711,15 @@ export default function POSScreen() {
                     <button
                       className="btn btn-primary btn-block min-h-[48px]"
                       onClick={() => {
-                        if (clearTimerRef.current) clearTimeout(clearTimerRef.current)
                         setCompleted(false)
                         setCart([])
                         setShowPayment(false)
                         setPaymentMethod('upi')
                         setLastTransaction(null)
+                        setCustomerName('')
+                        setCustomerPhone('')
+                        setCustomerSuggestions([])
+                        setShowSuggestions(false)
                         setCartSheetOpen(false)
                         if (displayOpen) SendProductsToDisplay()
                       }}
@@ -721,6 +759,58 @@ export default function POSScreen() {
                       <p className="text-sm text-base-content/60">Collect cash from customer</p>
                     </div>
                   )}
+                  {/* Customer Info */}
+                  <div className="space-y-2">
+                    <div className="relative" ref={suggestionsRef}>
+                      <label className="text-xs text-base-content/60">Phone (optional)</label>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        placeholder="Customer phone"
+                        className="input input-bordered w-full h-11 text-sm"
+                        value={customerPhone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^\d+\s-]/g, '')
+                          setCustomerPhone(val)
+                          if (val.replace(/\D/g, '').length < 6) {
+                            setShowSuggestions(false)
+                          }
+                        }}
+                        onFocus={() => { if (customerSuggestions.length > 0) setShowSuggestions(true) }}
+                      />
+                      {searchingCustomers && (
+                        <Loader2 size={16} className="absolute right-3 top-8 animate-spin text-base-content/40" />
+                      )}
+                      {showSuggestions && customerSuggestions.length > 0 && (
+                        <div className="absolute z-50 left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          {customerSuggestions.map((c) => (
+                            <button
+                              key={c.id}
+                              className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
+                              onClick={() => {
+                                setCustomerPhone(c.phone)
+                                setCustomerName(c.name)
+                                setShowSuggestions(false)
+                              }}
+                            >
+                              <span className="font-medium">{c.name}</span>
+                              <span className="text-base-content/50">— {c.phone}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-xs text-base-content/60">Name (optional)</label>
+                      <input
+                        type="text"
+                        placeholder="Customer name"
+                        className="input input-bordered w-full h-11 text-sm"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                      />
+                    </div>
+                  </div>
                   <button
                     className="btn btn-primary btn-block btn-lg"
                     onClick={handlePayment}
@@ -954,9 +1044,22 @@ export default function POSScreen() {
                   {printing ? 'Printing...' : 'Print Receipt'}
                 </button>
               )}
-              <button className="btn btn-ghost btn-block gap-2" disabled>
-                <Loader2 size={16} className="animate-spin" />
-                Waiting for display...
+              <button
+                className="btn btn-primary btn-block gap-2"
+                onClick={() => {
+                  setCompleted(false)
+                  setCart([])
+                  setShowPayment(false)
+                  setPaymentMethod('upi')
+                  setLastTransaction(null)
+                  setCustomerName('')
+                  setCustomerPhone('')
+                  setCustomerSuggestions([])
+                  setShowSuggestions(false)
+                  if (displayOpen) SendProductsToDisplay()
+                }}
+              >
+                <CheckCircle size={16} /> Done
               </button>
             </div>
           ) : (
@@ -990,6 +1093,58 @@ export default function POSScreen() {
                   <p className="text-sm text-base-content/60">Collect cash from customer</p>
                 </div>
               )}
+              {/* Customer Info */}
+              <div className="space-y-2">
+                <div className="relative" ref={suggestionsRef}>
+                  <label className="text-xs text-base-content/60">Phone (optional)</label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="Customer phone"
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={customerPhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d+\s-]/g, '')
+                      setCustomerPhone(val)
+                      if (val.replace(/\D/g, '').length < 6) {
+                        setShowSuggestions(false)
+                      }
+                    }}
+                    onFocus={() => { if (customerSuggestions.length > 0) setShowSuggestions(true) }}
+                  />
+                  {searchingCustomers && (
+                    <Loader2 size={14} className="absolute right-3 top-7 animate-spin text-base-content/40" />
+                  )}
+                  {showSuggestions && customerSuggestions.length > 0 && (
+                    <div className="absolute z-50 left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-40 overflow-auto">
+                      {customerSuggestions.map((c) => (
+                        <button
+                          key={c.id}
+                          className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
+                          onClick={() => {
+                            setCustomerPhone(c.phone)
+                            setCustomerName(c.name)
+                            setShowSuggestions(false)
+                          }}
+                        >
+                          <span className="font-medium">{c.name}</span>
+                          <span className="text-base-content/50">— {c.phone}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-base-content/60">Name (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Customer name"
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="flex gap-2">
                 <button
                   className="btn btn-ghost flex-1"

@@ -70,6 +70,11 @@ func initCollections() {
 		migrateTransactionsCollection(transactionsCol)
 	}
 
+	customersCol, _ := App.FindCollectionByNameOrId("customers")
+	if customersCol == nil {
+		createCustomersCollection()
+	}
+
 	settingsCol, _ := App.FindCollectionByNameOrId("settings")
 	if settingsCol == nil {
 		createSettingsCollection()
@@ -118,6 +123,7 @@ func createTransactionsCollection() {
 		&core.NumberField{Name: "total", Required: true},
 		&core.TextField{Name: "payment_method", Required: true, Max: 10},
 		&core.NumberField{Name: "receipt_number", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.TextField{Name: "customer_id", Max: 50},
 		&core.AutodateField{Name: "created", OnCreate: true},
 		&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true},
 	)
@@ -131,6 +137,27 @@ func createTransactionsCollection() {
 		log.Printf("Failed to create transactions collection: %v", err)
 	} else {
 		log.Println("Created transactions collection")
+	}
+}
+
+// createCustomersCollection creates the customers collection
+func createCustomersCollection() {
+	collection := core.NewBaseCollection("customers")
+	collection.Fields.Add(
+		&core.TextField{Name: "name", Required: true, Max: 100},
+		&core.TextField{Name: "phone", Required: true, Max: 15},
+		&core.AutodateField{Name: "created", OnCreate: true},
+	)
+
+	collection.ViewRule = types.Pointer("")
+	collection.CreateRule = types.Pointer("")
+	collection.UpdateRule = types.Pointer("")
+	collection.DeleteRule = types.Pointer("")
+
+	if err := App.Save(collection); err != nil {
+		log.Printf("Failed to create customers collection: %v", err)
+	} else {
+		log.Println("Created customers collection")
 	}
 }
 
@@ -219,7 +246,7 @@ func migrateSettingsCollection(col *core.Collection) {
 	}
 }
 
-// migrateTransactionsCollection adds receipt_number field and backfills existing transactions
+// migrateTransactionsCollection adds receipt_number and customer_id fields, backfills existing transactions
 func migrateTransactionsCollection(col *core.Collection) {
 	existingFields := make(map[string]bool)
 	for _, f := range col.Fields {
@@ -229,6 +256,9 @@ func migrateTransactionsCollection(col *core.Collection) {
 	fieldsToAdd := []core.Field{}
 	if !existingFields["receipt_number"] {
 		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "receipt_number", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+	if !existingFields["customer_id"] {
+		fieldsToAdd = append(fieldsToAdd, &core.TextField{Name: "customer_id", Max: 50})
 	}
 
 	if len(fieldsToAdd) > 0 {
@@ -240,26 +270,29 @@ func migrateTransactionsCollection(col *core.Collection) {
 		log.Printf("Migrated transactions collection: added %d missing fields", len(fieldsToAdd))
 
 		// Backfill receipt numbers for existing transactions (ordered by created time)
-		records, err := App.FindRecordsByFilter("transactions", "", "created", 0, 0)
-		if err != nil {
-			log.Printf("Failed to fetch transactions for backfill: %v", err)
-			return
-		}
-
-		if len(records) > 0 {
-			for i, r := range records {
-				r.Set("receipt_number", i+1)
-				if err := App.SaveNoValidate(r); err != nil {
-					log.Printf("Failed to backfill receipt_number for transaction %s: %v", r.Id, err)
-				}
+		// Only backfill if receipt_number was just added
+		if !existingFields["receipt_number"] {
+			records, err := App.FindRecordsByFilter("transactions", "", "created", 0, 0)
+			if err != nil {
+				log.Printf("Failed to fetch transactions for backfill: %v", err)
+				return
 			}
-			log.Printf("Backfilled receipt numbers for %d transactions", len(records))
 
-			// Update last_receipt_number in settings
-			settingsRecords, _ := App.FindRecordsByFilter("settings", "", "", 0, 0)
-			if len(settingsRecords) > 0 {
-				settingsRecords[0].Set("last_receipt_number", len(records))
-				App.SaveNoValidate(settingsRecords[0])
+			if len(records) > 0 {
+				for i, r := range records {
+					r.Set("receipt_number", i+1)
+					if err := App.SaveNoValidate(r); err != nil {
+						log.Printf("Failed to backfill receipt_number for transaction %s: %v", r.Id, err)
+					}
+				}
+				log.Printf("Backfilled receipt numbers for %d transactions", len(records))
+
+				// Update last_receipt_number in settings
+				settingsRecords, _ := App.FindRecordsByFilter("settings", "", "", 0, 0)
+				if len(settingsRecords) > 0 {
+					settingsRecords[0].Set("last_receipt_number", len(records))
+					App.SaveNoValidate(settingsRecords[0])
+				}
 			}
 		}
 	}

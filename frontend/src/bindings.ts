@@ -11,7 +11,7 @@ export class CartItem {
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class Transaction {
-  id = ''; receipt_number = 0; items: CartItem[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; created = ''
+  id = ''; receipt_number = 0; items: CartItem[] = []; subtotal = 0; tax_total = 0; total = 0; payment_method = ''; customer_id = ''; customer_name = ''; customer_phone = ''; created = ''
   constructor(s: any = {}) { Object.assign(this, s || {}); this.items = (s?.items || []).map((i: any) => new CartItem(i)) }
 }
 export class Settings {
@@ -26,9 +26,13 @@ export class ReportSummary {
   date = ''; total_transactions = 0; total_revenue = 0; total_tax = 0; upi_transactions = 0; cash_transactions = 0
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
+export class Customer {
+  id = ''; name = ''; phone = ''; created = ''
+  constructor(s: any = {}) { Object.assign(this, s || {}) }
+}
 
 // Models namespace (re-exports classes as types for models.Product pattern)
-export const models = { Product, CartItem, Transaction, Settings, ReportSummary }
+export const models = { Product, CartItem, Transaction, Settings, ReportSummary, Customer }
 export type models = typeof models
 
 // Service method wrappers
@@ -66,3 +70,11 @@ export const GetDataDir = (): Promise<string> => Call.ByID(2835599606)
 export const SelectDataDir = (): Promise<string> => Call.ByID(1820684820)
 export const SaveDataDir = (path: string): Promise<void> => Call.ByID(1100641391, path)
 export const GetTransactionsCSVContent = (startDate: string, endDate: string): Promise<string> => Call.ByID(1675994455, startDate, endDate)
+export const SearchCustomers = (phonePrefix: string): Promise<Customer[]> => Call.ByID(1681508442, phonePrefix)
+export const GetCustomers = (): Promise<Customer[]> => Call.ByID(2080178952)
+export const CreateCustomer = (c: Customer): Promise<Customer> => Call.ByID(2004659577, c)
+export const UpdateCustomer = (c: Customer): Promise<void> => Call.ByID(2080027308, c)
+export const DeleteCustomer = (id: string): Promise<void> => Call.ByID(3872832418, id)
+export const GetTransactionsByCustomerID = (customerID: string): Promise<Transaction[]> => Call.ByID(1855675302, customerID)
+export const GetCustomersCSVContent = (): Promise<string> => Call.ByID(3990766965)
+export const GetCustomerByID = (id: string): Promise<Customer> => Call.ByID(2794169867, id)

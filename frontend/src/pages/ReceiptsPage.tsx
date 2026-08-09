@@ -221,7 +221,7 @@ export default function ReceiptsPage() {
     },
   ], [taxEnabled, expandedRows, printerAvailable, printing])
 
-  // Custom search filter - searches across receipt number, amounts, items, payment method
+  // Custom search filter - searches across receipt number, amounts, items, payment method, customer info
   const globalFilterFn = useMemo(() => {
     return (row: any, _columnId: string, filterValue: string) => {
       const txn = row.original as Transaction
@@ -241,6 +241,10 @@ export default function ReceiptsPage() {
 
       // Item names
       if (txn.items?.some(item => item.name.toLowerCase().includes(search))) return true
+
+      // Customer name and phone
+      if (txn.customer_name?.toLowerCase().includes(search)) return true
+      if (txn.customer_phone?.includes(search)) return true
 
       return false
     }
@@ -282,7 +286,7 @@ export default function ReceiptsPage() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
               <input
                 type="text"
-                placeholder="Search by #, amount, item..."
+                placeholder="Search by #, amount, item, customer..."
                 className="input input-bordered w-full pl-9"
                 value={search}
                 onChange={e => setSearch(e.target.value)}

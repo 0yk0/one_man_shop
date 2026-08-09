@@ -219,6 +219,40 @@ func (a *App) GetTransactions(limit int, offset int) ([]models.Transaction, erro
 	return a.handlers.GetTransactions(limit, offset)
 }
 
+func (a *App) GetTransactionsByCustomerID(customerID string) ([]models.Transaction, error) {
+	return a.handlers.GetTransactionsByCustomerID(customerID)
+}
+
+// ========== Customers ==========
+
+func (a *App) GetCustomers() ([]models.Customer, error) {
+	return a.handlers.GetCustomers()
+}
+
+func (a *App) CreateCustomer(c models.Customer) (models.Customer, error) {
+	return a.handlers.CreateCustomer(c)
+}
+
+func (a *App) UpdateCustomer(c models.Customer) error {
+	return a.handlers.UpdateCustomer(c)
+}
+
+func (a *App) DeleteCustomer(id string) error {
+	return a.handlers.DeleteCustomer(id)
+}
+
+func (a *App) GetCustomerByID(id string) (*models.Customer, error) {
+	return a.handlers.GetCustomerByID(id)
+}
+
+func (a *App) SearchCustomers(phonePrefix string) ([]models.Customer, error) {
+	return a.handlers.SearchCustomers(phonePrefix)
+}
+
+func (a *App) GetCustomersCSVContent() (string, error) {
+	return a.handlers.GetCustomersCSVContent()
+}
+
 // ========== Reports ==========
 
 func (a *App) GetDailyReport(date string) (models.ReportSummary, error) {

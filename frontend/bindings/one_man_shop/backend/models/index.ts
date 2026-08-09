@@ -3,6 +3,7 @@
 
 export type {
     CartItem,
+    Customer,
     Product,
     ReportSummary,
     Settings,

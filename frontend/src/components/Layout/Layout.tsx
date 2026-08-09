@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSettings } from '../../hooks/useSettings'
 import AdminPinModal from '../AdminPinModal'
-import { Store, Monitor, Package, BarChart3, ReceiptText, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Store, Monitor, Package, BarChart3, ReceiptText, Settings, PanelLeftClose, PanelLeftOpen, Users } from 'lucide-react'
 import { Browser } from '@wailsio/runtime'
 
 interface Props {
@@ -42,6 +42,7 @@ export default function Layout({ onThemeChange }: Props) {
     { to: '/', icon: Monitor, label: 'POS', end: true },
     { to: '/receipts', icon: ReceiptText, label: 'Receipts', end: false },
     { route: '/products', icon: Package, label: 'Products' },
+    { route: '/customers', icon: Users, label: 'Customers' },
     { route: '/reports', icon: BarChart3, label: 'Reports' },
     { route: '/settings', icon: Settings, label: 'Settings' },
   ]
