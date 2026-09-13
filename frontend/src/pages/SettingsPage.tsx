@@ -3,7 +3,7 @@ import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
 import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile } from '../bindings'
 import { getAndroidPrinters, isPrinterConnected, testPrint, openBluetoothSettings, type AndroidPrinter } from '../lib/print'
-import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth } from 'lucide-react'
+import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth, Package } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -41,6 +41,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     printer_name: '',
     auto_print: true,
     paper_width: 80,
+    low_stock_threshold: 5,
   })
   const [saving, setSaving] = useState(false)
   const [formInitialized, setFormInitialized] = useState(false)
@@ -123,6 +124,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
         printer_name: settings.printer_name || '',
         auto_print: settings.auto_print ?? true,
         paper_width: settings.paper_width || 80,
+        low_stock_threshold: settings.low_stock_threshold ?? 5,
       })
       setFormInitialized(true)
     }
@@ -221,6 +223,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
+      low_stock_threshold: form.low_stock_threshold,
     })
     setSaving(false)
     if (success) {
@@ -295,6 +298,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
       printer_name: form.printer_name,
       auto_print: form.auto_print,
       paper_width: form.paper_width,
+      low_stock_threshold: form.low_stock_threshold,
       admin_pin: newPin,
     })
     setChangingPin(false)
@@ -392,6 +396,28 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               <label className="label"><span className="label-text-alt text-base-content/60 text-wrap">Per-product tax rates can be set individually</span></label>
             </div>
           )}
+
+          <div className="divider"></div>
+
+          <h2 className="card-title flex items-center gap-2"><Package size={18} />Inventory</h2>
+
+          <div className="form-control w-full max-w-xs">
+            <label className="label"><span className="label-text">Low Stock Warning Threshold</span></label>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+              className="input input-bordered w-full"
+              value={form.low_stock_threshold}
+              onChange={e => update('low_stock_threshold', parseInt(e.target.value) || 5)}
+            />
+            <label className="label">
+              <span className="label-text-alt text-base-content/60 text-wrap">
+                Show a warning when product stock falls below this number
+              </span>
+            </label>
+          </div>
 
           <div className="divider"></div>
 

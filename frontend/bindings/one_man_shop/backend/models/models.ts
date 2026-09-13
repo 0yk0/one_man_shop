@@ -49,6 +49,11 @@ export interface Product {
      * base64 data URL, empty = no image
      */
     "image_data": string;
+
+    /**
+     * current stock quantity (0 = out of stock)
+     */
+    "stock": number;
     "active": boolean;
     "created": string;
 }
@@ -125,6 +130,11 @@ export interface Settings {
      * rolling receipt counter
      */
     "last_receipt_number": number;
+
+    /**
+     * warn when stock falls below this value
+     */
+    "low_stock_threshold": number;
 }
 
 /**

@@ -28,6 +28,7 @@ func (a *AppHandler) GetProducts() ([]models.Product, error) {
 			Price:     r.GetFloat("price"),
 			TaxRate:   r.GetFloat("tax_rate"),
 			ImageData: r.GetString("image_data"),
+			Stock:     int(r.GetInt("stock")),
 			Active:    r.GetBool("active"),
 			Created:   r.GetString("created"),
 		})
@@ -58,16 +59,21 @@ func (a *AppHandler) CreateProduct(p models.Product) (models.Product, error) {
 	record.Set("price", p.Price)
 	record.Set("tax_rate", p.TaxRate)
 	record.Set("image_data", p.ImageData)
+	stock := p.Stock
+	if stock < 0 {
+		stock = 0
+	}
+	record.Set("stock", stock)
 	record.Set("active", true)
 
 	if err := db.App.SaveNoValidate(record); err != nil {
 		return models.Product{}, fmt.Errorf("failed to create product: %w", err)
 	}
 
-	log.Printf("[CreateProduct] id=%s, name=%s", record.Id, p.Name)
+	log.Printf("[CreateProduct] id=%s, name=%s, stock=%d", record.Id, p.Name, stock)
 	return models.Product{
 		ID: record.Id, Name: p.Name, Price: p.Price, TaxRate: p.TaxRate,
-		ImageData: p.ImageData, Active: true, Created: record.GetString("created"),
+		ImageData: p.ImageData, Stock: stock, Active: true, Created: record.GetString("created"),
 	}, nil
 }
 
@@ -82,6 +88,11 @@ func (a *AppHandler) UpdateProduct(p models.Product) error {
 	record.Set("price", p.Price)
 	record.Set("tax_rate", p.TaxRate)
 	record.Set("image_data", p.ImageData)
+	stock := p.Stock
+	if stock < 0 {
+		stock = 0
+	}
+	record.Set("stock", stock)
 	record.Set("active", p.Active)
 
 	if err := db.App.SaveNoValidate(record); err != nil {

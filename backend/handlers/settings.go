@@ -41,6 +41,7 @@ func (a *AppHandler) GetSettings() (models.Settings, error) {
 		AutoPrint:           r.GetBool("auto_print"),
 		PaperWidth:          int(r.GetInt("paper_width")),
 		LastReceiptNumber:   int(r.GetInt("last_receipt_number")),
+		LowStockThreshold:   int(r.GetInt("low_stock_threshold")),
 	}, nil
 }
 
@@ -75,6 +76,7 @@ func (a *AppHandler) SaveSettings(s models.Settings) error {
 	record.Set("auto_print", s.AutoPrint)
 	record.Set("paper_width", s.PaperWidth)
 	record.Set("last_receipt_number", s.LastReceiptNumber)
+	record.Set("low_stock_threshold", s.LowStockThreshold)
 
 	if err := db.App.SaveNoValidate(record); err != nil {
 		return fmt.Errorf("failed to save settings: %w", err)

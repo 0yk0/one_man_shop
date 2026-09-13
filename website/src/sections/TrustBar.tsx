@@ -11,7 +11,7 @@ const badges = [
 
 export const TrustBar: React.FC = () => {
   return (
-    <section className="py-8 px-4 bg-gray-50 border-y border-gray-100">
+    <section className="py-8 px-4 bg-dark-secondary border-y border-white/5">
       <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-8 md:gap-16">
         {badges.map((badge, i) => {
           const Icon = badge.icon;
@@ -22,9 +22,9 @@ export const TrustBar: React.FC = () => {
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, type: "spring", damping: 12, stiffness: 100 }}
-              className="flex items-center gap-2 text-gray-600"
+              className="flex items-center gap-2 text-slate-400"
             >
-              <Icon size={18} className="text-blue-600" />
+              <Icon size={18} className="text-blue-400" />
               <span className="font-medium text-sm">{badge.text}</span>
             </motion.div>
           );

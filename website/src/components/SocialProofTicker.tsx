@@ -26,7 +26,7 @@ export const SocialProofTicker: React.FC = () => {
   }
 
   return (
-    <section className="py-4 bg-gray-50 border-y border-gray-100 overflow-hidden">
+    <section className="py-4 bg-dark-secondary border-y border-white/5 overflow-hidden">
       <div className="ticker-animation flex whitespace-nowrap">
         {/* Duplicate items for seamless loop */}
         {[...stats, ...stats].map((stat, i) => {
@@ -34,11 +34,11 @@ export const SocialProofTicker: React.FC = () => {
           return (
             <div
               key={i}
-              className="inline-flex items-center gap-2 px-8 text-gray-600"
+              className="inline-flex items-center gap-2 px-8 text-slate-400"
             >
               <Icon size={16} className={stat.color} />
-              <span className="font-semibold">{stat.value.toLocaleString()}</span>
-              <span className="text-gray-400">{stat.text}</span>
+              <span className="font-semibold text-slate-300">{stat.value.toLocaleString()}</span>
+              <span>{stat.text}</span>
             </div>
           );
         })}

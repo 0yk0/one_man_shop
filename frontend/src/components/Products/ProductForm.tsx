@@ -15,6 +15,7 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
   const [taxRate, setTaxRate] = useState('')
   const [imageData, setImageData] = useState('')
   const [imagePreview, setImagePreview] = useState('')
+  const [stock, setStock] = useState('0')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
       setTaxRate(String(product.tax_rate * 100))
       setImageData(product.image_data || '')
       setImagePreview(product.image_data || '')
+      setStock(String(product.stock ?? 0))
     }
   }, [product])
 
@@ -99,6 +101,7 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
     p.price = parseFloat(price) || 0
     p.tax_rate = taxEnabled ? (parseFloat(taxRate) || 0) / 100 : 0
     p.image_data = imageData
+    p.stock = parseInt(stock) || 0
 
     onSave(p)
   }
@@ -203,6 +206,26 @@ export default function ProductForm({ product, taxEnabled, onSave, onClose }: Pr
               </label>
             </div>
           )}
+
+          <div className="form-control w-full">
+            <label className="label">
+              <span className="label-text">Stock Quantity</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              className="input input-bordered w-full"
+              value={stock}
+              onChange={e => setStock(e.target.value)}
+            />
+            <label className="label">
+              <span className="label-text-alt text-base-content/50">
+                Current stock level (0 = out of stock)
+              </span>
+            </label>
+          </div>
 
           <div className="modal-action">
             <button type="button" className="btn btn-ghost min-h-[44px]" onClick={onClose}>

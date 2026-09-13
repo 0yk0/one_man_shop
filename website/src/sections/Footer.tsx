@@ -3,7 +3,7 @@ import { Github, Heart, Linkedin, Globe, Smartphone } from "lucide-react";
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="py-12 px-4 bg-gray-900 text-gray-400">
+    <footer className="py-12 px-4 bg-[#060a14] text-slate-400">
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-1 text-sm">
             Built with <Heart size={14} className="text-red-400 fill-red-400" /> by{" "}
             <a href="https://yk0.in" target="_blank" rel="noopener noreferrer" className="text-white no-underline font-medium hover:underline">Yatheesh</a>
@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
               <Globe size={18} />
             </a>
           </div>
-          <p className="text-gray-600 text-sm">&copy; 2026 One Man Shop &middot; MIT License</p>
+          <p className="text-slate-600 text-sm">&copy; 2026 One Man Shop &middot; MIT License</p>
         </div>
       </div>
     </footer>

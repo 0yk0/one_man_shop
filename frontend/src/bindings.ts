@@ -3,7 +3,7 @@ import { Call } from '@wailsio/runtime'
 
 // Model classes
 export class Product {
-  id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = ''
+  id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; stock = 0; active = false; created = ''
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class CartItem {
@@ -20,6 +20,7 @@ export class Settings {
   backup_folder = ''; backup_retention_days = 30; display_screen = 0
   display_screen_name = ''; display_screen_width = 0; display_screen_height = 0
   auto_open_display = false; printer_name = ''; auto_print = true; paper_width = 80; last_receipt_number = 0
+  low_stock_threshold = 5
   constructor(s: any = {}) { Object.assign(this, s || {}) }
 }
 export class ReportSummary {

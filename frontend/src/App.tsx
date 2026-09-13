@@ -57,6 +57,7 @@ function App() {
         backup_enabled: false, backup_folder: '', backup_retention_days: 30, display_screen: 0,
         display_screen_name: '', display_screen_width: 0, display_screen_height: 0,
         auto_open_display: false, printer_name: '', auto_print: true, paper_width: 80, last_receipt_number: 0,
+        low_stock_threshold: 5,
       })
       setTheme('light')
       setIsComplete(true)
