@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
-import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile } from '../bindings'
+import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile, SelectFile, ExportDatabase, ImportDatabase } from '../bindings'
 import { getAndroidPrinters, isPrinterConnected, testPrint, openBluetoothSettings, type AndroidPrinter } from '../lib/print'
-import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth, Package } from 'lucide-react'
+import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth, Package, Database, Download, Upload } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -59,6 +59,10 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   const [dataDir, setDataDir] = useState('')
   const [isMobile, setIsMobile] = useState(false)
   const [changingDataDir, setChangingDataDir] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importSourcePath, setImportSourcePath] = useState('')
 
   // Load available screens on mount
   useEffect(() => {
@@ -251,6 +255,47 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     }
   }
 
+  const handleExportDatabase = async () => {
+    setExporting(true)
+    try {
+      const path = await ExportDatabase()
+      enqueueSnackbar(`Database exported to: ${path}`, { variant: 'success' })
+    } catch (err) {
+      enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleImportClick = async () => {
+    try {
+      const path = await SelectFile('Select Database File')
+      if (path && path.length > 0) {
+        setImportSourcePath(path)
+        setShowImportDialog(true)
+      }
+    } catch (err) {
+      // User cancelled or error
+      if (String(err) !== 'cancelled') {
+        enqueueSnackbar('Failed to select file: ' + String(err), { variant: 'error' })
+      }
+    }
+  }
+
+  const handleImportConfirm = async () => {
+    setShowImportDialog(false)
+    setImporting(true)
+    try {
+      await ImportDatabase(importSourcePath)
+      enqueueSnackbar('Import complete. The app will now close. Please reopen it.', { variant: 'success' })
+    } catch (err) {
+      enqueueSnackbar('Import failed: ' + String(err), { variant: 'error' })
+    } finally {
+      setImporting(false)
+      setImportSourcePath('')
+    }
+  }
+
   const handlePinChange = async () => {
     if (!settings) return
     setPinError('')
@@ -377,6 +422,39 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               </span>
             </label>
           </div>
+
+          <div className="divider"></div>
+
+          <h2 className="card-title flex items-center gap-2"><Database size={18} />Database</h2>
+
+          <p className="text-sm text-base-content/60">
+            Export your database as a backup or import data from another device.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="btn btn-outline gap-2"
+              onClick={handleExportDatabase}
+              disabled={exporting}
+            >
+              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              {exporting ? 'Exporting...' : 'Export to Downloads'}
+            </button>
+            <button
+              className="btn btn-outline btn-error gap-2"
+              onClick={handleImportClick}
+              disabled={importing}
+            >
+              {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {importing ? 'Importing...' : 'Import Database'}
+            </button>
+          </div>
+
+          <label className="label">
+            <span className="label-text-alt text-base-content/60 text-wrap">
+              Export saves a zip file to your Downloads folder. Import replaces all current data and restarts the app.
+            </span>
+          </label>
 
           <div className="divider"></div>
 
@@ -697,6 +775,35 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Import Database Confirmation Dialog */}
+      {showImportDialog && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <Database size={20} className="text-error" />
+              Import Database
+            </h3>
+            <p className="py-4">
+              All current products, transactions, customers, and settings will be <strong className="text-error">permanently replaced</strong> with the imported data.
+            </p>
+            <p className="text-sm text-base-content/60">
+              This cannot be undone. Make sure you have a backup of your current data before proceeding.
+            </p>
+            <div className="modal-action">
+              <button className="btn" onClick={() => { setShowImportDialog(false); setImportSourcePath('') }}>
+                Cancel
+              </button>
+              <button className="btn btn-error" onClick={handleImportConfirm}>
+                Import & Restart
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => { setShowImportDialog(false); setImportSourcePath('') }}>close</button>
+          </form>
+        </dialog>
+      )}
     </div>
   )
 }

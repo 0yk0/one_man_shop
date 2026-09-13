@@ -79,3 +79,8 @@ export const DeleteCustomer = (id: string): Promise<void> => Call.ByID(387283241
 export const GetTransactionsByCustomerID = (customerID: string): Promise<Transaction[]> => Call.ByID(1855675302, customerID)
 export const GetCustomersCSVContent = (): Promise<string> => Call.ByID(3990766965)
 export const GetCustomerByID = (id: string): Promise<Customer> => Call.ByID(2794169867, id)
+
+// Database Export/Import
+export const ExportDatabase = (): Promise<string> => Call.ByID(3509245966)
+export const ImportDatabase = (sourcePath: string): Promise<void> => Call.ByID(1835290817, sourcePath)
+export const SelectFile = (title: string): Promise<string> => Call.ByID(2427571203, title)

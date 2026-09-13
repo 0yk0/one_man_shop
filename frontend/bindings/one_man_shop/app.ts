@@ -52,6 +52,15 @@ export function DeleteProduct(id: string): $CancellablePromise<void> {
     return $Call.ByID(4245649569, id);
 }
 
+/**
+ * ExportDatabase creates a zip archive of the database and saves it to Downloads.
+ * On Android, saves to /storage/emulated/0/Download/.
+ * On Desktop, saves to ~/Downloads/.
+ */
+export function ExportDatabase(): $CancellablePromise<string> {
+    return $Call.ByID(3509245966);
+}
+
 export function ExportTransactionsCSV(startDate: string, endDate: string): $CancellablePromise<string> {
     return $Call.ByID(3689662970, startDate, endDate);
 }
@@ -120,6 +129,14 @@ export function GetWeeklyReport(startDate: string): $CancellablePromise<models$0
 }
 
 /**
+ * ImportDatabase extracts a zip file into the staging directory and quits the app.
+ * On next startup, db.Init() will swap the staged data into place.
+ */
+export function ImportDatabase(sourcePath: string): $CancellablePromise<void> {
+    return $Call.ByID(1835290817, sourcePath);
+}
+
+/**
  * IsMobile returns true if running on Android or iOS
  */
 export function IsMobile(): $CancellablePromise<boolean> {
@@ -182,6 +199,14 @@ export function SearchCustomers(phonePrefix: string): $CancellablePromise<models
  */
 export function SelectDataDir(): $CancellablePromise<string> {
     return $Call.ByID(1820684820);
+}
+
+/**
+ * SelectFile opens a native file picker dialog and returns the selected file path.
+ * Works on both desktop and Android (via SAF).
+ */
+export function SelectFile(title: string): $CancellablePromise<string> {
+    return $Call.ByID(2427571203, title);
 }
 
 export function SelectFolder(title: string): $CancellablePromise<string> {

@@ -28,6 +28,22 @@ func Init(dataDir string) *pocketbase.PocketBase {
 
 	// Use data subdirectory for PocketBase
 	pbDataDir := filepath.Join(dataDir, "pb_data")
+
+	// Check for staged database import from a previous session.
+	// If pb_data_import/ exists, replace pb_data/ with it.
+	importDir := filepath.Join(dataDir, "pb_data_import")
+	if _, err := os.Stat(importDir); err == nil {
+		log.Printf("[DB] Found staged database import at %s, applying...", importDir)
+		// Remove old pb_data
+		if err := os.RemoveAll(pbDataDir); err != nil {
+			log.Printf("[DB] WARNING: Failed to remove old pb_data: %v", err)
+		}
+		// Move staged import into place
+		if err := os.Rename(importDir, pbDataDir); err != nil {
+			log.Fatalf("FATAL: Failed to apply staged database import: %v", err)
+		}
+		log.Printf("[DB] Staged database import applied successfully")
+	}
 	if err := os.MkdirAll(pbDataDir, 0755); err != nil {
 		log.Printf("WARNING: Failed to create PocketBase data directory %q: %v", pbDataDir, err)
 		// Try fallback

@@ -132,3 +132,8 @@ export const SelectDataDir = vi.fn().mockResolvedValue('/tmp/test')
 export const SaveDataDir = vi.fn().mockResolvedValue(undefined)
 export const GetTransactionsCSVContent = vi.fn().mockResolvedValue('')
 export const SearchCustomers = vi.fn().mockResolvedValue([])
+
+// Database Export/Import
+export const ExportDatabase = vi.fn().mockResolvedValue('/tmp/test_export.zip')
+export const ImportDatabase = vi.fn().mockResolvedValue(undefined)
+export const SelectFile = vi.fn().mockResolvedValue('/tmp/test.zip')

@@ -301,6 +301,24 @@ func (a *App) SelectFolder(title string) (string, error) {
 	return result, nil
 }
 
+// SelectFile opens a native file picker dialog and returns the selected file path.
+// Works on both desktop and Android (via SAF).
+func (a *App) SelectFile(title string) (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("app not initialized")
+	}
+	result, err := a.app.Dialog.OpenFile().
+		SetTitle(title).
+		CanChooseFiles(true).
+		CanChooseDirectories(false).
+		AddFilter("ZIP files", "*.zip").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
 func (a *App) SelectSaveFile(title, defaultName string) (string, error) {
 	if a.app == nil {
 		return "", fmt.Errorf("app not initialized")
@@ -462,6 +480,70 @@ func (a *App) TriggerBackup() error {
 
 func (a *App) SetBackupSchedule(enabled bool) error {
 	return a.handlers.SetBackupSchedule(enabled)
+}
+
+// ========== Database Export/Import ==========
+
+// ExportDatabase creates a zip archive of the database and saves it to Downloads.
+// On Android, saves to /storage/emulated/0/Download/.
+// On Desktop, saves to ~/Downloads/.
+func (a *App) ExportDatabase() (string, error) {
+	dataDir := getAppDataDir()
+
+	targetDir, err := getDownloadsDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to find Downloads directory: %w", err)
+	}
+
+	return a.handlers.ExportDatabase(dataDir, targetDir)
+}
+
+// ImportDatabase extracts a zip file into the staging directory and quits the app.
+// On next startup, db.Init() will swap the staged data into place.
+func (a *App) ImportDatabase(sourcePath string) error {
+	dataDir := getAppDataDir()
+
+	if err := a.handlers.ImportDatabase(dataDir, sourcePath); err != nil {
+		return err
+	}
+
+	// Quit the app so the staged import can be applied on next startup
+	if a.app != nil {
+		go func() {
+			a.app.Quit()
+		}()
+	}
+
+	return nil
+}
+
+// getDownloadsDir returns the platform-appropriate Downloads directory.
+func getDownloadsDir() (string, error) {
+	if runtime.GOOS == "android" {
+		// Android: use external storage Download directory
+		downloadDir := "/storage/emulated/0/Download"
+		if _, err := os.Stat(downloadDir); err == nil {
+			return downloadDir, nil
+		}
+		// Fallback to app data dir
+		return getAppDataDir(), nil
+	}
+
+	// Desktop: use ~/Downloads
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("cannot determine home directory: %w", err)
+	}
+	downloads := filepath.Join(home, "Downloads")
+	if _, err := os.Stat(downloads); err == nil {
+		return downloads, nil
+	}
+
+	// Fallback: create Downloads in home dir
+	if err := os.MkdirAll(downloads, 0755); err != nil {
+		return "", fmt.Errorf("cannot create Downloads directory: %w", err)
+	}
+	return downloads, nil
 }
 
 // ========== Mobile/Data Directory Methods ==========
