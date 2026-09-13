@@ -61,6 +61,8 @@ func initCollections() {
 	productsCol, _ := App.FindCollectionByNameOrId("products")
 	if productsCol == nil {
 		createProductsCollection()
+	} else {
+		migrateProductsCollection(productsCol)
 	}
 
 	transactionsCol, _ := App.FindCollectionByNameOrId("transactions")
@@ -95,6 +97,7 @@ func createProductsCollection() {
 		&core.NumberField{Name: "price", Required: true, Min: types.Pointer(0.0)},
 		&core.NumberField{Name: "tax_rate", Min: types.Pointer(0.0), Max: types.Pointer(1.0)},
 		&core.TextField{Name: "image_data", Max: 10000000}, // base64 data URL (~7.5MB)
+		&core.NumberField{Name: "stock", Min: types.Pointer(0.0), OnlyInt: true},
 		&core.BoolField{Name: "active", Required: false},
 		&core.AutodateField{Name: "created", OnCreate: true},
 		&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true},
@@ -110,6 +113,42 @@ func createProductsCollection() {
 		log.Printf("Failed to create products collection: %v", err)
 	} else {
 		log.Println("Created products collection")
+	}
+}
+
+// migrateProductsCollection adds missing fields to an existing products collection
+func migrateProductsCollection(col *core.Collection) {
+	existingFields := make(map[string]bool)
+	for _, f := range col.Fields {
+		existingFields[f.GetName()] = true
+	}
+
+	fieldsToAdd := []core.Field{}
+	if !existingFields["stock"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "stock", Min: types.Pointer(0.0), OnlyInt: true})
+	}
+
+	if len(fieldsToAdd) > 0 {
+		col.Fields.Add(fieldsToAdd...)
+		if err := App.Save(col); err != nil {
+			log.Printf("Failed to migrate products collection: %v", err)
+		} else {
+			log.Printf("Migrated products collection: added %d missing fields", len(fieldsToAdd))
+		}
+
+		// Backfill existing products with stock = 0
+		if !existingFields["stock"] {
+			records, err := App.FindRecordsByFilter("products", "", "", 0, 0)
+			if err == nil {
+				for _, r := range records {
+					r.Set("stock", 0)
+					if err := App.SaveNoValidate(r); err != nil {
+						log.Printf("Failed to backfill stock for product %s: %v", r.Id, err)
+					}
+				}
+				log.Printf("Backfilled stock for %d products", len(records))
+			}
+		}
 	}
 }
 
@@ -184,6 +223,7 @@ func createSettingsCollection() {
 		&core.BoolField{Name: "auto_print"},
 		&core.NumberField{Name: "paper_width", Min: types.Pointer(58.0), Max: types.Pointer(80.0), OnlyInt: true},
 		&core.NumberField{Name: "last_receipt_number", Min: types.Pointer(0.0), OnlyInt: true},
+		&core.NumberField{Name: "low_stock_threshold", Min: types.Pointer(1.0), OnlyInt: true},
 	)
 
 	collection.ViewRule = types.Pointer("")
@@ -235,6 +275,9 @@ func migrateSettingsCollection(col *core.Collection) {
 	if !existingFields["last_receipt_number"] {
 		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "last_receipt_number", Min: types.Pointer(0.0), OnlyInt: true})
 	}
+	if !existingFields["low_stock_threshold"] {
+		fieldsToAdd = append(fieldsToAdd, &core.NumberField{Name: "low_stock_threshold", Min: types.Pointer(1.0), OnlyInt: true})
+	}
 
 	if len(fieldsToAdd) > 0 {
 		col.Fields.Add(fieldsToAdd...)
@@ -242,6 +285,20 @@ func migrateSettingsCollection(col *core.Collection) {
 			log.Printf("Failed to migrate settings collection: %v", err)
 		} else {
 			log.Printf("Migrated settings collection: added %d missing fields", len(fieldsToAdd))
+		}
+
+		// Backfill low_stock_threshold for existing settings records
+		if !existingFields["low_stock_threshold"] {
+			records, err := App.FindRecordsByFilter("settings", "", "", 0, 0)
+			if err == nil {
+				for _, r := range records {
+					r.Set("low_stock_threshold", 5)
+					if err := App.SaveNoValidate(r); err != nil {
+						log.Printf("Failed to backfill low_stock_threshold for settings %s: %v", r.Id, err)
+					}
+				}
+				log.Printf("Backfilled low_stock_threshold for %d settings records", len(records))
+			}
 		}
 	}
 }
@@ -327,6 +384,7 @@ func ensureDefaultSettings() {
 		record.Set("auto_print", true)
 		record.Set("paper_width", 80)
 		record.Set("last_receipt_number", 0)
+		record.Set("low_stock_threshold", 5)
 
 		if err := App.Save(record); err != nil {
 			log.Printf("Failed to create default settings: %v", err)

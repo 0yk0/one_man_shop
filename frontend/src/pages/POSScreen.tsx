@@ -44,6 +44,7 @@ export default function POSScreen() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth < 768)
   const [cartSheetOpen, setCartSheetOpen] = useState(false)
+  const [lowStockThreshold, setLowStockThreshold] = useState(5)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([])
@@ -63,6 +64,7 @@ export default function POSScreen() {
       const [prods, sett, screens] = await Promise.all([GetProducts(), GetSettings(), GetAvailableScreens()])
       setProducts(prods)
       setSettings(sett)
+      setLowStockThreshold(sett.low_stock_threshold || 5)
 
       // Check for additional displays
       let hasExternal = screens.length > 1
@@ -250,12 +252,18 @@ export default function POSScreen() {
 
   // ========== Cart operations ==========
   const addToCart = (product: Product) => {
+    // Don't add if out of stock
+    if (product.stock === 0) return
+
     setCart(prev => {
       const existing = prev.find(i => i.product_id === product.id)
       if (existing) {
+        // Cap quantity at available stock
+        const maxQty = product.stock
+        if (existing.qty >= maxQty) return prev
         return prev.map(i => {
           if (i.product_id === product.id) {
-            const newQty = i.qty + 1
+            const newQty = Math.min(i.qty + 1, maxQty)
             const newSubtotal = product.price * newQty
             const newTax = newSubtotal * product.tax_rate
             return { ...i, qty: newQty, subtotal: newSubtotal, tax_amount: newTax }
@@ -284,13 +292,17 @@ export default function POSScreen() {
 
   const updateQty = (productId: string, delta: number) => {
     delta > 0 ? sounds.qtyUp() : sounds.qtyDown()
+    const product = products.find(p => p.id === productId)
+    const maxQty = product?.stock ?? Infinity
     setCart(prev => prev.map(i => {
       if (i.product_id === productId) {
         const newQty = i.qty + delta
         if (newQty <= 0) return null as any
-        const newSubtotal = i.price * newQty
-        const newTax = newSubtotal * i.tax_rate
-        return { ...i, qty: newQty, subtotal: newSubtotal, tax_amount: newTax }
+        // Cap at available stock when increasing
+        const cappedQty = delta > 0 ? Math.min(newQty, maxQty) : newQty
+        const newSubtotal = (product?.price ?? i.price) * cappedQty
+        const newTax = newSubtotal * (product?.tax_rate ?? i.tax_rate)
+        return { ...i, qty: cappedQty, subtotal: newSubtotal, tax_amount: newTax }
       }
       return i
     }).filter(Boolean))
@@ -371,6 +383,18 @@ export default function POSScreen() {
       setCompleted(true)
       sounds.paymentSuccess()
       enqueueSnackbar(`Payment of ₹${total.toFixed(2)} recorded`, { variant: 'success' })
+
+      // Refresh product list to reflect updated stock after deduction
+      try {
+        const updatedProducts = await GetProducts()
+        setProducts(updatedProducts)
+        // Update customer display menu with fresh stock (hides out-of-stock items)
+        if (displayOpen) {
+          SendProductsToDisplay()
+        }
+      } catch (refreshErr) {
+        console.error('Failed to refresh products after sale:', refreshErr)
+      }
 
       try {
         await ConfirmPayment(savedTransaction.receipt_number || 0)
@@ -470,14 +494,21 @@ export default function POSScreen() {
             </div>
           ) : (
             <div className="product-card-grid">
-              {filteredProducts.map(product => (
+              {filteredProducts.map(product => {
+                const cartQty = cartQtyMap[product.id] || 0
+                const effectiveStock = product.stock - cartQty
+                const outOfStock = effectiveStock <= 0
+                return (
                 <button
                   key={product.id}
-                  className={`relative card bg-base-100 shadow-sm transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
-                  onClick={showPayment ? undefined : () => handleProductTap(product)}
+                  className={`relative card bg-base-100 shadow-sm transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                  onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
                 >
-                  {cartQtyMap[product.id] != null && (
-                    <span className="badge badge-primary badge-sm absolute top-1 right-1 z-10">{cartQtyMap[product.id]}</span>
+                  {cartQty > 0 && (
+                    <span className="badge badge-primary badge-sm absolute top-1 right-1 z-10">{cartQty}</span>
+                  )}
+                  {outOfStock && (
+                    <span className="badge badge-error badge-sm absolute top-1 left-1 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
                   )}
                   {product.image_data ? (
                     <img src={product.image_data} alt={product.name} className="w-full h-28 object-cover" />
@@ -489,9 +520,14 @@ export default function POSScreen() {
                   <div className="p-2">
                     <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
                     <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                    {product.stock > 0 && (
+                      <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
+                        Stock: {effectiveStock}
+                      </p>
+                    )}
                   </div>
                 </button>
-              ))}
+              )})}
             </div>
           )}
         </div>
@@ -913,14 +949,21 @@ export default function POSScreen() {
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
-            {filteredProducts.map(product => (
+            {filteredProducts.map(product => {
+              const cartQty = cartQtyMap[product.id] || 0
+              const effectiveStock = product.stock - cartQty
+              const outOfStock = effectiveStock <= 0
+              return (
               <button
                 key={product.id}
-                className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
-                onClick={showPayment ? undefined : () => handleProductTap(product)}
+                className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
               >
-                {cartQtyMap[product.id] != null && (
-                  <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQtyMap[product.id]}</span>
+                {cartQty > 0 && (
+                  <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQty}</span>
+                )}
+                {outOfStock && (
+                  <span className="badge badge-error badge-sm absolute top-2 left-2 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
                 )}
                 {product.image_data ? (
                   <img src={product.image_data} alt={product.name} className="w-full h-24 sm:h-28 md:h-32 object-cover" />
@@ -932,9 +975,14 @@ export default function POSScreen() {
                 <div className="card-body p-3">
                   <h3 className="font-semibold text-sm leading-tight">{product.name}</h3>
                   <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                  {product.stock > 0 && (
+                    <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
+                      Stock: {effectiveStock}
+                    </p>
+                  )}
                 </div>
               </button>
-            ))}
+              )})}
           </div>
         )}
       </div>

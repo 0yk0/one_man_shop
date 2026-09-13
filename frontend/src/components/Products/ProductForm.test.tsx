@@ -10,6 +10,7 @@ vi.mock('../../bindings', () => ({
     price = 0
     tax_rate = 0
     image_data = ''
+    stock = 0
     active = false
     created = ''
   },
@@ -26,7 +27,8 @@ function getPriceInput() {
 }
 
 function getTaxRateInput() {
-  return screen.getByPlaceholderText('0')
+  // Both tax rate and stock inputs have placeholder="0"; tax rate is first
+  return screen.getAllByPlaceholderText('0')[0]
 }
 
 // Inside a <dialog>, getByRole doesn't work in jsdom. Use text selectors.
@@ -174,6 +176,7 @@ describe('ProductForm', () => {
       price: 50,
       tax_rate: 0.1,
       image_data: '',
+      stock: 25,
       active: true,
       created: '2026-01-01',
     }
@@ -229,6 +232,7 @@ describe('ProductForm', () => {
         price: 10,
         tax_rate: 0,
         image_data: 'data:image/png;base64,abc123',
+        stock: 100,
         active: true,
         created: '',
       }
@@ -245,6 +249,7 @@ describe('ProductForm', () => {
         price: 10,
         tax_rate: 0,
         image_data: 'data:image/png;base64,abc123',
+        stock: 0,
         active: true,
         created: '',
       }

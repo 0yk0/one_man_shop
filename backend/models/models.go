@@ -7,8 +7,9 @@ type Product struct {
 	ID        string  `json:"id"`
 	Name      string  `json:"name"`
 	Price     float64 `json:"price"`
-	TaxRate   float64 `json:"tax_rate"` // 0.0 to 1.0 (e.g., 0.05 = 5%)
+	TaxRate   float64 `json:"tax_rate"`   // 0.0 to 1.0 (e.g., 0.05 = 5%)
 	ImageData string  `json:"image_data"` // base64 data URL, empty = no image
+	Stock     int     `json:"stock"`      // current stock quantity (0 = out of stock)
 	Active    bool    `json:"active"`
 	Created   string  `json:"created"`
 }
@@ -88,6 +89,7 @@ type Settings struct {
 	AutoPrint           bool   `json:"auto_print"`            // auto-print after payment
 	PaperWidth          int    `json:"paper_width"`           // 58 or 80 (mm) for thermal paper
 	LastReceiptNumber   int    `json:"last_receipt_number"`   // rolling receipt counter
+	LowStockThreshold   int    `json:"low_stock_threshold"`   // warn when stock falls below this value
 }
 
 // ReportSummary represents a day's or period's sales summary

@@ -24,6 +24,7 @@ export default function ProductsPage() {
   const [taxEnabled, setTaxEnabled] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [lowStockThreshold, setLowStockThreshold] = useState(5)
   const { enqueueSnackbar } = useSnackbar()
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function ProductsPage() {
       const [prods, settings] = await Promise.all([GetProducts(), GetSettings()])
       setProducts(prods)
       setTaxEnabled(settings.tax_enabled)
+      setLowStockThreshold(settings.low_stock_threshold || 5)
     } catch (err) {
       console.error('Failed to load products:', err)
     } finally {
@@ -147,6 +149,11 @@ export default function ProductsPage() {
                 <div className="p-3">
                   <h3 className="font-semibold text-sm truncate">{product.name}</h3>
                   <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`badge badge-xs ${product.stock === 0 ? 'badge-error' : product.stock <= lowStockThreshold ? 'badge-warning' : 'badge-success'}`}>
+                      Stock: {product.stock}
+                    </span>
+                  </div>
                   {taxEnabled && (
                     <p className="text-xs text-base-content/60">{(product.tax_rate * 100).toFixed(1)}% tax</p>
                   )}
@@ -178,6 +185,7 @@ export default function ProductsPage() {
                 <tr>
                   <th>Name</th>
                   <th>Price</th>
+                  <th>Stock</th>
                   {taxEnabled && <th>Tax Rate</th>}
                   <th className="text-right">Actions</th>
                 </tr>
@@ -185,7 +193,7 @@ export default function ProductsPage() {
               <tbody>
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={taxEnabled ? 4 : 3} className="text-center py-12 text-base-content/40">
+                    <td colSpan={taxEnabled ? 5 : 4} className="text-center py-12 text-base-content/40">
                       <Package size={40} className="mx-auto mb-2 opacity-30" />
                       <p>No products yet</p>
                       <p className="text-sm">Click "Add Product" to get started</p>
@@ -205,6 +213,11 @@ export default function ProductsPage() {
                         {product.name}
                       </td>
                       <td>₹{product.price.toFixed(2)}</td>
+                      <td>
+                        <span className={`badge badge-sm ${product.stock === 0 ? 'badge-error' : product.stock <= lowStockThreshold ? 'badge-warning' : 'badge-success'}`}>
+                          {product.stock}
+                        </span>
+                      </td>
                       {taxEnabled && (
                         <td>{(product.tax_rate * 100).toFixed(1)}%</td>
                       )}

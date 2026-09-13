@@ -92,6 +92,27 @@ func (a *AppHandler) CreateTransaction(t models.Transaction) (models.Transaction
 		return models.Transaction{}, fmt.Errorf("failed to save transaction: %w", err)
 	}
 
+	// Deduct stock for each product sold
+	for _, item := range t.Items {
+		productRecord, err := db.App.FindRecordById("products", item.ProductID)
+		if err != nil {
+			log.Printf("[CreateTransaction] Warning: could not find product %s for stock deduction: %v", item.ProductID, err)
+			continue
+		}
+		currentStock := int(productRecord.GetInt("stock"))
+		newStock := currentStock - item.Qty
+		if newStock < 0 {
+			log.Printf("[CreateTransaction] Warning: stock for product %s would go negative (%d), clamping to 0", item.ProductID, newStock)
+			newStock = 0
+		}
+		productRecord.Set("stock", newStock)
+		if err := db.App.SaveNoValidate(productRecord); err != nil {
+			log.Printf("[CreateTransaction] Warning: failed to deduct stock for product %s: %v", item.ProductID, err)
+		} else {
+			log.Printf("[CreateTransaction] Stock deducted: product=%s, was=%d, now=%d, sold=%d", item.ProductID, currentStock, newStock, item.Qty)
+		}
+	}
+
 	createdAt := time.Now().UTC().Format(time.RFC3339)
 
 	return models.Transaction{

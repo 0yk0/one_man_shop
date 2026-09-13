@@ -130,9 +130,13 @@ func (a *App) SendProductsToDisplay() {
 		theme = s.Theme
 	}
 
-	dispProducts := make([]display.Product, len(products))
-	for i, p := range products {
-		dispProducts[i] = display.Product{ID: p.ID, Name: p.Name, Price: p.Price}
+	dispProducts := make([]display.Product, 0, len(products))
+	for _, p := range products {
+		// Skip out-of-stock products from customer display
+		if p.Stock == 0 {
+			continue
+		}
+		dispProducts = append(dispProducts, display.Product{ID: p.ID, Name: p.Name, Price: p.Price})
 	}
 
 	a.displayState.SetMenu(a.getShopName(), dispProducts, theme)
