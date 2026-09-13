@@ -57,7 +57,7 @@ export const ExitIntent: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={handleClose}
           />
 
@@ -67,12 +67,12 @@ export const ExitIntent: React.FC = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            className="relative bg-[#0f172a] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-white/10"
           >
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 transition-colors z-10"
+              className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors z-10"
             >
               <X size={16} />
             </button>
@@ -80,15 +80,15 @@ export const ExitIntent: React.FC = () => {
             {/* Content */}
             <div className="p-8 text-center">
               {/* Icon */}
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Download size={28} className="text-blue-600" />
+              <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Download size={28} className="text-blue-400" />
               </div>
 
               {/* Text */}
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-2xl font-bold text-white mb-2">
                 Wait! Before you go
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-slate-400 mb-6">
                 Download One Man Shop for free. No sign-up required.
               </p>
 
@@ -96,7 +96,7 @@ export const ExitIntent: React.FC = () => {
               <div className="flex flex-col gap-3">
                 <a
                   href={url}
-                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-blue-600/25"
                 >
                   <Monitor size={18} />
                   {label}
@@ -105,7 +105,7 @@ export const ExitIntent: React.FC = () => {
                   <a
                     key={alt.label}
                     href={alt.url}
-                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-green-600/25"
                   >
                     <Smartphone size={18} />
                     Get {alt.label}
@@ -115,7 +115,7 @@ export const ExitIntent: React.FC = () => {
             </div>
 
             {/* Trust badges */}
-            <div className="bg-gray-50 px-8 py-4 flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="bg-white/5 px-8 py-4 flex items-center justify-center gap-6 text-sm text-slate-400 border-t border-white/5">
               <span>✓ Free forever</span>
               <span>✓ No sign-up</span>
               <span>✓ Works offline</span>

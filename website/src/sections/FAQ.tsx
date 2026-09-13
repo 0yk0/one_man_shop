@@ -23,20 +23,20 @@ export const FAQ: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-24 px-4 bg-gray-50">
+    <section className="py-24 px-4 bg-dark-secondary">
       <div className="max-w-3xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl sm:text-4xl font-bold text-center mb-4"
+          className="text-3xl sm:text-4xl font-bold text-center mb-4 text-white"
         >Frequently asked questions</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
+          className="text-base sm:text-lg text-slate-400 text-center max-w-2xl mx-auto mb-12"
         >Everything you need to know about One Man Shop.</motion.p>
 
         <div className="flex flex-col gap-3">
@@ -49,12 +49,12 @@ export const FAQ: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+                className="glass-card rounded-xl overflow-hidden"
               >
                 <button onClick={() => setOpenIndex(isOpen ? null : i)} className="w-full flex items-center justify-between p-5 text-left bg-none border-none cursor-pointer">
-                  <span className="font-medium text-gray-900 pr-4">{faq.q}</span>
+                  <span className="font-medium text-white pr-4">{faq.q}</span>
                   <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0">
-                    <ChevronDown size={20} className="text-gray-400" />
+                    <ChevronDown size={20} className="text-slate-400" />
                   </motion.div>
                 </button>
                 <AnimatePresence>
@@ -66,7 +66,7 @@ export const FAQ: React.FC = () => {
                       transition={{ duration: 0.3 }}
                       style={{ overflow: "hidden" }}
                     >
-                      <p className="px-5 pb-5 text-gray-500 leading-relaxed">{faq.a}</p>
+                      <p className="px-5 pb-5 text-slate-400 leading-relaxed">{faq.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

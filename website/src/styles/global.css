@@ -6,6 +6,80 @@ html {
   scroll-padding-top: 80px; /* Account for fixed navbar */
 }
 
+/* ============================================
+   DARK THEME UTILITIES
+   ============================================ */
+
+/* Dark background tokens */
+.bg-dark-primary {
+  background-color: #0b1120;
+}
+
+.bg-dark-secondary {
+  background-color: #0f172a;
+}
+
+.bg-dark-card {
+  background-color: #1e293b;
+}
+
+.bg-dark-elevated {
+  background-color: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Text colors for dark theme */
+.text-dark-heading {
+  color: #f8fafc;
+}
+
+.text-dark-body {
+  color: #94a3b8;
+}
+
+.text-dark-muted {
+  color: #64748b;
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 80px rgba(37, 99, 235, 0.25), 0 0 40px rgba(37, 99, 235, 0.15);
+}
+
+.glow-blue-sm {
+  box-shadow: 0 0 40px rgba(37, 99, 235, 0.2);
+}
+
+.glow-blue-intense {
+  box-shadow: 0 0 120px rgba(37, 99, 235, 0.35), 0 0 60px rgba(37, 99, 235, 0.2);
+}
+
+/* Text gradient */
+.text-gradient-blue {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.1);
+}
+
+/* Dark section transitions */
+.dark-section {
+  background: linear-gradient(180deg, #0b1120 0%, #0f172a 100%);
+}
+
 /* Lazy loading fade-in animation */
 .lazy-image {
   opacity: 0;

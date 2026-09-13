@@ -11,10 +11,10 @@ interface StatItem {
 }
 
 const stats: StatItem[] = [
-  { icon: Package, value: 50, suffix: "+", label: "Products", color: "text-blue-500" },
-  { icon: Palette, value: 35, suffix: "", label: "Themes", color: "text-purple-500" },
-  { icon: Clock, value: 2, suffix: " min", label: "Setup time", color: "text-green-500" },
-  { icon: IndianRupee, value: 0, suffix: "", label: "Forever", color: "text-amber-500" },
+  { icon: Package, value: 50, suffix: "+", label: "Products", color: "text-blue-400" },
+  { icon: Palette, value: 35, suffix: "", label: "Themes", color: "text-purple-400" },
+  { icon: Clock, value: 2, suffix: " min", label: "Setup time", color: "text-green-400" },
+  { icon: IndianRupee, value: 0, suffix: "", label: "Forever", color: "text-amber-400" },
 ];
 
 const AnimatedCounter: React.FC<{
@@ -58,7 +58,7 @@ export const AnimatedStats: React.FC = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-16 px-4 bg-white border-y border-gray-100">
+    <section ref={ref} className="py-20 px-4 bg-dark-primary border-y border-white/5">
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, i) => {
@@ -71,17 +71,17 @@ export const AnimatedStats: React.FC = () => {
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="text-center"
               >
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gray-50 mb-3 ${stat.color}`}>
-                  <Icon size={24} />
+                <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 mb-4 ${stat.color}`}>
+                  <Icon size={28} />
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-1">
+                <div className="text-5xl md:text-6xl font-extrabold text-white mb-2 tracking-tight">
                   <AnimatedCounter
                     value={stat.value}
                     suffix={stat.suffix}
                     isInView={isInView}
                   />
                 </div>
-                <div className="text-sm text-gray-500">{stat.label}</div>
+                <div className="text-sm text-slate-400 font-medium">{stat.label}</div>
               </motion.div>
             );
           })}

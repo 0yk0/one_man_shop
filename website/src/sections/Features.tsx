@@ -14,20 +14,20 @@ const features = [
 
 export const Features: React.FC = () => {
   return (
-    <section className="py-24 px-4 bg-white">
+    <section className="py-24 px-4 bg-dark-primary">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl sm:text-4xl font-bold text-center mb-4"
+          className="text-3xl sm:text-4xl font-bold text-center mb-4 text-white"
         >Everything you need to run your shop — nothing you don&apos;t.</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-base sm:text-lg text-gray-500 text-center max-w-2xl mx-auto mb-12"
+          className="text-base sm:text-lg text-slate-400 text-center max-w-2xl mx-auto mb-12"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -40,13 +40,13 @@ export const Features: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, type: "spring", damping: 15, stiffness: 100 }}
-                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+                className="glass-card glass-card-hover rounded-2xl p-6 transition-all duration-300"
               >
-                <div className="w-12 h-12 bg-blue-600/10 rounded-xl flex items-center justify-center mb-4">
-                  <Icon size={24} className="text-blue-600" />
+                <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon size={24} className="text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
             );
           })}

@@ -251,7 +251,7 @@ export const VideoDemo: React.FC = () => {
           transition={{ delay: 0.8 }}
           className="mt-8 text-center"
         >
-          <p className="text-gray-500 text-sm">
+          <p className="text-slate-400 text-sm">
             No sign-up required • Works offline • Free forever
           </p>
         </motion.div>
