@@ -30,6 +30,7 @@ import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -37,7 +38,11 @@ import android.os.StatFs;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.provider.MediaStore;
+import android.content.ContentValues;
 import android.speech.tts.TextToSpeech;
+import java.io.InputStream;
+import java.io.OutputStream;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -1131,6 +1136,53 @@ public class WailsBridge {
     public String getExternalStoragePath() {
         java.io.File dir = activity.getExternalFilesDir(null);
         return dir != null ? dir.getAbsolutePath() : "";
+    }
+
+    /**
+     * Copy a file from the app's internal storage to the user's Downloads folder
+     * using MediaStore API. No special permissions required on Android 10+.
+     * Returns the path of the file in Downloads, or throws on failure.
+     */
+    public String copyToDownloads(String sourcePath, String filename) {
+        java.io.File sourceFile = new java.io.File(sourcePath);
+        if (!sourceFile.exists()) {
+            throw new IllegalArgumentException("Source file does not exist: " + sourcePath);
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+        values.put(MediaStore.Downloads.MIME_TYPE, "application/zip");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+        }
+
+        Uri uri = activity.getContentResolver().insert(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        if (uri == null) {
+            throw new RuntimeException("Failed to create MediaStore entry for " + filename);
+        }
+
+        try (InputStream is = new java.io.FileInputStream(sourceFile);
+             OutputStream os = activity.getContentResolver().openOutputStream(uri)) {
+            if (os == null) {
+                throw new RuntimeException("Failed to open output stream for MediaStore URI");
+            }
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = is.read(buf)) > 0) {
+                os.write(buf, 0, n);
+            }
+        } catch (Exception e) {
+            // Clean up the MediaStore entry on failure
+            activity.getContentResolver().delete(uri, null, null);
+            throw new RuntimeException("Failed to write to Downloads: " + e.getMessage(), e);
+        }
+
+        // Delete the source temp file
+        sourceFile.delete();
+
+        Log.i(TAG, "copyToDownloads: saved " + filename + " to Downloads via MediaStore");
+        return "/storage/emulated/0/Download/" + filename;
     }
 
     /** Battery/power state as {"level":0-1,"charging":bool,"lowPower":bool}. */

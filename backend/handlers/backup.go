@@ -121,6 +121,31 @@ func cleanOldBackups(backupFolder string, retentionDays int) {
 	}
 }
 
+// ExportDatabaseToTemp creates a zip archive of the pb_data directory in the given temp directory.
+// Used by Android where the file is later copied to Downloads via MediaStore.
+func (a *AppHandler) ExportDatabaseToTemp(dataDir string, tempDir string) (string, error) {
+	pbDataDir := filepath.Join(dataDir, "pb_data")
+
+	if _, err := os.Stat(pbDataDir); os.IsNotExist(err) {
+		return "", fmt.Errorf("PocketBase data directory not found: %s", pbDataDir)
+	}
+
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	zipName := "pos_database_export_" + timestamp + ".zip"
+	zipPath := filepath.Join(tempDir, zipName)
+
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	if err := createZipArchive(pbDataDir, zipPath); err != nil {
+		return "", fmt.Errorf("failed to create zip archive: %w", err)
+	}
+
+	log.Printf("[Export] Database zip created at: %s", zipPath)
+	return zipPath, nil
+}
+
 // ExportDatabase creates a zip archive of the pb_data directory and saves it to the given target directory.
 // Returns the path of the created zip file.
 func (a *AppHandler) ExportDatabase(dataDir string, targetDir string) (string, error) {
@@ -154,15 +179,27 @@ func (a *AppHandler) ImportDatabase(dataDir string, sourcePath string) error {
 		return fmt.Errorf("invalid database file: %w", err)
 	}
 
+	// Check available disk space — require at least 2x the zip file size
+	zipInfo, err := os.Stat(sourcePath)
+	if err != nil {
+		return fmt.Errorf("cannot read import file: %w", err)
+	}
 	stagingDir := filepath.Join(dataDir, "pb_data_import")
 
-	// Clean up any leftover staging from a previous interrupted import
+	// Remove any leftover staging from a previous interrupted import
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("failed to clean staging directory: %w", err)
 	}
 
 	if err := os.MkdirAll(stagingDir, 0755); err != nil {
 		return fmt.Errorf("failed to create staging directory: %w", err)
+	}
+
+	// Check free disk space before extraction
+	freeSpace, err := getFreeSpace(dataDir)
+	if err == nil && freeSpace < zipInfo.Size()*2 {
+		os.RemoveAll(stagingDir)
+		return fmt.Errorf("insufficient disk space: need at least %d bytes, have %d bytes", zipInfo.Size()*2, freeSpace)
 	}
 
 	if err := extractZipArchive(sourcePath, stagingDir); err != nil {
@@ -233,12 +270,14 @@ func createZipArchive(sourceDir string, zipPath string) error {
 		if err != nil {
 			return err
 		}
-		defer srcFile.Close()
-
 		_, err = io.Copy(f, srcFile)
+		srcFile.Close()
 		return err
 	})
 }
+
+// maxImportSize is the maximum allowed total decompressed size for a database import (1 GB).
+const maxImportSize int64 = 1 * 1024 * 1024 * 1024
 
 // extractZipArchive extracts a zip file into the target directory.
 // If the zip contains files at root (data.db), they are placed directly in targetDir.
@@ -257,6 +296,18 @@ func extractZipArchive(zipPath string, targetDir string) error {
 		if strings.HasPrefix(name, "pb_data/") {
 			hasNestedPB = true
 			break
+		}
+	}
+
+	// Check total decompressed size to prevent zip bombs
+	var totalSize int64
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		totalSize += int64(f.UncompressedSize64)
+		if totalSize > maxImportSize {
+			return fmt.Errorf("database file is too large (%d bytes decompressed, max %d bytes)", totalSize, maxImportSize)
 		}
 	}
 

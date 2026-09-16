@@ -70,7 +70,7 @@ export default function ReceiptsPage() {
   useEffect(() => {
     GetSettings().then(s => {
       setPrinterAvailable(!!s.printer_name)
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   // Filter transactions
@@ -275,7 +275,7 @@ export default function ReceiptsPage() {
   return (
     <div className="p-4 md:p-6">
       {/* Filter Section */}
-      <div className="bg-base-100 border border-base-300 rounded-xl p-4">
+      <div className="bg-base-100 border border-base-300 rounded-xl p-4 mb-4">
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
           <DateRangePicker
             value={{ preset, customStart, customEnd }}

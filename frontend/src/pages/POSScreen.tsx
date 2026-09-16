@@ -243,8 +243,8 @@ export default function POSScreen() {
         enqueueSnackbar('Customer display disconnected', { variant: 'info' })
       }
     }
-    ;(window as any)._displayBridge = (window as any)._displayBridge || {}
-    ;(window as any)._displayBridge.onDismiss = handleDismiss
+      ; (window as any)._displayBridge = (window as any)._displayBridge || {}
+      ; (window as any)._displayBridge.onDismiss = handleDismiss
     return () => {
       delete (window as any)._displayBridge?.onDismiss
     }
@@ -446,7 +446,7 @@ export default function POSScreen() {
     return (
       <div className="flex flex-col h-full">
         {/* Mobile Header */}
-        <div className="p-3 border-b border-base-300 bg-base-100 safe-area-top">
+        <div className="p-3 border-b border-base-300 bg-base-100 safe-area-top mb-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
@@ -499,35 +499,36 @@ export default function POSScreen() {
                 const effectiveStock = product.stock - cartQty
                 const outOfStock = effectiveStock <= 0
                 return (
-                <button
-                  key={product.id}
-                  className={`relative card bg-base-100 shadow-sm transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
-                  onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
-                >
-                  {cartQty > 0 && (
-                    <span className="badge badge-primary badge-sm absolute top-1 right-1 z-10">{cartQty}</span>
-                  )}
-                  {outOfStock && (
-                    <span className="badge badge-error badge-sm absolute top-1 left-1 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
-                  )}
-                  {product.image_data ? (
-                    <img src={product.image_data} alt={product.name} className="w-full h-28 object-cover" />
-                  ) : (
-                    <div className="w-full h-28 bg-base-200 flex items-center justify-center">
-                      <ShoppingCart size={24} className="opacity-20" />
-                    </div>
-                  )}
-                  <div className="p-2">
-                    <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
-                    <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
-                    {product.stock > 0 && (
-                      <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
-                        Stock: {effectiveStock}
-                      </p>
+                  <button
+                    key={product.id}
+                    className={`relative card bg-base-100 shadow-sm transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                    onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
+                  >
+                    {cartQty > 0 && (
+                      <span className="badge badge-primary badge-sm absolute top-1 right-1 z-10">{cartQty}</span>
                     )}
-                  </div>
-                </button>
-              )})}
+                    {outOfStock && (
+                      <span className="badge badge-error badge-sm absolute top-1 left-1 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
+                    )}
+                    {product.image_data ? (
+                      <img src={product.image_data} alt={product.name} className="w-full h-28 object-cover" />
+                    ) : (
+                      <div className="w-full h-28 bg-base-200 flex items-center justify-center">
+                        <ShoppingCart size={24} className="opacity-20" />
+                      </div>
+                    )}
+                    <div className="p-2">
+                      <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
+                      <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                      {product.stock > 0 && (
+                        <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
+                          Stock: {effectiveStock}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
@@ -866,7 +867,7 @@ export default function POSScreen() {
             <div className="modal-box">
               <h3 className="font-bold text-lg">Clear Cart</h3>
               <p className="py-4">Are you sure you want to clear all items from the cart?</p>
-            <div className="modal-action safe-area-bottom">
+              <div className="modal-action safe-area-bottom">
                 <button className="btn" onClick={() => setShowClearConfirm(false)}>Cancel</button>
                 <button className="btn btn-error" onClick={confirmClearCart}>Clear</button>
               </div>
@@ -954,35 +955,36 @@ export default function POSScreen() {
               const effectiveStock = product.stock - cartQty
               const outOfStock = effectiveStock <= 0
               return (
-              <button
-                key={product.id}
-                className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
-                onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
-              >
-                {cartQty > 0 && (
-                  <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQty}</span>
-                )}
-                {outOfStock && (
-                  <span className="badge badge-error badge-sm absolute top-2 left-2 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
-                )}
-                {product.image_data ? (
-                  <img src={product.image_data} alt={product.name} className="w-full h-24 sm:h-28 md:h-32 object-cover" />
-                ) : (
-                  <div className="w-full h-24 sm:h-28 md:h-32 bg-base-200 flex items-center justify-center">
-                    <ShoppingCart size={32} className="opacity-20" />
-                  </div>
-                )}
-                <div className="card-body p-3">
-                  <h3 className="font-semibold text-sm leading-tight">{product.name}</h3>
-                  <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
-                  {product.stock > 0 && (
-                    <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
-                      Stock: {effectiveStock}
-                    </p>
+                <button
+                  key={product.id}
+                  className={`relative card bg-base-100 shadow hover:shadow-md hover:bg-primary/5 transition-all duration-150 cursor-pointer text-left overflow-hidden ${showPayment || outOfStock ? 'opacity-50 pointer-events-none' : ''} ${tappedId === product.id ? 'ring-2 ring-primary scale-95' : ''}`}
+                  onClick={showPayment || outOfStock ? undefined : () => handleProductTap(product)}
+                >
+                  {cartQty > 0 && (
+                    <span className="badge badge-primary badge-sm absolute top-2 right-2 z-10">{cartQty}</span>
                   )}
-                </div>
-              </button>
-              )})}
+                  {outOfStock && (
+                    <span className="badge badge-error badge-sm absolute top-2 left-2 z-10">{product.stock === 0 ? 'Out of Stock' : 'In Cart'}</span>
+                  )}
+                  {product.image_data ? (
+                    <img src={product.image_data} alt={product.name} className="w-full h-24 sm:h-28 md:h-32 object-cover" />
+                  ) : (
+                    <div className="w-full h-24 sm:h-28 md:h-32 bg-base-200 flex items-center justify-center">
+                      <ShoppingCart size={32} className="opacity-20" />
+                    </div>
+                  )}
+                  <div className="card-body p-3">
+                    <h3 className="font-semibold text-sm leading-tight">{product.name}</h3>
+                    <p className="text-primary font-bold text-sm">₹{product.price.toFixed(2)}</p>
+                    {product.stock > 0 && (
+                      <p className={`text-xs ${effectiveStock <= lowStockThreshold ? 'text-warning font-semibold' : 'text-base-content/50'}`}>
+                        Stock: {effectiveStock}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>

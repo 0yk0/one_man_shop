@@ -54,8 +54,8 @@ export function DeleteProduct(id: string): $CancellablePromise<void> {
 
 /**
  * ExportDatabase creates a zip archive of the database and saves it to Downloads.
- * On Android, saves to /storage/emulated/0/Download/.
- * On Desktop, saves to ~/Downloads/.
+ * On Android, saves to /storage/emulated/0/Download/ via MediaStore API.
+ * On Desktop, saves to ~/Downloads/ directly.
  */
 export function ExportDatabase(): $CancellablePromise<string> {
     return $Call.ByID(3509245966);

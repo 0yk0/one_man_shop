@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useSnackbar } from 'notistack'
-import { GetAvailableScreens, GetAvailablePrinters, GetDataDir, SelectDataDir, SaveDataDir, IsMobile, SelectFile, ExportDatabase, ImportDatabase } from '../bindings'
+import { GetAvailableScreens, GetAvailablePrinters, IsMobile, SelectFile, ExportDatabase, ImportDatabase } from '../bindings'
 import { getAndroidPrinters, isPrinterConnected, testPrint, openBluetoothSettings, type AndroidPrinter } from '../lib/print'
-import { Save, Loader2, Palette, Monitor, Shield, Printer, FolderOpen, RefreshCw, Bluetooth, Package, Database, Download, Upload } from 'lucide-react'
+import { Save, Loader2, Palette, Monitor, Shield, Printer, RefreshCw, Bluetooth, Package, Database, Download, Upload } from 'lucide-react'
 import PinInput from '../components/PinInput'
 
 const DAISYUI_THEMES = [
@@ -56,9 +56,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
   const [confirmPin, setConfirmPin] = useState('')
   const [pinError, setPinError] = useState('')
   const [changingPin, setChangingPin] = useState(false)
-  const [dataDir, setDataDir] = useState('')
   const [isMobile, setIsMobile] = useState(false)
-  const [changingDataDir, setChangingDataDir] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [importing, setImporting] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
@@ -101,9 +99,8 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     loadPrinters()
   }, [])
 
-  // Load data dir and platform on mount
+  // Load platform on mount
   useEffect(() => {
-    GetDataDir().then(setDataDir).catch(() => {})
     IsMobile().then(setIsMobile).catch(() => setIsMobile(false))
   }, [])
 
@@ -238,28 +235,20 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
     }
   }
 
-  const handleChangeDataDir = async () => {
-    if (isMobile) return // Not supported on Android
-    try {
-      setChangingDataDir(true)
-      const selected = await SelectDataDir()
-      if (selected && selected.length > 0) {
-        await SaveDataDir(selected)
-        setDataDir(selected)
-        enqueueSnackbar('Data directory updated. Restart the app to use the new location.', { variant: 'info' })
-      }
-    } catch (err) {
-      console.error('Failed to change data directory:', err)
-    } finally {
-      setChangingDataDir(false)
-    }
-  }
-
   const handleExportDatabase = async () => {
     setExporting(true)
     try {
-      const path = await ExportDatabase()
-      enqueueSnackbar(`Database exported to: ${path}`, { variant: 'success' })
+      const zipPath = await ExportDatabase()
+
+      // On Android, the zip is in app temp dir — copy to Downloads via MediaStore
+      if (isMobile && (window as any).wails?.copyToDownloads) {
+        const filename = zipPath.split('/').pop() || 'database_export.zip'
+        const downloadsPath = await (window as any).wails.copyToDownloads(zipPath, filename)
+        enqueueSnackbar(`Database exported to: ${downloadsPath}`, { variant: 'success' })
+      } else {
+        // Desktop: zip is already in ~/Downloads/
+        enqueueSnackbar(`Database exported to: ${zipPath}`, { variant: 'success' })
+      }
     } catch (err) {
       enqueueSnackbar('Export failed: ' + String(err), { variant: 'error' })
     } finally {
@@ -398,7 +387,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             <input type="text" className="input input-bordered w-full" value={form.merchant_name} onChange={e => update('merchant_name', e.target.value)} />
           </div>
 
-          <div className="divider"></div>
+          {/* <div className="divider"></div>
 
           <h2 className="card-title flex items-center gap-2"><FolderOpen size={18} />Data Location</h2>
 
@@ -416,45 +405,14 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             )}
             <label className="label">
               <span className="label-text-alt text-base-content/60 text-wrap">
-                {isMobile 
+                {isMobile
                   ? 'On Android, data is stored in the app\'s external storage and persists across updates.'
                   : 'Your products, transactions, and settings are stored in this directory.'}
               </span>
             </label>
-          </div>
+          </div> */}
 
-          <div className="divider"></div>
 
-          <h2 className="card-title flex items-center gap-2"><Database size={18} />Database</h2>
-
-          <p className="text-sm text-base-content/60">
-            Export your database as a backup or import data from another device.
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              className="btn btn-outline gap-2"
-              onClick={handleExportDatabase}
-              disabled={exporting}
-            >
-              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-              {exporting ? 'Exporting...' : 'Export to Downloads'}
-            </button>
-            <button
-              className="btn btn-outline btn-error gap-2"
-              onClick={handleImportClick}
-              disabled={importing}
-            >
-              {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-              {importing ? 'Importing...' : 'Import Database'}
-            </button>
-          </div>
-
-          <label className="label">
-            <span className="label-text-alt text-base-content/60 text-wrap">
-              Export saves a zip file to your Downloads folder. Import replaces all current data and restarts the app.
-            </span>
-          </label>
 
           <div className="divider"></div>
 
@@ -497,7 +455,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
             </label>
           </div>
 
-          <div className="divider"></div>
+          {/*  <div className="divider"></div>
 
           <h2 className="card-title">Backup</h2>
 
@@ -523,7 +481,7 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
                 <input type="number" min="1" max="365" className="input input-bordered w-full" value={form.backup_retention_days} onChange={e => update('backup_retention_days', parseInt(e.target.value) || 30)} />
               </div>
             </>
-          )}
+          )} */}
 
           <div className="divider"></div>
 
@@ -700,6 +658,38 @@ export default function SettingsPage({ currentTheme, onThemeChange }: Props) {
               </span>
             </label>
           </div>
+          <div className="divider"></div>
+
+          <h2 className="card-title flex items-center gap-2"><Database size={18} />Database</h2>
+
+          <p className="text-sm text-base-content/60">
+            Export your database as a backup or import data from another device.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="btn btn-outline gap-2"
+              onClick={handleExportDatabase}
+              disabled={exporting}
+            >
+              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              {exporting ? 'Exporting...' : 'Export to Downloads'}
+            </button>
+            <button
+              className="btn btn-outline btn-error gap-2"
+              onClick={handleImportClick}
+              disabled={importing}
+            >
+              {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {importing ? 'Importing...' : 'Import Database'}
+            </button>
+          </div>
+
+          <label className="label">
+            <span className="label-text-alt text-base-content/60 text-wrap">
+              Export saves a zip file to your Downloads folder. Import replaces all current data and restarts the app.
+            </span>
+          </label>
 
           <div className="divider"></div>
 

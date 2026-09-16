@@ -32,6 +32,7 @@ build/android/.gradle/
 build/android/app/build/
 build/android/build/
 build/android/local.properties
+build/android/app/src/main/jniLibs/
 
 # Docs
 docs/

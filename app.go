@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"one_man_shop/backend/db"
 	"one_man_shop/backend/display"
@@ -485,11 +486,23 @@ func (a *App) SetBackupSchedule(enabled bool) error {
 // ========== Database Export/Import ==========
 
 // ExportDatabase creates a zip archive of the database and saves it to Downloads.
-// On Android, saves to /storage/emulated/0/Download/.
-// On Desktop, saves to ~/Downloads/.
+// On Android, saves to /storage/emulated/0/Download/ via MediaStore API.
+// On Desktop, saves to ~/Downloads/ directly.
 func (a *App) ExportDatabase() (string, error) {
 	dataDir := getAppDataDir()
 
+	if runtime.GOOS == "android" {
+		// Android: write zip to app's temp dir, then copy to Downloads via MediaStore
+		tempDir := filepath.Join(dataDir, "temp_export")
+		zipPath, err := a.handlers.ExportDatabaseToTemp(dataDir, tempDir)
+		if err != nil {
+			return "", err
+		}
+		// Return the temp zip path — frontend will call Java copyToDownloads
+		return zipPath, nil
+	}
+
+	// Desktop: write directly to Downloads
 	targetDir, err := getDownloadsDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to find Downloads directory: %w", err)
@@ -508,8 +521,10 @@ func (a *App) ImportDatabase(sourcePath string) error {
 	}
 
 	// Quit the app so the staged import can be applied on next startup
+	// Delay slightly so the frontend can show the snackbar message
 	if a.app != nil {
 		go func() {
+			time.Sleep(1500 * time.Millisecond)
 			a.app.Quit()
 		}()
 	}

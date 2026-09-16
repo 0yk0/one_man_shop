@@ -141,7 +141,7 @@ export default function TransactionsTab() {
   const totalPages = table.getPageCount()
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-4">
       {/* Filter Section */}
       <div className="bg-base-100 border border-base-300 rounded-xl p-4">
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">

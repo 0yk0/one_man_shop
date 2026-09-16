@@ -231,3 +231,166 @@ func TestRunBackup_success(t *testing.T) {
 		}
 	}
 }
+
+// ========== Export/Import tests ==========
+
+func TestCreateZipArchive(t *testing.T) {
+	srcDir := t.TempDir()
+	dstDir := t.TempDir()
+
+	// Create source files
+	os.WriteFile(filepath.Join(srcDir, "data.db"), []byte("fake-db-content"), 0644)
+	os.WriteFile(filepath.Join(srcDir, "data.db-wal"), []byte("wal-content"), 0644)
+	os.MkdirAll(filepath.Join(srcDir, "sub"), 0755)
+	os.WriteFile(filepath.Join(srcDir, "sub", "file.txt"), []byte("nested"), 0644)
+
+	zipPath := filepath.Join(dstDir, "test.zip")
+	if err := createZipArchive(srcDir, zipPath); err != nil {
+		t.Fatalf("createZipArchive failed: %v", err)
+	}
+
+	// Verify zip was created
+	if _, err := os.Stat(zipPath); os.IsNotExist(err) {
+		t.Fatal("Expected zip file to exist")
+	}
+
+	// Verify zip is valid by extracting
+	extractDir := t.TempDir()
+	if err := extractZipArchive(zipPath, extractDir); err != nil {
+		t.Fatalf("extractZipArchive failed: %v", err)
+	}
+
+	// Verify extracted files
+	for _, tc := range []struct{ name, want string }{
+		{"data.db", "fake-db-content"},
+		{"data.db-wal", "wal-content"},
+		{"sub/file.txt", "nested"},
+	} {
+		got, err := os.ReadFile(filepath.Join(extractDir, tc.name))
+		if err != nil {
+			t.Errorf("Expected %s to exist: %v", tc.name, err)
+			continue
+		}
+		if string(got) != tc.want {
+			t.Errorf("%s: got %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}
+
+func TestExtractZipArchive_nested_pb_data(t *testing.T) {
+	// Create a zip with pb_data/ subdirectory structure (what ExportDatabase produces)
+	srcDir := t.TempDir()
+	pbDataDir := filepath.Join(srcDir, "pb_data")
+	os.MkdirAll(pbDataDir, 0755)
+	os.WriteFile(filepath.Join(pbDataDir, "data.db"), []byte("nested-db"), 0644)
+	os.WriteFile(filepath.Join(pbDataDir, "data.db-wal"), []byte("nested-wal"), 0644)
+
+	zipPath := filepath.Join(t.TempDir(), "nested.zip")
+	if err := createZipArchive(pbDataDir, zipPath); err != nil {
+		t.Fatalf("createZipArchive failed: %v", err)
+	}
+
+	// Extract — should strip pb_data/ prefix
+	extractDir := t.TempDir()
+	if err := extractZipArchive(zipPath, extractDir); err != nil {
+		t.Fatalf("extractZipArchive failed: %v", err)
+	}
+
+	// Verify files are at root level (not under pb_data/)
+	got, err := os.ReadFile(filepath.Join(extractDir, "data.db"))
+	if err != nil {
+		t.Fatalf("Expected data.db at root: %v", err)
+	}
+	if string(got) != "nested-db" {
+		t.Errorf("data.db: got %q, want %q", got, "nested-db")
+	}
+}
+
+func TestValidateDatabaseZip_valid(t *testing.T) {
+	srcDir := t.TempDir()
+	os.WriteFile(filepath.Join(srcDir, "data.db"), []byte("db"), 0644)
+
+	zipPath := filepath.Join(t.TempDir(), "valid.zip")
+	if err := createZipArchive(srcDir, zipPath); err != nil {
+		t.Fatalf("createZipArchive failed: %v", err)
+	}
+
+	if err := validateDatabaseZip(zipPath); err != nil {
+		t.Errorf("Expected valid zip, got error: %v", err)
+	}
+}
+
+func TestValidateDatabaseZip_valid_nested(t *testing.T) {
+	srcDir := t.TempDir()
+	pbData := filepath.Join(srcDir, "pb_data")
+	os.MkdirAll(pbData, 0755)
+	os.WriteFile(filepath.Join(pbData, "data.db"), []byte("db"), 0644)
+
+	zipPath := filepath.Join(t.TempDir(), "nested.zip")
+	if err := createZipArchive(pbData, zipPath); err != nil {
+		t.Fatalf("createZipArchive failed: %v", err)
+	}
+
+	if err := validateDatabaseZip(zipPath); err != nil {
+		t.Errorf("Expected valid nested zip, got error: %v", err)
+	}
+}
+
+func TestValidateDatabaseZip_invalid(t *testing.T) {
+	srcDir := t.TempDir()
+	os.WriteFile(filepath.Join(srcDir, "random.txt"), []byte("not a db"), 0644)
+
+	zipPath := filepath.Join(t.TempDir(), "invalid.zip")
+	if err := createZipArchive(srcDir, zipPath); err != nil {
+		t.Fatalf("createZipArchive failed: %v", err)
+	}
+
+	if err := validateDatabaseZip(zipPath); err == nil {
+		t.Error("Expected error for invalid zip, got nil")
+	}
+}
+
+func TestValidateDatabaseZip_not_a_zip(t *testing.T) {
+	tmpDir := t.TempDir()
+	fakePath := filepath.Join(tmpDir, "notazip.zip")
+	os.WriteFile(fakePath, []byte("this is not a zip file"), 0644)
+
+	if err := validateDatabaseZip(fakePath); err == nil {
+		t.Error("Expected error for non-zip file, got nil")
+	}
+}
+
+func TestRoundTrip_export_then_import(t *testing.T) {
+	// Simulate full export→import round trip
+	srcDir := t.TempDir()
+	pbDataDir := filepath.Join(srcDir, "pb_data")
+	os.MkdirAll(pbDataDir, 0755)
+	os.WriteFile(filepath.Join(pbDataDir, "data.db"), []byte("test-db-content"), 0644)
+	os.WriteFile(filepath.Join(pbDataDir, "data.db-wal"), []byte("wal"), 0644)
+
+	// Export to zip
+	zipPath := filepath.Join(t.TempDir(), "export.zip")
+	if err := createZipArchive(pbDataDir, zipPath); err != nil {
+		t.Fatalf("Export failed: %v", err)
+	}
+
+	// Validate
+	if err := validateDatabaseZip(zipPath); err != nil {
+		t.Fatalf("Validation failed: %v", err)
+	}
+
+	// Import (extract to new dir)
+	importDir := t.TempDir()
+	if err := extractZipArchive(zipPath, importDir); err != nil {
+		t.Fatalf("Import failed: %v", err)
+	}
+
+	// Verify data.db exists and has correct content
+	got, err := os.ReadFile(filepath.Join(importDir, "data.db"))
+	if err != nil {
+		t.Fatalf("data.db not found after import: %v", err)
+	}
+	if string(got) != "test-db-content" {
+		t.Errorf("data.db content: got %q, want %q", got, "test-db-content")
+	}
+}
