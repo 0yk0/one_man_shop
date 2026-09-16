@@ -36,3 +36,4 @@ build/android/app/src/main/jniLibs/
 
 # Docs
 docs/
+build/android/release.keystore
