@@ -69,11 +69,10 @@ export default function Layout({ onThemeChange }: Props) {
               <button
                 key={item.route}
                 onClick={() => handleProtectedClick(item.route)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                  location.pathname === item.route
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${location.pathname === item.route
                     ? 'bg-primary text-primary-content'
                     : 'hover:bg-base-300 text-base-content'
-                } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+                  } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
                 data-tip={collapsed ? item.label : undefined}
                 title={item.label}
               >
@@ -87,11 +86,10 @@ export default function Layout({ onThemeChange }: Props) {
               key={item.to}
               to={item.to!}
               end={item.end}
-              className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                isActive
+              className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
                   ? 'bg-primary text-primary-content'
                   : 'hover:bg-base-300 text-base-content'
-              } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
+                } ${collapsed ? 'justify-center tooltip tooltip-right' : ''}`}
               data-tip={collapsed ? item.label : undefined}
               title={item.label}
             >
@@ -106,7 +104,7 @@ export default function Layout({ onThemeChange }: Props) {
         <div className="p-4 border-t border-base-300">
           <div className="flex items-center justify-between">
             <div className="text-xs text-base-content/40">
-              <p>v0.1.0</p>
+              <p>v0.2.0</p>
               <p className="mt-1">Made by <button onClick={() => Browser.OpenURL('https://linkedin.com/in/yatheeshkonduru')} className="hover:text-base-content transition-colors link link-hover">Yatheesh</button></p>
             </div>
             <button
@@ -146,11 +144,10 @@ export default function Layout({ onThemeChange }: Props) {
               <button
                 key={item.route}
                 onClick={() => handleProtectedClick(item.route)}
-                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
-                  location.pathname === item.route
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${location.pathname === item.route
                     ? 'text-primary bg-primary/10'
                     : 'text-base-content/60 active:text-primary active:bg-primary/5'
-                }`}
+                  }`}
               >
                 <item.icon size={22} />
                 <span className="text-xs">{item.label}</span>
@@ -162,11 +159,10 @@ export default function Layout({ onThemeChange }: Props) {
               key={item.to}
               to={item.to!}
               end={item.end}
-              className={({ isActive }) => `flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
-                isActive
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${isActive
                   ? 'text-primary bg-primary/10'
                   : 'text-base-content/60 active:text-primary active:bg-primary/5'
-              }`}
+                }`}
             >
               <item.icon size={22} />
               <span className="text-xs">{item.label}</span>

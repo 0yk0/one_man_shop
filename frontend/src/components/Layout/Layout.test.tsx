@@ -82,7 +82,7 @@ describe('Layout - PIN gating', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('v0.1.0')).toBeInTheDocument()
+    expect(screen.getByText('v0.2.0')).toBeInTheDocument()
     expect(screen.getByText(/Made by/)).toBeInTheDocument()
   })
 
