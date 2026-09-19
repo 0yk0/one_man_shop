@@ -7,9 +7,6 @@ const mockSaveSettings = vi.fn()
 const mockIsSetupComplete = vi.fn()
 const mockGetAvailableScreens = vi.fn()
 const mockGetAvailablePrinters = vi.fn()
-const mockGetDataDir = vi.fn().mockResolvedValue('/test/data')
-const mockSelectDataDir = vi.fn().mockResolvedValue('')
-const mockSaveDataDir = vi.fn().mockResolvedValue(undefined)
 const mockIsMobile = vi.fn().mockResolvedValue(false)
 
 vi.mock('../bindings', () => ({
@@ -18,9 +15,6 @@ vi.mock('../bindings', () => ({
   IsSetupComplete: (...args: any[]) => mockIsSetupComplete(...args),
   GetAvailableScreens: (...args: any[]) => mockGetAvailableScreens(...args),
   GetAvailablePrinters: (...args: any[]) => mockGetAvailablePrinters(...args),
-  GetDataDir: (...args: any[]) => mockGetDataDir(...args),
-  SelectDataDir: (...args: any[]) => mockSelectDataDir(...args),
-  SaveDataDir: (...args: any[]) => mockSaveDataDir(...args),
   IsMobile: (...args: any[]) => mockIsMobile(...args),
   Product: class Product { id = ''; name = ''; price = 0; tax_rate = 0; image_data = ''; active = false; created = '' },
   CartItem: class CartItem { product_id = ''; name = ''; qty = 0; price = 0; tax_rate = 0; subtotal = 0; tax_amount = 0 },
@@ -222,9 +216,10 @@ describe('SettingsPage - Receipt Printer section', () => {
       expect(screen.getByText('Receipt Printer')).toBeInTheDocument()
     })
 
-    // The printer name should be shown in the dropdown
-    const select = screen.getByDisplayValue('HP LaserJet')
-    expect(select).toBeInTheDocument()
+    // Wait for the printer name to appear in the dropdown options
+    await waitFor(() => {
+      expect(screen.getByText('HP LaserJet')).toBeInTheDocument()
+    })
   })
 
   it('shows auto_print and paper_width from saved settings', async () => {
@@ -242,6 +237,11 @@ describe('SettingsPage - Receipt Printer section', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Receipt Printer')).toBeInTheDocument()
+    })
+
+    // Wait for the printer option to appear
+    await waitFor(() => {
+      expect(screen.getByText('HP LaserJet')).toBeInTheDocument()
     })
 
     // Paper width should be 58mm
